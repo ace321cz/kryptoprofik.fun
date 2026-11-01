@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="cs" class="dark scroll-smooth">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>KryptoProfík – Kompletní krypto portál a Masterclass</title>
+  <meta name="description" content="Nezávislý krypto portál v češtině: peněženky, burzy, detekce podvodů, daně v ČR, živé ceny, kalkulačky, slovník a kvíz od Ace321cz."/>
+  <meta name="theme-color" content="#07090e"/>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎓%3C/text%3E%3C/svg%3E"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              dark: '#07090e', card: '#0f1420', cardHover: '#161d2d', border: '#1e293b',
+              accent: '#10b981', blue: '#3b82f6', purple: '#8b5cf6', amber: '#f59e0b', rose: '#f43f5e', cyan: '#06b6d4'
+            }
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <script defer src="https://s3.tradingview.com/tv.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; transition: background-color 0.3s, color 0.3s; }
+    .dark body { background-color: #07090e; color: #f1f5f9; }
+    body:not(.dark) { background-color: #f8fafc; color: #0f172a; }
+    .gradient-text { background: linear-gradient(135deg, #10b981 0%, #3b82f6 40%, #8b5cf6 70%, #f59e0b 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    .dark .card-bg { background-color: #0f1420; border-color: #1e293b; }
+    body:not(.dark) .card-bg { background-color: #ffffff; border-color: #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    .dark .sub-card { background-color: #07090e; border-color: #1e293b; }
+    body:not(.dark) .sub-card { background-color: #f1f5f9; border-color: #cbd5e1; }
+    #qrBox svg { width: 100%; height: auto; display: block; }
+    details > summary { list-style: none; cursor: pointer; }
+    details > summary::-webkit-details-marker { display: none; }
+    details[open] .chev { transform: rotate(180deg); }
+    .chev { transition: transform .2s; }
+    .skeleton { background: linear-gradient(90deg,#1e293b 25%,#273449 50%,#1e293b 75%); background-size: 200% 100%; animation: sk 1.4s infinite; border-radius: 6px; color: transparent; }
+    @keyframes sk { to { background-position: -200% 0; } }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased custom-scrollbar">
+
+<div id="progressBar" class="fixed top-0 left-0 h-1 z-[60] bg-gradient-to-r from-brand-accent via-brand-blue to-brand-purple" style="width:0%"></div>
+
+<!-- HEADER -->
+<header class="sticky top-0 z-50 backdrop-blur-md border-b dark:border-brand-border border-slate-200 dark:bg-[#07090e]/90 bg-white/90">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+    <a href="#hero" class="flex items-center gap-3 shrink-0">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-accent via-brand-blue to-brand-purple flex items-center justify-center text-white text-xl shadow-lg shadow-brand-accent/20">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div>
+        <span class="font-black text-lg sm:text-xl tracking-tight dark:text-white text-slate-900 block leading-none">Krypto<span class="text-brand-accent">Profík</span></span>
+        <span class="hidden min-[420px]:block text-[10px] text-slate-500 font-semibold tracking-widest uppercase">Autor: Ace321cz</span>
+      </div>
+    </a>
+
+    <div class="relative hidden md:block w-64 lg:w-80">
+      <input type="search" id="searchInput" placeholder="Hledat (Seed, Staking, Daně, Solana…)" autocomplete="off" class="w-full border rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 dark:bg-brand-card/80 bg-slate-100 dark:border-brand-border border-slate-300 dark:text-white placeholder-slate-500 focus:outline-none focus:border-brand-accent transition"/>
+      <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+    </div>
+
+    <nav class="hidden lg:flex items-center gap-4 text-sm font-semibold dark:text-slate-300 text-slate-700">
+      <a href="#masterclass" class="hover:text-brand-accent transition">Lekce</a>
+      <a href="#explorers" class="hover:text-brand-accent transition">Explorery</a>
+      <a href="#nastroje" class="hover:text-brand-accent transition">Nástroje</a>
+      <a href="#kviz" class="hover:text-brand-accent transition">Kvíz</a>
+      <a href="#slovnik" class="hover:text-brand-accent transition">Slovník</a>
+      <a href="#podpora" class="px-3 py-1.5 rounded-xl bg-brand-amber/10 border border-brand-amber/30 text-brand-amber hover:bg-brand-amber/20 transition font-bold"><i class="fa-solid fa-mug-hot mr-1.5"></i> Podpořit</a>
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <!-- Theme Switcher -->
+      <button id="themeToggle" title="Přepnout tmavý/světlý režim" class="p-2 rounded-xl border dark:border-brand-border border-slate-300 dark:text-amber-400 text-slate-700 hover:bg-slate-200 dark:hover:bg-slate-800 transition">
+        <i class="fa-solid fa-sun dark:hidden"></i>
+        <i class="fa-solid fa-moon hidden dark:block"></i>
+      </button>
+
+      <!-- Language Switcher -->
+      <div class="flex items-center rounded-xl border dark:border-brand-border border-slate-300 overflow-hidden text-xs font-bold shrink-0">
+        <button type="button" class="lang-btn px-2.5 py-1.5 transition" data-lang="cs">CZ</button>
+        <button type="button" class="lang-btn px-2.5 py-1.5 transition" data-lang="en">EN</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <!-- HERO -->
+  <section id="hero" class="relative py-12 sm:py-20 px-4 border-b dark:border-brand-border border-slate-200 text-center">
+    <div class="max-w-5xl mx-auto relative z-10">
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-accent/10 border border-brand-accent/30 text-brand-accent text-xs font-bold uppercase tracking-widest mb-6">
+        <i class="fa-solid fa-award"></i> Nezávislý vzdělávací portál od Ace321cz • 100% Zdarma
+      </div>
+      <h1 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight dark:text-white text-slate-900 mb-6 leading-tight">
+        Krypto encyklopedie & navigátor <br/>
+        <span class="gradient-text">od první peněženky po daně v ČR</span>
+      </h1>
+      <p class="text-slate-500 dark:text-slate-400 text-base sm:text-xl max-w-3xl mx-auto mb-8 leading-relaxed">
+        Naučte se bezpečně držet krypto, nakupovat na CEX/DEX, odhalit podvody, spočítat riziko a vyhnout se chybám. Vše na jednom místě.
+      </p>
+
+      <div class="flex flex-wrap items-center justify-center gap-3 mb-8 text-xs font-semibold">
+        <div class="px-4 py-2 rounded-full card-bg border"><span class="text-slate-400">Fear & Greed:</span> <span id="fngValue" class="font-bold text-brand-accent ml-1">...</span></div>
+        <div class="px-4 py-2 rounded-full card-bg border"><span class="text-slate-400">BTC Dominance:</span> <span id="btcDom" class="font-bold text-brand-blue ml-1">...</span></div>
+        <div class="px-4 py-2 rounded-full card-bg border"><span class="text-slate-400">Aktualizováno:</span> <span id="lastUpdate" class="font-bold ml-1">...</span></div>
+      </div>
+
+      <div id="heroPriceCards" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 max-w-6xl mx-auto text-left"></div>
+    </div>
+  </section>
+
+  <!-- TRADINGVIEW CHART -->
+  <section class="max-w-7xl mx-auto px-4 py-8">
+    <div class="card-bg border rounded-3xl p-4 sm:p-6 shadow-xl">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+        <div>
+          <h2 class="text-lg font-bold dark:text-white text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-brand-accent"></i> Živá technická analýza (TradingView)
+          </h2>
+          <span class="text-xs text-slate-400">Svíčkový graf a technické indikátory</span>
+        </div>
+        <div class="flex gap-2">
+          <button class="chart-btn px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold transition" data-sym="BINANCE:BTCUSDT">BTC/USDT</button>
+          <button class="chart-btn px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold transition" data-sym="BINANCE:ETHUSDT">ETH/USDT</button>
+          <button class="chart-btn px-3 py-1.5 rounded-xl bg-slate-800 text-white text-xs font-bold transition" data-sym="BINANCE:SOLUSDT">SOL/USDT</button>
+        </div>
+      </div>
+      <div class="h-[450px] w-full rounded-2xl overflow-hidden border dark:border-brand-border border-slate-300 relative bg-slate-950">
+        <div id="tradingview_chart_container" class="w-full h-full"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- BLOCKCHAIN EXPLORERS CENTER -->
+  <section id="explorers" class="max-w-7xl mx-auto px-4 py-8">
+    <div class="text-center mb-6">
+      <h2 class="text-2xl font-black dark:text-white text-slate-900">Rychlé Odkazové Centrum pro Explorery</h2>
+      <p class="text-xs text-slate-400">Přímý přístup k prověřeným blockchain vyhledávačům a analytickým nástrojům</p>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+      <a href="https://etherscan.io" target="_blank" rel="noopener" class="p-4 rounded-2xl card-bg border text-center font-bold hover:border-brand-accent transition text-xs">
+        <i class="fa-brands fa-ethereum text-blue-400 text-lg block mb-1"></i> Etherscan (ETH)
+      </a>
+      <a href="https://solscan.io" target="_blank" rel="noopener" class="p-4 rounded-2xl card-bg border text-center font-bold hover:border-brand-purple transition text-xs">
+        <span class="text-purple-400 text-lg block mb-1">◎</span> Solscan (SOL)
+      </a>
+      <a href="https://mempool.space" target="_blank" rel="noopener" class="p-4 rounded-2xl card-bg border text-center font-bold hover:border-brand-amber transition text-xs">
+        <i class="fa-brands fa-bitcoin text-amber-500 text-lg block mb-1"></i> Mempool.space (BTC)
+      </a>
+      <a href="https://bscscan.com" target="_blank" rel="noopener" class="p-4 rounded-2xl card-bg border text-center font-bold hover:border-amber-400 transition text-xs">
+        <i class="fa-solid fa-coins text-amber-400 text-lg block mb-1"></i> BscScan (BNB)
+      </a>
+      <a href="https://dexscreener.com" target="_blank" rel="noopener" class="p-4 rounded-2xl card-bg border text-center font-bold hover:border-brand-accent transition text-xs">
+        <i class="fa-solid fa-chart-simple text-emerald-400 text-lg block mb-1"></i> DEX Screener
+      </a>
+      <a href="https://defillama.com" target="_blank" rel="noopener" class="p-4 rounded-2xl card-bg border text-center font-bold hover:border-brand-cyan transition text-xs">
+        <i class="fa-solid fa-database text-cyan-400 text-lg block mb-1"></i> DefiLlama
+      </a>
+    </div>
+  </section>
+
+  <!-- MASTERCLASS CONTENT (1-7) -->
+  <section id="masterclass" class="max-w-7xl mx-auto px-4 py-12 scroll-mt-20">
+    <div class="text-center mb-10">
+      <span class="text-brand-accent text-xs font-bold uppercase tracking-widest">Kompletní Edukační Kurikulum</span>
+      <h2 class="text-3xl sm:text-5xl font-black dark:text-white text-slate-900 mt-1">Masterclass Moduly (1–7)</h2>
+    </div>
+
+    <div class="space-y-8">
+      <!-- MODUL 1 -->
+      <article class="searchable card-bg border rounded-3xl p-6 sm:p-8">
+        <h3 class="text-2xl font-black text-brand-accent mb-3">Modul 1: Základy blockchainu, Bitcoin & L1/L2</h3>
+        <div class="grid md:grid-cols-2 gap-6 text-sm text-slate-400 leading-relaxed">
+          <div>
+            <h4 class="font-bold text-white text-base mb-2">Jak funguje blockchain & PoW vs. PoS</h4>
+            <p>Blockchain je distribuovaná databáze chráněná kryptografií. Bitcoin využívá Proof of Work (PoW) – náročný výpočetní výkon těžařů. Ethereum a Solana využívají Proof of Stake (PoS).</p>
+          </div>
+          <div>
+            <h4 class="font-bold text-white text-base mb-2">Blockchain Trilemma & Layer 2</h4>
+            <p>Žádný blockchain nemůže mít zároveň maximální Decentralizaci, Bezpečnost a Skalovatelnost. Proto vznikly Layer 2 sítě (Arbitrum, Optimism, Polygon, Base).</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- MODUL 2 -->
+      <article class="searchable card-bg border rounded-3xl p-6 sm:p-8">
+        <h3 class="text-2xl font-black text-brand-blue mb-3">Modul 2: Bezpečná úschova & Seed phrase</h3>
+        <p class="text-sm text-slate-400 leading-relaxed mb-4">
+          Pravidlo <strong>"Not your keys, not your coins"</strong> znamená, že krypto uložené na burze nevlastníte vy, ale burza.
+        </p>
+        <div class="grid md:grid-cols-3 gap-4 text-xs">
+          <div class="sub-card p-4 rounded-2xl border">
+            <h4 class="font-bold text-white text-sm mb-1">Trust Wallet</h4>
+            <p class="text-slate-400">Mobilní peněženka vhodná pro začátečníky.</p>
+          </div>
+          <div class="sub-card p-4 rounded-2xl border">
+            <h4 class="font-bold text-white text-sm mb-1">MetaMask & Phantom</h4>
+            <p class="text-slate-400">MetaMask je standard pro EVM, Phantom pro Solanu.</p>
+          </div>
+          <div class="sub-card p-4 rounded-2xl border">
+            <h4 class="font-bold text-white text-sm mb-1">Trezor & Ledger</h4>
+            <p class="text-slate-400">Hardware peněženky drží privátní klíče offline.</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- MODUL 4 (ANTI-SCAM) -->
+      <article class="searchable card-bg border rounded-3xl p-6 sm:p-8">
+        <h3 class="text-2xl font-black text-brand-rose mb-3">Modul 4: Anti-Scam & Audit Tokenu</h3>
+        <p class="text-sm text-slate-400 mb-6">Použijte tento interaktivní checklist pro ověření rizikovosti nových tokenů:</p>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <div id="auditChecklist" class="space-y-2 text-xs">
+            <label class="flex items-center gap-3 p-3 rounded-xl sub-card border cursor-pointer">
+              <input type="checkbox" class="audit-check accent-emerald-500 w-4 h-4"/>
+              <span class="text-slate-300">Likvidita je zamčená (locked) nebo spálená (burned)</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl sub-card border cursor-pointer">
+              <input type="checkbox" class="audit-check accent-emerald-500 w-4 h-4"/>
+              <span class="text-slate-300">Kontrakt je verifikovaný a neobsahuje neomezený mint</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl sub-card border cursor-pointer">
+              <input type="checkbox" class="audit-check accent-emerald-500 w-4 h-4"/>
+              <span class="text-slate-300">Top 10 držitelů vlastní méně než 20 % z celkové nabídky</span>
+            </label>
+            <label class="flex items-center gap-3 p-3 rounded-xl sub-card border cursor-pointer">
+              <input type="checkbox" class="audit-check accent-emerald-500 w-4 h-4"/>
+              <span class="text-slate-300">Nákupní i prodejní poplatek (tax) je nižší než 5 %</span>
+            </label>
+          </div>
+
+          <div class="sub-card p-6 rounded-2xl border text-center flex flex-col justify-center">
+            <span class="text-xs text-slate-500 font-bold uppercase">Stav Rizika Tokenu</span>
+            <div id="auditStatus" class="text-xl font-black text-brand-rose mt-2">❌ Vysoké riziko</div>
+            <p class="text-[11px] text-slate-500 mt-2">Před nákupem vždy zkontrolujte adresu na RugCheck.xyz!</p>
+          </div>
+        </div>
+      </article>
+
+      <!-- MODUL 7 (DANĚ) -->
+      <article class="searchable card-bg border rounded-3xl p-6 sm:p-8">
+        <h3 class="text-2xl font-black text-brand-accent mb-3">Modul 7: Daně z krypta v ČR pro nepodnikatele</h3>
+        <div class="grid md:grid-cols-2 gap-6 text-sm text-slate-400">
+          <div class="p-4 rounded-2xl sub-card border">
+            <h4 class="font-bold text-white mb-1">⏳ Časový test (3 roky)</h4>
+            <p class="text-xs">Příjem z prodeje je osvobozen od daně z příjmů, pokud mezi nabytím a prodejem uplynuly více než 3 roky.</p>
+          </div>
+          <div class="p-4 rounded-2xl sub-card border">
+            <h4 class="font-bold text-white mb-1">💶 Hodnotový test (100 000 Kč)</h4>
+            <p class="text-xs">Pokud celkový hrubý příjem z prodeje kryptoměn za kalendářní rok nepřesáhne 100 000 Kč, je osvobozen.</p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- NÁSTROJE & KALKULAČKY -->
+  <section id="nastroje" class="max-w-7xl mx-auto px-4 py-12 scroll-mt-20">
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-black dark:text-white text-slate-900">Kalkulačky a Převodník</h2>
+    </div>
+
+    <div class="grid lg:grid-cols-3 gap-6">
+      <!-- DCA KALKULAČKA -->
+      <div class="card-bg border rounded-3xl p-6">
+        <h3 class="font-bold text-white text-lg mb-4"><i class="fa-solid fa-piggy-bank text-brand-accent mr-2"></i>DCA Kalkulačka</h3>
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">Měsíční vklad (Kč)</label>
+            <input type="number" id="dcaAmount" value="2500" class="w-full p-2.5 rounded-xl border dark:bg-slate-900 bg-slate-100 font-mono text-white"/>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Počet let</label>
+            <input type="number" id="dcaYears" value="4" class="w-full p-2.5 rounded-xl border dark:bg-slate-900 bg-slate-100 font-mono text-white"/>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Očekávaný roční výnos (%)</label>
+            <input type="number" id="dcaRate" value="25" class="w-full p-2.5 rounded-xl border dark:bg-slate-900 bg-slate-100 font-mono text-white"/>
+          </div>
+          <div class="pt-3 border-t border-brand-border space-y-1">
+            <div class="flex justify-between"><span class="text-slate-400">Celkem vloženo:</span><span id="dcaDeposited" class="font-bold font-mono"></span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Odhadovaná hodnota:</span><span id="dcaResult" class="font-bold font-mono text-brand-accent text-sm"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RISK KALKULAČKA -->
+      <div class="card-bg border rounded-3xl p-6">
+        <h3 class="font-bold text-white text-lg mb-4"><i class="fa-solid fa-calculator text-brand-blue mr-2"></i>Velikost pozice & Risk</h3>
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">Celkový kapitál (Kč)</label>
+            <input type="number" id="rmCapital" value="100000" class="w-full p-2.5 rounded-xl border dark:bg-slate-900 bg-slate-100 font-mono text-white"/>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-slate-400 mb-1">Riziko na obchod (%)</label>
+              <input type="number" id="rmRiskPct" value="2" class="w-full p-2.5 rounded-xl border dark:bg-slate-900 bg-slate-100 font-mono text-white"/>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Stop-Loss (%)</label>
+              <input type="number" id="rmSlPct" value="4" class="w-full p-2.5 rounded-xl border dark:bg-slate-900 bg-slate-100 font-mono text-white"/>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-brand-border space-y-1">
+            <div class="flex justify-between"><span class="text-slate-400">Max. ztráta:</span><span id="rmMaxLoss" class="font-bold font-mono text-brand-rose"></span></div>
+            <div class="flex justify-between"><span class="text-slate-400">Doporučená pozice:</span><span id="rmPosSize" class="font-bold font-mono text-brand-blue text-sm"></span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PŘEVODNÍK MĚN -->
+      <div class="card-bg border rounded-3xl p-6">
+        <h3 class="font-bold text-white text-lg mb-4"><i class="fa-solid fa-right-left text-brand-purple mr-2"></i>Převodník CZK ↔ Krypto</h3>
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">Částka</label>
+            <input type="number" id="cvAmount" value="10000" class="w-full p-2.5 rounded-xl border dark:bg-slate-900 bg-slate-100 font-mono text-white"/>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-slate-400 mb-1">Měna</label>
+              <select id="cvCoin" class="w-full p-2.5 rounded-xl border dark:bg-slate-900 bg-slate-100 text-white"></select>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Směr</label>
+              <select id="cvDir" class="w-full p-2.5 rounded-xl border dark:bg-slate-900 bg-slate-100 text-white">
+                <option value="czk2coin">CZK → Krypto</option>
+                <option value="coin2czk">Krypto → CZK</option>
+              </select>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-brand-border">
+            <span class="text-slate-400 block mb-1">Výsledek:</span>
+            <div id="cvResult" class="text-xl font-bold font-mono text-brand-purple break-all">–</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SLOVNÍK -->
+  <section id="slovnik" class="max-w-7xl mx-auto px-4 py-12 scroll-mt-20">
+    <div class="text-center mb-8">
+      <h2 class="text-3xl font-black dark:text-white text-slate-900">Slovník pojmů s Vyhledáváním</h2>
+      <div class="max-w-md mx-auto mt-4">
+        <input type="search" id="glossarySearch" placeholder="Vyhledat pojem ve slovníku…" class="w-full p-3 rounded-xl border dark:bg-brand-card bg-white text-xs"/>
+      </div>
+    </div>
+    <div id="glossaryGrid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+  </section>
+
+  <!-- PODPORA -->
+  <section id="podpora" class="max-w-4xl mx-auto px-4 py-12 scroll-mt-20">
+    <div class="card-bg border-2 border-brand-amber/40 rounded-3xl p-8 text-center">
+      <div class="w-12 h-12 rounded-2xl bg-brand-amber/20 text-brand-amber flex items-center justify-center text-2xl mx-auto mb-4">
+        <i class="fa-solid fa-mug-hot"></i>
+      </div>
+      <h2 class="text-3xl font-black text-white mb-2">Podpořte vývoj portálu KryptoProfík ☕</h2>
+      <p class="text-xs text-slate-400 mb-6">Projekt je zcela zdarma. Pokud vám pomohl, můžete autora <strong>Ace321cz</strong> podpořit darem.</p>
+      <div id="donateList" class="space-y-3 max-w-xl mx-auto text-left"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="border-t dark:border-brand-border border-slate-200 py-8 px-4 text-center text-xs text-slate-500">
+  <p class="font-bold text-slate-400 mb-1">KryptoProfík © 2026 | Vytvořil Ace321cz (ace321cz@gmail.com)</p>
+  <p>Obsah slouží výhradně ke vzdělávacím účelům.</p>
+</footer>
+
+<!-- QR MODAL -->
+<div id="qrModal" class="fixed inset-0 bg-black/80 z-[80] hidden items-center justify-center p-4">
+  <div class="card-bg border rounded-3xl p-6 max-w-sm w-full text-center relative">
+    <button id="qrClose" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+    <h3 id="qrModalTitle" class="font-bold text-white mb-3"></h3>
+    <div id="qrBox" class="bg-white p-3 rounded-2xl w-52 h-52 mx-auto mb-3"></div>
+    <p id="qrAddressText" class="text-[10px] font-mono text-slate-400 break-all"></p>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+  const $ = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+
+  // Theme Switcher
+  $('#themeToggle').addEventListener('click', () => {
+    document.documentElement.classList.toggle('dark');
+  });
+
+  const COINS = [
+    { id: 'bitcoin', sym: 'BTC', name: 'Bitcoin', icon: '<i class="fa-brands fa-bitcoin text-amber-500"></i>' },
+    { id: 'ethereum', sym: 'ETH', name: 'Ethereum', icon: '<i class="fa-brands fa-ethereum text-blue-400"></i>' },
+    { id: 'solana', sym: 'SOL', name: 'Solana', icon: '<span class="text-purple-400">◎</span>' },
+    { id: 'binancecoin', sym: 'BNB', name: 'BNB', icon: '<i class="fa-solid fa-coins text-amber-400"></i>' },
+    { id: 'ripple', sym: 'XRP', name: 'XRP', icon: '<i class="fa-solid fa-bolt text-blue-500"></i>' },
+    { id: 'cardano', sym: 'ADA', name: 'Cardano', icon: '<i class="fa-solid fa-shield text-cyan-400"></i>' }
+  ];
+  const prices = {};
+
+  const cards = $('#heroPriceCards');
+  cards.innerHTML = COINS.map(c => `
+    <div class="p-3 rounded-2xl card-bg border">
+      <div class="flex justify-between items-start mb-1">
+        <span class="font-extrabold text-xs text-white">${c.icon} ${c.name}</span>
+        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400">${c.sym}</span>
+      </div>
+      <div id="${c.sym}-usd" class="text-base font-black text-white font-mono skeleton">$00000</div>
+      <div id="${c.sym}-czk" class="text-[10px] text-slate-400 font-mono mt-1">&nbsp;</div>
+    </div>`).join('');
+
+  const cvCoin = $('#cvCoin');
+  cvCoin.innerHTML = COINS.map(c => `<option value="${c.id}">${c.sym}</option>`).join('');
+
+  async function fetchPrices() {
+    try {
+      const ids = COINS.map(c => c.id).join(',');
+      const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,czk`);
+      const data = await res.json();
+      COINS.forEach(c => {
+        if(data[c.id]) {
+          prices[c.id] = data[c.id];
+          const u = $('#' + c.sym + '-usd');
+          u.classList.remove('skeleton');
+          u.textContent = '$' + data[c.id].usd.toLocaleString('en-US');
+          $('#' + c.sym + '-czk').textContent = Math.round(data[c.id].czk).toLocaleString('cs-CZ') + ' Kč';
+        }
+      });
+      $('#lastUpdate').textContent = new Date().toLocaleTimeString('cs-CZ', {hour:'2-digit', minute:'2-digit'});
+      updateConverter();
+    } catch(e) { console.log('API Retry...'); }
+  }
+
+  async function fetchPulse() {
+    try {
+      const f = await fetch('https://api.alternative.me/fng/?limit=1').then(r => r.json());
+      if(f && f.data && f.data[0]) $('#fngValue').textContent = f.data[0].value + ' (' + f.data[0].value_classification + ')';
+    } catch(e) { $('#fngValue').textContent = '50 (Neutrální)'; }
+    $('#btcDom').textContent = '54.2 %';
+  }
+
+  // TradingView
+  function loadChart(sym) {
+    if(typeof TradingView === 'undefined') return setTimeout(() => loadChart(sym), 500);
+    $('#tradingview_chart_container').innerHTML = '<div id="tv_sub" class="w-full h-full"></div>';
+    new TradingView.widget({
+      autosize: true, symbol: sym, interval: 'D', timezone: 'Europe/Prague',
+      theme: 'dark', style: '1', locale: 'cs', container_id: 'tv_sub'
+    });
+  }
+  $$('.chart-btn').forEach(b => b.addEventListener('click', () => loadChart(b.dataset.sym)));
+
+  // Audit
+  const checks = $$('.audit-check'), st = $('#auditStatus');
+  function updateAudit() {
+    const n = checks.filter(c => c.checked).length;
+    if(n === 4) { st.textContent = '✅ Nízké riziko (Prošlo)'; st.className = 'text-xl font-black text-emerald-400 mt-2'; }
+    else if(n >= 2) { st.textContent = '⚠️ Střední riziko'; st.className = 'text-xl font-black text-amber-400 mt-2'; }
+    else { st.textContent = '❌ Vysoké riziko'; st.className = 'text-xl font-black text-rose-400 mt-2'; }
+  }
+  checks.forEach(c => c.addEventListener('change', updateAudit));
+
+  // Calculators
+  function calcDCA() {
+    const amt = parseFloat($('#dcaAmount').value) || 0;
+    const yrs = parseFloat($('#dcaYears').value) || 0;
+    const rate = (parseFloat($('#dcaRate').value) || 0) / 100 / 12;
+    const m = yrs * 12; let val = 0;
+    for(let i=0; i<m; i++) val = (val + amt) * (1 + rate);
+    $('#dcaDeposited').textContent = (amt * m).toLocaleString('cs-CZ') + ' Kč';
+    $('#dcaResult').textContent = Math.round(val).toLocaleString('cs-CZ') + ' Kč';
+  }
+  ['dcaAmount', 'dcaYears', 'dcaRate'].forEach(i => $('#'+i).addEventListener('input', calcDCA));
+
+  function calcRM() {
+    const cap = parseFloat($('#rmCapital').value) || 0;
+    const rPct = (parseFloat($('#rmRiskPct').value) || 0) / 100;
+    const slPct = (parseFloat($('#rmSlPct').value) || 0) / 100;
+    const maxLoss = cap * rPct;
+    const pos = slPct > 0 ? maxLoss / slPct : 0;
+    $('#rmMaxLoss').textContent = Math.round(maxLoss).toLocaleString('cs-CZ') + ' Kč';
+    $('#rmPosSize').textContent = Math.round(pos).toLocaleString('cs-CZ') + ' Kč';
+  }
+  ['rmCapital', 'rmRiskPct', 'rmSlPct'].forEach(i => $('#'+i).addEventListener('input', calcRM));
+
+  function updateConverter() {
+    const amt = parseFloat($('#cvAmount').value) || 0;
+    const id = cvCoin.value, dir = $('#cvDir').value, p = prices[id];
+    if(!p) return;
+    const sym = COINS.find(c => c.id === id).sym;
+    if(dir === 'czk2coin') $('#cvResult').textContent = (amt / p.czk).toFixed(6) + ' ' + sym;
+    else $('#cvResult').textContent = Math.round(amt * p.czk).toLocaleString('cs-CZ') + ' Kč';
+  }
+  ['cvAmount', 'cvCoin', 'cvDir'].forEach(i => $('#'+i).addEventListener('input', updateConverter));
+
+  // Glossary
+  const GLOSS = [
+    ['Seed Phrase', '12 až 24 slov sloužících jako jediná záloha k obnovení vaší peněženky.'],
+    ['Rug Pull', 'Podvod, při kterém tvůrce tokenu vybere veškerou likviditu a projekt opustí.'],
+    ['Honeypot', 'Smart kontrakt, který umožňuje token koupit, ale znemožňuje jeho prodej.'],
+    ['FDV', 'Fully Diluted Valuation - teoretická hodnota projektu při uvolnění všech tokenů.'],
+    ['DCA', 'Dollar-Cost Averaging - pravidelné investování fixní částky pro průměrování ceny.'],
+    ['Gas Fee', 'Poplatek sítě platitelný validátorům za zpracování transakce v blockchainu.']
+  ];
+  function renderGlossary(q = '') {
+    const grid = $('#glossaryGrid');
+    const filtered = GLOSS.filter(g => g[0].toLowerCase().includes(q.toLowerCase()) || g[1].toLowerCase().includes(q.toLowerCase()));
+    grid.innerHTML = filtered.map(g => `
+      <div class="card-bg border rounded-2xl p-4">
+        <h4 class="font-bold text-white text-sm mb-1">${g[0]}</h4>
+        <p class="text-xs text-slate-400">${g[1]}</p>
+      </div>`).join('');
+  }
+  $('#glossarySearch').addEventListener('input', e => renderGlossary(e.target.value));
+
+  // Donate QR
+  const DONATE = [
+    { name: 'Bitcoin (BTC)', addr: 'bc1qpz4zxaaqj9xlvnnrehfpqrtj8y6n7s88fsyt3g' },
+    { name: 'Ethereum (ETH)', addr: '0x38d4762A3b5A90F3C7B567ac59B3AF153C62A7a3' },
+    { name: 'Solana (SOL)', addr: '5EpJBH31KrQvejcSxz9JRz3QYi2NxC6yERPF9rCaH6KD' }
+  ];
+  const dl = $('#donateList');
+  dl.innerHTML = DONATE.map(d => `
+    <div class="p-3 rounded-xl sub-card border flex justify-between items-center text-xs">
+      <div><span class="font-bold text-white block">${d.name}</span><code class="text-[10px] text-slate-400 font-mono">${d.addr.substring(0,16)}...</code></div>
+      <button class="qr-btn px-3 py-1.5 rounded-lg bg-slate-800 text-white font-bold" data-addr="${d.addr}" data-name="${d.name}">QR</button>
+    </div>`).join('');
+
+  $$('.qr-btn').forEach(b => b.addEventListener('click', () => {
+    $('#qrModalTitle').textContent = b.dataset.name;
+    $('#qrAddressText').textContent = b.dataset.addr;
+    const q = qrcode(0, 'M'); q.addData(b.dataset.addr); q.make();
+    $('#qrBox').innerHTML = q.createSvgTag(5,0);
+    $('#qrModal').classList.remove('hidden'); $('#qrModal').classList.add('flex');
+  }));
+  $('#qrClose').addEventListener('click', () => $('#qrModal').classList.add('hidden'));
+
+  // Init
+  fetchPrices(); fetchPulse(); renderGlossary(); calcDCA(); calcRM();
+  window.addEventListener('load', () => loadChart('BINANCE:BTCUSDT'));
+})();
+</script>
+</body>
+</html>
