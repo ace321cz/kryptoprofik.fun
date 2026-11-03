@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html class="scroll-smooth dark" lang="cs" data-page="index">
+<head>
+
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>KryptoProfík – Masterclass od A do Z | Kompletní krypto portál</title>
+<meta content="Nezávislý krypto portál v češtině: peněženky, burzy, detekce podvodů, daně v ČR, živé ceny, kalkulačky, slovník a kvíz." name="description"/>
+<meta content="#07090e" name="theme-color"/>
+<meta content="dark" name="color-scheme"/>
+<meta content="index, follow" name="robots"/>
+<meta content="KryptoProfík – Masterclass od A do Z" property="og:title"/>
+<meta content="Peněženky, burzy, anti-scam, daně v ČR, živé ceny a kalkulačky. Zdarma a česky." property="og:description"/>
+<meta content="website" property="og:type"/>
+<link href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E🎓%3C/text%3E%3C/svg%3E" rel="icon"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+
+
+<link href="style.css" rel="stylesheet"/>
+<script defer="" src="https://s3.tradingview.com/tv.js"></script>
+<script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<!--JSONLD-->
+</head>
+<body class="min-h-screen flex flex-col antialiased custom-scrollbar">
+<noscript><div class="bg-amber-500 text-black text-center text-sm font-semibold p-2" id="noscriptMsg">JavaScript is required / Tento web vyžaduje JavaScript.</div></noscript>
+<!-- Reading progress -->
+<div class="fixed top-0 left-0 h-0.5 z-[60] bg-gradient-to-r from-brand-accent via-brand-blue to-brand-purple" id="progressBar" style="width:0%"></div>
+<a class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[70] focus:bg-brand-accent focus:text-white focus:px-4 focus:py-2 focus:rounded-lg" data-i18n="ke940d57a" href="#main">Přeskočit na obsah</a>
+<header class="sticky top-0 z-50 bg-[#07090e]/90 backdrop-blur-md border-b border-brand-border">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+<a aria-label="KryptoProfík – úvod" class="flex items-center gap-3 shrink-0" data-i18n-attr='{"aria-label":"k481e2a03"}' href="index.html">
+<div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-accent via-brand-blue to-brand-purple flex items-center justify-center text-white text-xl shadow-lg shadow-brand-accent/20">
+<i class="fa-solid fa-graduation-cap"></i>
+</div>
+<div>
+<span class="font-black text-lg sm:text-xl tracking-tight text-white block leading-none"><span data-i18n="kc2d1dd21">Krypto</span><span class="text-brand-accent" data-i18n="kcae7904e">Profík</span></span>
+<span class="hidden min-[420px]:block text-[11px] text-slate-400 font-semibold tracking-widest uppercase" data-i18n="k7b434b09">Masterclass od A do Z</span> <span class="text-slate-600 mx-1">·</span> <span class="hidden sm:inline text-[10px] text-slate-500 font-semibold" data-keep data-i18n="kc076b50d">podle Ace321cz</span>
+</div>
+</a>
+<div class="relative hidden md:block w-72">
+<label class="sr-only" data-i18n="kd92f7bee" for="searchInput">Hledat v obsahu</label>
+<input autocomplete="off" class="w-full bg-brand-card/80 border border-brand-border rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-accent transition" data-i18n-attr='{"placeholder":"kfcabaf62"}' id="searchInput" placeholder="Hledat (Seed, Staking, daně, Solana…)" type="search"/>
+<i aria-hidden="true" class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-400"></i>
+</div>
+<nav aria-label="Hlavní navigace" class="hidden lg:flex items-center gap-5 text-sm font-semibold text-slate-300" data-i18n-attr='{"aria-label":"k05143906"}'>
+<a class="nav-link hover:text-brand-accent transition" data-i18n="k952f3754" data-target="start" href="#start">Start</a>
+<a class="nav-link hover:text-brand-accent transition" data-i18n="kf90fae53" data-target="chapters" href="#chapters">Lekce</a>
+<a class="nav-link hover:text-brand-accent transition" data-i18n="k7801375a" data-target="nastroje" href="nastroje.html#nastroje">Nástroje</a>
+<a class="nav-link hover:text-brand-accent transition" data-i18n="ke0e3d604" data-target="kviz" href="nastroje.html#kviz">Kvíz</a>
+<a class="nav-link hover:text-brand-accent transition" data-i18n="k6f0e7ab5" data-target="slovnik" href="glosar.html#slovnik">Slovník</a>
+<a class="nav-link hover:text-brand-accent transition" data-i18n="k03688ba6" data-target="faq" href="glosar.html#faq">FAQ</a>
+<a class="px-4 py-2 rounded-xl bg-brand-amber/10 border border-brand-amber/30 text-brand-amber hover:bg-brand-amber/20 transition font-bold" href="#podpora">
+<i class="fa-solid fa-mug-hot mr-1.5"></i> <span data-i18n="k89b65d1a">Podpořit</span> </a>
+</nav>
+<div class="flex items-center rounded-lg border border-brand-border overflow-hidden text-xs font-bold shrink-0" role="group" aria-label="Language / Jazyk"><button type="button" class="lang-btn px-2.5 py-1.5 transition hover:text-white" data-lang="cs" aria-pressed="true">CZ</button><button type="button" class="lang-btn px-2.5 py-1.5 transition hover:text-white" data-lang="en" aria-pressed="false">EN</button></div>
+      <a href="https://www.instagram.com/cryptoprofik" target="_blank" rel="noopener noreferrer" data-keep class="w-8 h-8 rounded-lg border border-brand-border bg-brand-card/80 text-slate-300 hover:text-white flex items-center justify-center transition shrink-0" aria-label="Instagram KryptoProfík" data-i18n-attr='{"aria-label":"k7373447d"}'><i class="fa-brands fa-instagram"></i></a>
+      <button type="button" class="theme-toggle w-8 h-8 rounded-lg border border-brand-border bg-brand-card/80 text-slate-300 hover:text-white flex items-center justify-center transition shrink-0" aria-label="Přepnout světlý/tmavý režim" aria-pressed="true" data-i18n-attr='{"aria-label":"k61178023"}'><i class="fa-solid fa-sun"></i></button>
+      <button aria-controls="mobileMenu" aria-expanded="false" aria-label="Otevřít menu" class="lg:hidden p-2 text-slate-300 hover:text-white" data-i18n-attr='{"aria-label":"kd2cee4c8"}' id="mobileMenuBtn">
+<i class="fa-solid fa-bars text-xl"></i>
+</button>
+</div>
+<div class="hidden lg:hidden bg-brand-card border-b border-brand-border px-4 py-4 space-y-1 text-sm font-semibold" id="mobileMenu">
+<input aria-label="Hledat téma" class="w-full bg-slate-900 border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white mb-2" data-i18n-attr='{"placeholder":"k8b90a7c4","aria-label":"k7173e2f6"}' id="mobileSearchInput" placeholder="Hledat téma…" type="search"/>
+<a class="block py-2 text-slate-300 hover:text-brand-accent" data-i18n="k1f252132" href="#start">Start – kde začít</a>
+<a class="block py-2 text-slate-300 hover:text-brand-accent" data-i18n="k74553756" href="#chapters">Masterclass lekce</a>
+<a class="block py-2 text-slate-300 hover:text-brand-accent" data-i18n="kb9478766" href="nastroje.html#nastroje">Kalkulačky a převodník</a>
+<a class="block py-2 text-slate-300 hover:text-brand-accent" data-i18n="ke0e3d604" href="nastroje.html#kviz">Kvíz</a>
+<a class="block py-2 text-slate-300 hover:text-brand-accent" data-i18n="k9b3add6f" href="glosar.html#slovnik">Slovník pojmů</a>
+<a class="block py-2 text-slate-300 hover:text-brand-accent" data-i18n="kda6e3830" href="glosar.html#faq">Časté otázky</a>
+<a class="block py-2 text-brand-amber font-bold" href="#podpora"><i class="fa-solid fa-mug-hot mr-2"></i><span data-i18n="k857ca6f8">Podpořit tvorbu</span></a>
+</div>
+</header>
+<div class="sticky top-16 z-40 bg-[#07090e]/90 backdrop-blur-md border-y border-brand-border no-print"><nav aria-label="Stránky webu" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex gap-2 overflow-x-auto no-scrollbar"><a href="zaklady.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n-skip>1 Základy</a><a href="penezenky.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n-skip>2 Peněženky</a><a href="burzy.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n-skip>3 Burzy & DEX</a><a href="anti-scam.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n-skip>4 Anti-scam</a><a href="analyza.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n-skip>5 Analýza</a><a href="strategie.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n-skip>6 Strategie</a><a href="dane.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n-skip>7 Daně v ČR</a><a href="nastroje.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n-skip>Nástroje</a><a href="glosar.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n-skip>Slovník & FAQ</a></nav></div><div id="globalResults" class="hidden bg-[#07090e]/95 border-b border-brand-border no-print"></div>
+<main id="main">
+<section class="relative py-12 sm:py-20 px-4 border-b border-brand-border hero-glow hero-grid" id="hero">
+<div class="max-w-6xl mx-auto text-center relative z-10">
+<div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-accent/10 border border-brand-accent/30 text-brand-accent text-xs font-bold uppercase tracking-widest mb-6">
+<i class="fa-solid fa-award"></i> <span data-i18n="kd956ccec">Od začátečníka po pokročilého • 100% zdarma</span> </div>
+<h1 class="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white mb-6 leading-tight"> <span data-i18n="k8c1e37d6">Krypto encyklopedie a navigátor</span><br/><span class="gradient-text" data-i18n="kb3a83dcb">od první peněženky po chytré investování</span>
+</h1>
+<p class="text-slate-400 text-base sm:text-xl max-w-3xl mx-auto mb-8 leading-relaxed"> <span data-i18n="k76314d73">Kompletní výukový portál v češtině. Naučte se bezpečně držet krypto, nakupovat na burzách i DEX, rozpoznat podvody, spočítat riziko a nezapomenout na</span> <strong class="text-white" data-i18n="k0f1069b1">daně v ČR</strong>.
+      </p>
+<div class="flex flex-wrap items-center justify-center gap-3 mb-10">
+<a class="px-6 py-3 rounded-2xl bg-brand-accent text-white font-bold hover:bg-emerald-400 transition shadow-lg shadow-brand-accent/20" href="#start"><i class="fa-solid fa-play mr-2"></i><span data-i18n="k8e3e3ef2">Začít od nuly</span></a>
+<a class="px-6 py-3 rounded-2xl bg-brand-card border border-brand-border text-slate-200 font-bold hover:border-brand-rose/60 transition" href="#scam-checker"><i class="fa-solid fa-shield-halved mr-2 text-brand-rose"></i><span data-i18n="kd54c7689">Jak poznat podvod</span></a>
+</div>
+<dl class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto mb-10 text-center">
+<div class="rounded-2xl bg-brand-card/70 border border-brand-border px-4 py-3"><dt class="text-2xl font-black text-white">31</dt><dd class="text-xs text-slate-400" data-i18n="kfec5cf90">modulů</dd></div>
+<div class="rounded-2xl bg-brand-card/70 border border-brand-border px-4 py-3"><dt class="text-2xl font-black text-white">11</dt><dd class="text-xs text-slate-400" data-i18n="k352ae712">interaktivní nástroje</dd></div>
+<div class="rounded-2xl bg-brand-card/70 border border-brand-border px-4 py-3"><dt class="text-2xl font-black text-white">31</dt><dd class="text-xs text-slate-400" data-i18n="k101a9691">pojmů ve slovníku</dd></div>
+<div class="rounded-2xl bg-brand-card/70 border border-brand-border px-4 py-3"><dt class="text-2xl font-black text-white">2</dt><dd class="text-xs text-slate-400" data-i18n="k9f58d48d">jazyky (CZ/EN)</dd></div>
+</dl>
+<!-- Market pulse -->
+<div class="flex flex-wrap items-center justify-center gap-3 mb-6 text-xs">
+<div class="px-3 py-1.5 rounded-full bg-brand-card border border-brand-border">
+<span class="text-slate-400" data-i18n="ke838f04d">Fear &amp; Greed:</span>
+<span class="font-bold text-white ml-1" id="fngValue">…</span>
+</div>
+<div class="px-3 py-1.5 rounded-full bg-brand-card border border-brand-border">
+<span class="text-slate-400" data-i18n="k085b9168">BTC dominance:</span>
+<span class="font-bold text-white ml-1" id="btcDom">…</span>
+</div>
+<div class="px-3 py-1.5 rounded-full bg-brand-card border border-brand-border">
+<span class="text-slate-400" data-i18n="kdc251b73">Aktualizace:</span>
+<span class="font-bold text-white ml-1" id="lastUpdate">…</span>
+</div>
+</div>
+<div aria-live="polite" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 max-w-6xl mx-auto text-left" id="heroPriceCards"></div>
+<p class="hidden mt-4 text-xs text-brand-amber" id="priceError"><i class="fa-solid fa-triangle-exclamation mr-1"></i><span data-i18n="k83613a35">Živé ceny se nepodařilo načíst (limit API nebo výpadek připojení). Zkusíme to znovu automaticky.</span></p>
+</div>
+</section><section aria-labelledby="chartTitle" class="max-w-7xl mx-auto px-4 py-8">
+<div class="bg-brand-card border border-brand-border rounded-3xl p-4 sm:p-6 shadow-xl">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+<div>
+<h2 class="text-lg font-bold text-white flex items-center gap-2" id="chartTitle"><i class="fa-solid fa-chart-line text-brand-accent"></i> <span data-i18n="k43840248">Živá technická analýza (TradingView)</span></h2>
+<span class="text-xs text-slate-400" data-i18n="k4b24d67c">Svíčkový graf, indikátory a kreslicí nástroje</span>
+</div>
+<div aria-label="Výběr páru" class="flex gap-2" data-i18n-attr='{"aria-label":"keba19cf6"}' role="group">
+<button class="chart-btn px-3 py-1.5 rounded-xl bg-slate-800 text-xs font-bold transition" data-i18n="k7ba5aa66" data-sym="BINANCE:BTCUSDT">BTC/USDT</button>
+<button class="chart-btn px-3 py-1.5 rounded-xl bg-slate-800 text-xs font-bold transition" data-i18n="k2e729326" data-sym="BINANCE:ETHUSDT">ETH/USDT</button>
+<button class="chart-btn px-3 py-1.5 rounded-xl bg-slate-800 text-xs font-bold transition" data-i18n="k7b46d61a" data-sym="BINANCE:SOLUSDT">SOL/USDT</button>
+</div>
+</div>
+<div class="h-[460px] w-full rounded-2xl overflow-hidden border border-brand-border relative bg-slate-950">
+<div class="w-full h-full" id="tradingview_chart_container"></div>
+<p class="hidden absolute inset-0 flex items-center justify-center text-center text-sm text-slate-400 px-6" data-i18n="ke1a4d94d" id="chartFallback">Graf se nepodařilo načíst (možná blokátor reklam nebo výpadek připojení). Zkuste stránku obnovit.</p>
+</div>
+</div>
+</section><section class="max-w-5xl mx-auto px-4 py-12 scroll-mt-20" id="start">
+<div class="text-center mb-8">
+<span class="text-brand-accent text-xs font-bold uppercase tracking-widest" data-i18n="k7dc92222">Kde začít</span>
+<h2 class="text-3xl sm:text-4xl font-black text-white mt-1" data-i18n="k2c6c2361">Vaše cesta v 7 krocích</h2>
+<p class="text-slate-400 text-sm mt-2" data-i18n="ke51364d6">Odškrtávejte hotové kroky – postup se uloží ve vašem prohlížeči.</p>
+</div>
+<div class="bg-brand-card border border-brand-border rounded-3xl p-5 sm:p-8">
+<div class="flex items-center justify-between mb-3 text-xs font-bold">
+<span class="text-slate-400" data-i18n="k89463015">Splněno</span>
+<span class="text-brand-accent" id="roadmapCount">0 / 7</span>
+</div>
+<div class="h-2 bg-slate-800 rounded-full overflow-hidden mb-6"><div class="h-full bg-brand-accent transition-all" id="roadmapBar" style="width:0%"></div></div>
+<ol class="space-y-2.5 text-sm" id="roadmapList"></ol>
+</div>
+</section><section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 scroll-mt-20" id="chapters"><div class="mb-8 text-center max-w-2xl mx-auto"><span class="text-brand-accent text-xs font-bold uppercase tracking-widest" data-i18n="kmp5e6dc7">Edukační kurikulum</span><h2 class="text-3xl sm:text-5xl font-black text-white mt-1" data-i18n="kmpd62f13">Masterclass: kapitoly</h2><p class="text-slate-400 text-base mt-2" data-i18n-h="kmp1816e52">Obsah je rozdělený do samostatných stránek, aby se v něm dalo snáz hledat. Vyberte si kapitolu níže.</p></div><div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"><a href="zaklady.html" class="group flex flex-col rounded-3xl bg-brand-card border border-brand-border hover:border-brand-accent overflow-hidden transition"><div class="h-28"><svg viewBox="0 0 240 210" class="w-full h-full" role="img" aria-hidden="true"><defs><linearGradient id="g311b6982" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b82f6"/><stop offset="1" stop-color="#06b6d4"/></linearGradient></defs><rect width="240" height="210" rx="24" fill="url(#g311b6982)"/><rect x="40" y="70" width="46" height="46" rx="8" fill="#fff" opacity=".9"/><rect x="100" y="50" width="46" height="46" rx="8" fill="#fff" opacity=".65"/><rect x="100" y="110" width="46" height="46" rx="8" fill="#fff" opacity=".65"/><rect x="160" y="70" width="46" height="46" rx="8" fill="#fff" opacity=".4"/><line x1="86" y1="93" x2="100" y2="73" stroke="#fff" stroke-width="3"/><line x1="86" y1="93" x2="100" y2="133" stroke="#fff" stroke-width="3"/><line x1="146" y1="73" x2="160" y2="93" stroke="#fff" stroke-width="3"/><line x1="146" y1="133" x2="160" y2="93" stroke="#fff" stroke-width="3"/></svg></div><div class="p-5 flex-1 flex flex-col"><span class="text-[11px] font-bold text-brand-accent uppercase tracking-widest">1</span><h3 class="font-black text-white text-lg mt-1 group-hover:text-brand-accent transition" data-i18n="kmp41508ac">Základy</h3><span class="text-xs text-slate-400 mt-auto pt-3">13 lekcí</span></div></a><a href="penezenky.html" class="group flex flex-col rounded-3xl bg-brand-card border border-brand-border hover:border-brand-accent overflow-hidden transition"><div class="h-28"><svg viewBox="0 0 240 210" class="w-full h-full" role="img" aria-hidden="true"><defs><linearGradient id="gd68efdab" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#06b6d4"/><stop offset="1" stop-color="#3b82f6"/></linearGradient></defs><rect width="240" height="210" rx="24" fill="url(#gd68efdab)"/><rect x="40" y="60" width="150" height="90" rx="16" fill="#fff" opacity=".85"/><rect x="40" y="60" width="150" height="34" rx="16" fill="#fff" opacity=".4"/><circle cx="168" cy="105" r="10" fill="#06b6d4"/></svg></div><div class="p-5 flex-1 flex flex-col"><span class="text-[11px] font-bold text-brand-accent uppercase tracking-widest">2</span><h3 class="font-black text-white text-lg mt-1 group-hover:text-brand-accent transition" data-i18n="kmp7998bc0">Peněženky</h3><span class="text-xs text-slate-400 mt-auto pt-3">1 lekce</span></div></a><a href="burzy.html" class="group flex flex-col rounded-3xl bg-brand-card border border-brand-border hover:border-brand-accent overflow-hidden transition"><div class="h-28"><svg viewBox="0 0 240 210" class="w-full h-full" role="img" aria-hidden="true"><defs><linearGradient id="gab5eb590" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a855f7"/><stop offset="1" stop-color="#6366f1"/></linearGradient></defs><rect width="240" height="210" rx="24" fill="url(#gab5eb590)"/><path d="M50 80 h90 l-18 -18" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M190 130 h-90 l18 18" stroke="#fff" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M50 80 h90 l-18 18" stroke="#fff" stroke-width="6" fill="none" opacity=".5" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="p-5 flex-1 flex flex-col"><span class="text-[11px] font-bold text-brand-accent uppercase tracking-widest">3</span><h3 class="font-black text-white text-lg mt-1 group-hover:text-brand-accent transition" data-i18n="kmp4f0afbf">Burzy & DEX</h3><span class="text-xs text-slate-400 mt-auto pt-3">1 lekce</span></div></a><a href="anti-scam.html" class="group flex flex-col rounded-3xl bg-brand-card border border-brand-border hover:border-brand-accent overflow-hidden transition"><div class="h-28"><svg viewBox="0 0 240 210" class="w-full h-full" role="img" aria-hidden="true"><defs><linearGradient id="g78f3af19" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f43f5e"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs><rect width="240" height="210" rx="24" fill="url(#g78f3af19)"/><path d="M120 40 l55 20 v40 c0 40 -25 65 -55 80 c-30 -15 -55 -40 -55 -80 v-40 z" fill="#fff" opacity=".9"/><path d="M100 105 l15 15 l30 -32" stroke="#ec4899" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="p-5 flex-1 flex flex-col"><span class="text-[11px] font-bold text-brand-accent uppercase tracking-widest">4</span><h3 class="font-black text-white text-lg mt-1 group-hover:text-brand-accent transition" data-i18n="kmp8baad7d">Anti-scam</h3><span class="text-xs text-slate-400 mt-auto pt-3">10 lekcí</span></div></a><a href="analyza.html" class="group flex flex-col rounded-3xl bg-brand-card border border-brand-border hover:border-brand-accent overflow-hidden transition"><div class="h-28"><svg viewBox="0 0 240 210" class="w-full h-full" role="img" aria-hidden="true"><defs><linearGradient id="g10b039c7" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1fd98b"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient></defs><rect width="240" height="210" rx="24" fill="url(#g10b039c7)"/><rect x="45" y="110" width="20" height="40" fill="#fff" opacity=".6"/><rect x="80" y="85" width="20" height="65" fill="#fff" opacity=".8"/><rect x="115" y="60" width="20" height="90" fill="#fff"/><rect x="150" y="95" width="20" height="55" fill="#fff" opacity=".7"/><polyline points="45,100 90,70 125,55 170,80" fill="none" stroke="#0ea5e9" stroke-width="3"/></svg></div><div class="p-5 flex-1 flex flex-col"><span class="text-[11px] font-bold text-brand-accent uppercase tracking-widest">5</span><h3 class="font-black text-white text-lg mt-1 group-hover:text-brand-accent transition" data-i18n="kmp94e844f">Analýza</h3><span class="text-xs text-slate-400 mt-auto pt-3">3 lekcí</span></div></a><a href="strategie.html" class="group flex flex-col rounded-3xl bg-brand-card border border-brand-border hover:border-brand-accent overflow-hidden transition"><div class="h-28"><svg viewBox="0 0 240 210" class="w-full h-full" role="img" aria-hidden="true"><defs><linearGradient id="g8d3e6a9e" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#f97316"/></linearGradient></defs><rect width="240" height="210" rx="24" fill="url(#g8d3e6a9e)"/><polygon points="120,40 190,80 190,130 120,170 50,130 50,80" fill="#fff" opacity=".2"/><polygon points="120,65 165,90 165,120 120,145 75,120 75,90" fill="#fff" opacity=".9"/><circle cx="120" cy="105" r="14" fill="#f97316"/></svg></div><div class="p-5 flex-1 flex flex-col"><span class="text-[11px] font-bold text-brand-accent uppercase tracking-widest">6</span><h3 class="font-black text-white text-lg mt-1 group-hover:text-brand-accent transition" data-i18n="kmp3dc9ffe">Strategie</h3><span class="text-xs text-slate-400 mt-auto pt-3">2 lekcí</span></div></a><a href="dane.html" class="group flex flex-col rounded-3xl bg-brand-card border border-brand-border hover:border-brand-accent overflow-hidden transition"><div class="h-28"><svg viewBox="0 0 240 210" class="w-full h-full" role="img" aria-hidden="true"><defs><linearGradient id="g7caf4fad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fb923c"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs><rect width="240" height="210" rx="24" fill="url(#g7caf4fad)"/><rect x="65" y="40" width="90" height="120" rx="10" fill="#fff" opacity=".9"/><line x1="80" y1="65" x2="140" y2="65" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/><line x1="80" y1="85" x2="140" y2="85" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" opacity=".6"/><line x1="80" y1="105" x2="120" y2="105" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" opacity=".6"/><circle cx="150" cy="135" r="22" fill="#f59e0b"/><text x="150" y="142" font-size="20" text-anchor="middle" fill="#fff" font-family="sans-serif" font-weight="bold">Kč</text></svg></div><div class="p-5 flex-1 flex flex-col"><span class="text-[11px] font-bold text-brand-accent uppercase tracking-widest">7</span><h3 class="font-black text-white text-lg mt-1 group-hover:text-brand-accent transition" data-i18n="kmp432664">Daně v ČR</h3><span class="text-xs text-slate-400 mt-auto pt-3">1 lekce</span></div></a><a href="nastroje.html" class="group flex flex-col rounded-3xl bg-brand-card border border-brand-border hover:border-brand-accent overflow-hidden transition"><div class="h-28"><svg viewBox="0 0 240 210" class="w-full h-full" role="img" aria-hidden="true"><defs><linearGradient id="gd5ad50c8" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1fd98b"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient></defs><rect width="240" height="210" rx="24" fill="url(#gd5ad50c8)"/><circle cx="120" cy="105" r="46" fill="none" stroke="#fff" stroke-width="10" opacity=".85"/><circle cx="120" cy="105" r="16" fill="#fff"/><rect x="113" y="35" width="14" height="22" rx="4" fill="#fff"/><rect x="113" y="153" width="14" height="22" rx="4" fill="#fff"/><rect x="35" y="98" width="22" height="14" rx="4" fill="#fff"/><rect x="183" y="98" width="22" height="14" rx="4" fill="#fff"/></svg></div><div class="p-5 flex-1 flex flex-col"><span class="text-[11px] font-bold text-brand-accent uppercase tracking-widest">&nbsp;</span><h3 class="font-black text-white text-lg mt-1 group-hover:text-brand-accent transition" data-i18n="kmpd1ff7f8">Nástroje & kalkulačky</h3><span class="text-xs text-slate-400 mt-auto pt-3">&nbsp;</span></div></a><a href="glosar.html" class="group flex flex-col rounded-3xl bg-brand-card border border-brand-border hover:border-brand-accent overflow-hidden transition"><div class="h-28"><svg viewBox="0 0 240 210" class="w-full h-full" role="img" aria-hidden="true"><defs><linearGradient id="g60d45514" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1fd98b"/><stop offset="1" stop-color="#0ea5e9"/></linearGradient></defs><rect width="240" height="210" rx="24" fill="url(#g60d45514)"/><rect x="55" y="55" width="130" height="80" rx="14" fill="#fff" opacity=".9"/><polygon points="80,135 80,160 105,135" fill="#fff" opacity=".9"/><line x1="75" y1="80" x2="165" y2="80" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round"/><line x1="75" y1="100" x2="145" y2="100" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round" opacity=".6"/><line x1="75" y1="118" x2="125" y2="118" stroke="#0ea5e9" stroke-width="5" stroke-linecap="round" opacity=".4"/></svg></div><div class="p-5 flex-1 flex flex-col"><span class="text-[11px] font-bold text-brand-accent uppercase tracking-widest">&nbsp;</span><h3 class="font-black text-white text-lg mt-1 group-hover:text-brand-accent transition" data-i18n="kmpa1a3c83">Slovník & FAQ</h3><span class="text-xs text-slate-400 mt-auto pt-3">&nbsp;</span></div></a></div></section>
+</main>
+<button aria-label="Nahoru" class="hidden fixed bottom-5 right-5 z-40 w-11 h-11 rounded-full bg-brand-accent text-white shadow-lg hover:bg-emerald-400 transition" data-i18n-attr='{"aria-label":"k3559ade5"}' id="toTop"><i class="fa-solid fa-arrow-up"></i></button>
+<section class="max-w-5xl mx-auto px-4 py-16 scroll-mt-20" id="podpora">
+<div class="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-brand-card via-slate-900 to-brand-card border-2 border-brand-amber/40 shadow-2xl text-center">
+<div class="w-16 h-16 rounded-2xl bg-brand-amber/20 border border-brand-amber/40 text-brand-amber flex items-center justify-center text-3xl mx-auto mb-6"><i class="fa-solid fa-mug-hot"></i></div>
+<h2 class="text-3xl sm:text-5xl font-black text-white mb-4" data-i18n="k2c90ddde">Pomohl vám tento portál? Podpořte autora ☕</h2>
+<p class="text-slate-300 text-base max-w-2xl mx-auto mb-8 leading-relaxed" data-i18n="kebda5b57">Portál je zdarma, bez placených kurzů a affiliate spamu. Pokud vám pomohl, můžete poslat dobrovolné dýško. Před odesláním si vždy porovnejte adresu s QR kódem a pošlete nejdřív malý testovací obnos.</p>
+<div class="space-y-4 max-w-2xl mx-auto text-left" id="donateList"></div>
+</div>
+</section><div aria-labelledby="qrModalTitle" aria-modal="true" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[80] hidden items-center justify-center p-4" id="qrModal" role="dialog">
+<div class="bg-brand-card border border-brand-border rounded-3xl p-6 max-w-sm w-full text-center relative shadow-2xl">
+<button aria-label="Zavřít" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl" data-i18n-attr='{"aria-label":"kae2883a5"}' id="qrClose"><i class="fa-solid fa-xmark"></i></button>
+<h3 class="font-bold text-white text-lg mb-2" id="qrModalTitle">QR kód</h3>
+<div class="bg-white p-3 rounded-2xl w-56 h-56 mx-auto my-3 shadow-inner"><div id="qrBox"></div></div>
+<p class="text-xs font-mono text-slate-400 break-all px-2" id="qrAddressText"></p>
+</div>
+</div><footer class="border-t border-brand-border bg-brand-card mt-auto">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid gap-10 sm:grid-cols-2 lg:grid-cols-5 text-sm">
+<div class="space-y-3">
+<div class="flex items-center gap-2 font-black text-white text-lg">
+<span class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-accent via-brand-blue to-brand-purple flex items-center justify-center text-white text-base"><i class="fa-solid fa-graduation-cap"></i></span>
+<span><span data-i18n="kc2d1dd21">Krypto</span><span class="text-brand-accent" data-i18n="kcae7904e">Profík</span></span>
+</div>
+<p class="text-slate-400 text-xs leading-relaxed" data-i18n="kaf92a5a2">Nezávislý vzdělávací portál o kryptoměnách v češtině.</p>
+<p class="text-slate-400 text-xs" data-i18n="kf7806ad2">Poslední aktualizace: listopad 2026</p>
+</div>
+<nav aria-label="Navigace" data-i18n-attr='{"aria-label":"k9d625ccd"}'>
+<h2 class="font-bold text-white mb-3" data-i18n="k9d625ccd">Navigace</h2>
+<ul class="space-y-2 text-slate-400">
+<li><a class="hover:text-brand-accent transition" data-i18n="k952f3754" href="#start">Start</a></li>
+<li><a class="hover:text-brand-accent transition" data-i18n="kf90fae53" href="#chapters">Lekce</a></li>
+<li><a class="hover:text-brand-accent transition" data-i18n="k7801375a" href="nastroje.html#nastroje">Nástroje</a></li>
+<li><a class="hover:text-brand-accent transition" data-i18n="ke0e3d604" href="nastroje.html#kviz">Kvíz</a></li>
+<li><a class="hover:text-brand-accent transition" data-i18n="k6f0e7ab5" href="glosar.html#slovnik">Slovník</a></li>
+<li><a class="hover:text-brand-accent transition" data-i18n="k03688ba6" href="glosar.html#faq">FAQ</a></li>
+</ul>
+</nav>
+<div>
+<h2 class="font-bold text-white mb-3" data-i18n="k0863756d">Bezpečnostní nástroje</h2>
+<ul class="space-y-2 text-slate-400">
+<li><a class="hover:text-brand-accent transition" data-i18n="k27a09314" href="https://tokensniffer.com" rel="noopener noreferrer" target="_blank">TokenSniffer</a></li>
+<li><a class="hover:text-brand-accent transition" data-i18n="k1b858a3f" href="https://rugcheck.xyz" rel="noopener noreferrer" target="_blank">RugCheck (SOL)</a></li>
+<li><a class="hover:text-brand-accent transition" data-i18n="kab035c7a" href="https://gopluslabs.io" rel="noopener noreferrer" target="_blank">GoPlus Security</a></li>
+<li><a class="hover:text-brand-accent transition" data-i18n="kdde5d98d" href="https://revoke.cash" rel="noopener noreferrer" target="_blank">Revoke.cash</a></li>
+</ul>
+</div>
+<div>
+<h2 class="font-bold text-white mb-3" data-i18n="k2c139c0a">Zdroje a regulace</h2>
+<ul class="space-y-2 text-slate-400">
+<li><a class="hover:text-brand-accent transition" data-i18n="kcd7cc690" href="https://www.financnisprava.gov.cz" rel="noopener noreferrer" target="_blank">Finanční správa ČR</a></li>
+<li><a class="hover:text-brand-accent transition" data-i18n="k01252f3e" href="https://www.esma.europa.eu" rel="noopener noreferrer" target="_blank">ESMA (MiCA)</a></li>
+<li><a class="hover:text-brand-accent transition" data-i18n="k893d3cf9" href="https://www.coingecko.com" rel="noopener noreferrer" target="_blank">CoinGecko</a></li>
+<li><a class="hover:text-brand-accent transition" data-i18n="k31fe3a89" href="https://www.tradingview.com" rel="noopener noreferrer" target="_blank">TradingView</a></li>
+</ul>
+</div>
+</div>
+<div><h2 class="font-bold text-white mb-3" data-i18n="k3325ddfa">Autor a provozovatel</h2><ul class="space-y-2 text-slate-400"><li class="font-semibold text-slate-200" data-keep>Ace321cz</li><li><a class="hover:text-brand-accent transition" href="mailto:ace321cz@gmail.com" data-keep>ace321cz@gmail.com</a></li><li><a class="hover:text-brand-accent transition inline-flex items-center gap-1.5" href="https://www.instagram.com/cryptoprofik" target="_blank" rel="noopener noreferrer" data-keep><i class="fa-brands fa-instagram"></i> @cryptoprofik</a></li><li><a class="hover:text-brand-accent transition" data-i18n="kb01f9464" href="zaklady.html#about-project">O projektu</a></li><li><a class="hover:text-brand-accent transition" data-i18n="kf034422d" href="mailto:ace321cz@gmail.com?subject=KryptoProfik%20-%20zpetna%20vazba">Nahlásit chybu / zpětná vazba</a></li></ul></div>
+
+<div class="border-t border-brand-border">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+<a href="https://www.instagram.com/cryptoprofik" target="_blank" rel="noopener noreferrer" data-keep
+   class="flex flex-col sm:flex-row items-center gap-5 p-6 rounded-3xl bg-gradient-to-r from-[#feda75]/10 via-[#d62976]/10 to-[#4f5bd5]/10 border border-brand-border hover:border-brand-accent transition group">
+<span class="w-14 h-14 shrink-0 rounded-2xl bg-gradient-to-tr from-[#feda75] via-[#d62976] to-[#4f5bd5] flex items-center justify-center text-white text-2xl">
+<i class="fa-brands fa-instagram"></i></span>
+<div class="min-w-0 text-center sm:text-left">
+<div class="font-black text-fg text-lg" data-i18n="k0794f580">Sledujte KryptoProfík na Instagramu</div>
+<div class="text-sm text-slate-400" data-i18n="ka0a761af">Krátké tipy, upozornění na nové moduly a novinky z krypto světa — přímo ve vašem feedu.</div>
+</div>
+<span class="sm:ml-auto shrink-0 px-5 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold group-hover:bg-emerald-400 transition" data-i18n="k0c5e9942">Sledovat @cryptoprofik</span>
+</a>
+</div>
+</div>
+<div class="border-t border-brand-border">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row gap-4 items-start justify-between text-xs text-slate-400">
+<div class="font-semibold text-slate-300 shrink-0" data-i18n="ke95fdd2a">KryptoProfík – Masterclass od A do Z © 2026</div>
+<p class="max-w-3xl leading-relaxed"><strong class="text-slate-300" data-i18n="kd7a40ca8">Vyloučení odpovědnosti:</strong> <span data-i18n="kb6ecf3c6">Informace slouží pouze k edukačním účelům a nejsou finančním, investičním ani daňovým poradenstvím. Obchodování s kryptoměnami je vysoce rizikové a můžete přijít o celou investici. Ceny jsou orientační (zdroj CoinGecko).</span></p>
+</div>
+</div>
+</footer>
+<script src="i18n-data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
