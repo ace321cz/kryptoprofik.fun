@@ -535,13 +535,13 @@
     const dl = $('#donateList'); if (!dl) return; dl.innerHTML = '';
     DONATE.forEach(d => {
       const row = document.createElement('div');
-      row.className = 'p-4 rounded-2xl bg-slate-950 border border-brand-border flex flex-col sm:flex-row items-center justify-between gap-4';
+      row.className = 'p-4 rounded-2xl bg-slate-950 border border-brand-border flex flex-col sm:flex-row sm:items-center justify-between gap-4';
       row.innerHTML = `
         <div class="flex items-center gap-3 overflow-hidden w-full">
           <span class="w-10 h-10 rounded-xl ${d.cls} font-bold flex items-center justify-center shrink-0 text-xl">${d.icon}</span>
           <div class="min-w-0">
             <div class="text-[11px] font-bold text-slate-400 uppercase">${d.name}</div>
-            <code class="text-xs text-white font-mono block truncate" title="${d.addr}">${d.addr}</code>
+            <code class="text-xs text-white font-mono block break-all" title="${d.addr}">${d.addr}</code>
           </div>
         </div>
         <div class="flex gap-2 w-full sm:w-auto shrink-0">
