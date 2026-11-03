@@ -55,3 +55,5 @@
     [data-theme="light"] .skeleton { background: linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%); background-size: 200% 100%; }
     @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto !important; } .skeleton { animation: none; } * { transition: none !important; } }
   
+html,body{max-width:100%;overflow-x:hidden}
+code,.font-mono{overflow-wrap:anywhere}
