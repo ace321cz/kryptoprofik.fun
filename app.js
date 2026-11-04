@@ -1200,6 +1200,88 @@
   new MutationObserver(() => { const si2 = document.getElementById('searchInput'); if (si2 && si2.value) renderGlobalResults(si2.value.toLowerCase().trim()); })
     .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
+  /* ================= Cookie consent + (opt-in) analytics ================= */
+  (function cookieConsent() {
+    const KEY = 'kp_cookie_consent';
+    // TODO: nahraď vlastním Measurement ID z analytics.google.com (GA4) -- dokud
+    // zůstane placeholder s "XXXX", žádný analytický skript se nenačte.
+    const GA_ID = 'G-XXXXXXXXXX';
+    function loadGA() {
+      if (window.__kpGaLoaded || !GA_ID || GA_ID.indexOf('XXXX') !== -1) return;
+      window.__kpGaLoaded = true;
+      const s = document.createElement('script');
+      s.async = true; s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+      document.head.appendChild(s);
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { window.dataLayer.push(arguments); }
+      window.gtag = gtag;
+      gtag('js', new Date());
+      gtag('config', GA_ID, { anonymize_ip: true });
+    }
+    let saved = null;
+    try { saved = localStorage.getItem(KEY); } catch (e) {}
+    if (saved === 'accepted') { loadGA(); return; }
+    if (saved === 'rejected') return;
+    const bar = document.createElement('div');
+    bar.id = 'cookieBar';
+    bar.className = 'fixed bottom-0 inset-x-0 z-[80] bg-brand-card border-t border-brand-border p-4 sm:p-5 no-print';
+    const isEn = document.documentElement.lang === 'en';
+    const msg = isEn
+      ? 'We use cookies only for basic, anonymous visit statistics. No ads, no personal data sold.'
+      : 'Používáme cookies jen pro základní, anonymní statistiku návštěvnosti. Žádné reklamy, žádný prodej osobních dat.';
+    const accept = isEn ? 'Accept' : 'Přijmout';
+    const reject = isEn ? 'Reject' : 'Odmítnout';
+    bar.innerHTML = '<div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center gap-3 sm:gap-6">' +
+      '<p class="text-xs sm:text-sm text-slate-300 flex-1">🍪 ' + msg + '</p>' +
+      '<div class="flex gap-2 shrink-0 w-full sm:w-auto">' +
+      '<button id="cookieReject" type="button" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition">' + reject + '</button>' +
+      '<button id="cookieAccept" type="button" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand-accent hover:opacity-90 text-xs font-bold text-white transition">' + accept + '</button>' +
+      '</div></div>';
+    document.body.appendChild(bar);
+    document.getElementById('cookieAccept').addEventListener('click', () => {
+      try { localStorage.setItem(KEY, 'accepted'); } catch (e) {}
+      loadGA(); bar.remove();
+    });
+    document.getElementById('cookieReject').addEventListener('click', () => {
+      try { localStorage.setItem(KEY, 'rejected'); } catch (e) {}
+      bar.remove();
+    });
+  })();
+
+  /* ================= Per-page share buttons ================= */
+  (function shareButtons() {
+    const mount = document.getElementById('shareBtns');
+    if (!mount) return;
+    const url = encodeURIComponent(location.href);
+    const title = encodeURIComponent(document.title);
+    const items = [
+      { icon: 'fa-brands fa-facebook', href: 'https://www.facebook.com/sharer/sharer.php?u=' + url, label: 'Facebook' },
+      { icon: 'fa-brands fa-x-twitter', href: 'https://twitter.com/intent/tweet?url=' + url + '&text=' + title, label: 'X' },
+      { icon: 'fa-brands fa-whatsapp', href: 'https://wa.me/?text=' + title + '%20' + url, label: 'WhatsApp' },
+    ];
+    mount.innerHTML = items.map(it =>
+      '<a href="' + it.href + '" target="_blank" rel="noopener noreferrer" aria-label="' + it.label + '" ' +
+      'class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-brand-accent flex items-center justify-center text-slate-300 hover:text-white transition"><i class="' + it.icon + '"></i></a>'
+    ).join('') +
+      '<button id="shareCopy" type="button" aria-label="Copy link" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-brand-accent flex items-center justify-center text-slate-300 hover:text-white transition"><i class="fa-solid fa-link"></i></button>';
+    const copyBtn = document.getElementById('shareCopy');
+    copyBtn.addEventListener('click', () => {
+      const done = () => { copyBtn.innerHTML = '<i class="fa-solid fa-check"></i>'; setTimeout(() => { copyBtn.innerHTML = '<i class="fa-solid fa-link"></i>'; }, 1500); };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(location.href).then(done).catch(() => {});
+      else {
+        const t = document.createElement('textarea'); t.value = location.href; t.style.position = 'fixed'; t.style.opacity = '0';
+        document.body.appendChild(t); t.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(t); done();
+      }
+    });
+  })();
+
+  /* ================= PWA: service worker registration ================= */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+  }
+
 })();
 
   

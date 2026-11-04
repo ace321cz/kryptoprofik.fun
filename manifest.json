@@ -1,0 +1,17 @@
+{
+  "name": "KryptoProf\u00edk \u2013 Masterclass od A do Z",
+  "short_name": "KryptoProf\u00edk",
+  "description": "Nez\u00e1visl\u00fd krypto port\u00e1l v \u010de\u0161tin\u011b: pen\u011b\u017eenky, burzy, anti-scam, dan\u011b v \u010cR, kalkula\u010dky a slovn\u00edk.",
+  "start_url": "index.html",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#07090e",
+  "theme_color": "#07090e",
+  "lang": "cs",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

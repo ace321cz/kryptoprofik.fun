@@ -1,59 +1,13 @@
-﻿<?xml version="1.0" encoding="UTF-8"?>
-		<!--	created with www.mysitemapgenerator.com	-->
-		<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
-<url>
-	<loc>https://kryptoprofik.fun/</loc>
-	<lastmod>2026-11-03T21:02:53+01:00</lastmod>
-	<priority>1.0</priority>
-</url>
-<url>
-	<loc>https://kryptoprofik.fun/index.html</loc>
-	<lastmod>2026-11-03T21:02:53+01:00</lastmod>
-	<priority>1.0</priority>
-</url>
-<url>
-	<loc>https://kryptoprofik.fun/nastroje.html</loc>
-	<lastmod>2026-11-03T21:02:53+01:00</lastmod>
-	<priority>1.0</priority>
-</url>
-<url>
-	<loc>https://kryptoprofik.fun/glosar.html</loc>
-	<lastmod>2026-11-03T21:02:53+01:00</lastmod>
-	<priority>1.0</priority>
-</url>
-<url>
-	<loc>https://kryptoprofik.fun/zaklady.html</loc>
-	<lastmod>2026-11-03T21:02:53+01:00</lastmod>
-	<priority>1.0</priority>
-</url>
-<url>
-	<loc>https://kryptoprofik.fun/penezenky.html</loc>
-	<lastmod>2026-11-03T21:02:53+01:00</lastmod>
-	<priority>1.0</priority>
-</url>
-<url>
-	<loc>https://kryptoprofik.fun/burzy.html</loc>
-	<lastmod>2026-11-03T21:02:53+01:00</lastmod>
-	<priority>1.0</priority>
-</url>
-<url>
-	<loc>https://kryptoprofik.fun/anti-scam.html</loc>
-	<lastmod>2026-11-03T21:02:53+01:00</lastmod>
-	<priority>1.0</priority>
-</url>
-<url>
-	<loc>https://kryptoprofik.fun/analyza.html</loc>
-	<lastmod>2026-11-03T21:02:53+01:00</lastmod>
-	<priority>1.0</priority>
-</url>
-<url>
-	<loc>https://kryptoprofik.fun/strategie.html</loc>
-	<lastmod>2026-11-03T21:02:53+01:00</lastmod>
-	<priority>1.0</priority>
-</url>
-<url>
-	<loc>https://kryptoprofik.fun/dane.html</loc>
-	<lastmod>2026-11-03T21:02:53+01:00</lastmod>
-	<priority>1.0</priority>
-</url>
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://kryptoprofik.fun/</loc><lastmod>2026-11-04</lastmod><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://kryptoprofik.fun/zaklady.html</loc><lastmod>2026-11-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://kryptoprofik.fun/penezenky.html</loc><lastmod>2026-11-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://kryptoprofik.fun/burzy.html</loc><lastmod>2026-11-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://kryptoprofik.fun/anti-scam.html</loc><lastmod>2026-11-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://kryptoprofik.fun/analyza.html</loc><lastmod>2026-11-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://kryptoprofik.fun/strategie.html</loc><lastmod>2026-11-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://kryptoprofik.fun/dane.html</loc><lastmod>2026-11-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://kryptoprofik.fun/nastroje.html</loc><lastmod>2026-11-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://kryptoprofik.fun/glosar.html</loc><lastmod>2026-11-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
 </urlset>
