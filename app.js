@@ -1203,9 +1203,7 @@
   /* ================= Cookie consent + (opt-in) analytics ================= */
   (function cookieConsent() {
     const KEY = 'kp_cookie_consent';
-    // TODO: nahraď vlastním Measurement ID z analytics.google.com (GA4) -- dokud
-    // zůstane placeholder s "XXXX", žádný analytický skript se nenačte.
-    const GA_ID = 'G-XXXXXXXXXX';
+    const GA_ID = 'G-EF0SMSE5ER';
     function loadGA() {
       if (window.__kpGaLoaded || !GA_ID || GA_ID.indexOf('XXXX') !== -1) return;
       window.__kpGaLoaded = true;
@@ -1256,7 +1254,7 @@
     const title = encodeURIComponent(document.title);
     const items = [
       { icon: 'fa-brands fa-facebook', href: 'https://www.facebook.com/sharer/sharer.php?u=' + url, label: 'Facebook' },
-      { icon: 'fa-brands fa-x-twitter', href: 'https://twitter.com/intent/tweet?url=' + url + '&text=' + title, label: 'X' },
+      { icon: 'fa-brands fa-twitter', href: 'https://twitter.com/intent/tweet?url=' + url + '&text=' + title, label: 'X' },
       { icon: 'fa-brands fa-whatsapp', href: 'https://wa.me/?text=' + title + '%20' + url, label: 'WhatsApp' },
     ];
     mount.innerHTML = items.map(it =>
