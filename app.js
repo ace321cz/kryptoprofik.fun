@@ -1227,10 +1227,13 @@
     const msg = isEn
       ? 'We use cookies only for basic, anonymous visit statistics. No ads, no personal data sold.'
       : 'Používáme cookies jen pro základní, anonymní statistiku návštěvnosti. Žádné reklamy, žádný prodej osobních dat.';
+    const moreInfoHref = (CURRENT_PAGE === 'soukromi' ? '#soukromi' : 'soukromi.html');
+    const moreInfo = isEn ? 'More info' : 'Více info';
     const accept = isEn ? 'Accept' : 'Přijmout';
     const reject = isEn ? 'Reject' : 'Odmítnout';
     bar.innerHTML = '<div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center gap-3 sm:gap-6">' +
-      '<p class="text-xs sm:text-sm text-slate-300 flex-1">🍪 ' + msg + '</p>' +
+      '<p class="text-xs sm:text-sm text-slate-300 flex-1">🍪 ' + msg +
+      ' <a href="' + moreInfoHref + '" class="underline hover:text-white">' + moreInfo + '</a></p>' +
       '<div class="flex gap-2 shrink-0 w-full sm:w-auto">' +
       '<button id="cookieReject" type="button" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition">' + reject + '</button>' +
       '<button id="cookieAccept" type="button" class="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-brand-accent hover:opacity-90 text-xs font-bold text-white transition">' + accept + '</button>' +
