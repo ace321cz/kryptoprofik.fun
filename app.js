@@ -1283,6 +1283,74 @@
     window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
   }
 
+  /* ================= Continue reading tracker (index.html banner) ================= */
+  (function continueReading() {
+    const KEY = 'kp_last_seen';
+    const container = document.getElementById('modulesContainer');
+    if (container && 'IntersectionObserver' in window) {
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(en => {
+          if (!en.isIntersecting) return;
+          const id = en.target.id;
+          if (!id) return;
+          try { localStorage.setItem(KEY, JSON.stringify({ id: id, page: CURRENT_PAGE })); } catch (e) {}
+        });
+      }, { rootMargin: '-20% 0px -60% 0px', threshold: 0 });
+      Array.from(container.children).forEach(a => { if (a.id) obs.observe(a); });
+    }
+
+    const banner = document.getElementById('continueBanner');
+    if (!banner) return;
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+    if (!saved || !saved.id) return;
+    const entry = SITE_INDEX.find(x => x.id === saved.id);
+    const targetPage = entry ? entry.page : saved.page;
+    if (!targetPage) return;
+    const isEn = document.documentElement.lang === 'en';
+    const title = entry ? (isEn ? entry.en : entry.cs) : saved.id;
+    const label = isEn ? 'Continue reading:' : 'Pokračovat v lekci:';
+    banner.innerHTML = '<a href="' + targetPage + '.html#' + saved.id + '" class="flex items-center gap-3 px-5 py-4 rounded-2xl bg-brand-card border border-brand-accent/40 hover:border-brand-accent transition group">' +
+      '<i class="fa-solid fa-arrow-rotate-right text-brand-accent shrink-0"></i>' +
+      '<span class="text-sm text-slate-300 min-w-0"><b class="text-white">' + label + '</b> ' + title + '</span>' +
+      '<i class="fa-solid fa-arrow-right ml-auto text-slate-500 group-hover:text-brand-accent transition shrink-0"></i></a>';
+    banner.classList.remove('hidden');
+  })();
+
+  /* ================= Module feedback (thumbs up/down) ================= */
+  (function moduleFeedback() {
+    const KEY = 'kp_feedback';
+    let voted = {};
+    try { voted = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) {}
+    const upCls = ['bg-emerald-500/20', 'text-emerald-400'];
+    const downCls = ['bg-rose-500/20', 'text-rose-400'];
+    document.querySelectorAll('.kp-fb-btn').forEach(btn => {
+      const mod = btn.dataset.mod;
+      if (voted[mod] && voted[mod] === btn.dataset.fb) {
+        btn.classList.add(...(btn.dataset.fb === 'up' ? upCls : downCls));
+      }
+      if (voted[mod]) btn.disabled = true;
+    });
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.kp-fb-btn');
+      if (!btn) return;
+      const mod = btn.dataset.mod, vote = btn.dataset.fb;
+      if (!mod || voted[mod]) return;
+      voted[mod] = vote;
+      try { localStorage.setItem(KEY, JSON.stringify(voted)); } catch (e2) {}
+      if (window.gtag) window.gtag('event', 'module_feedback', { module_id: mod, vote: vote });
+      const wrap = btn.parentElement;
+      if (!wrap) return;
+      wrap.querySelectorAll('.kp-fb-btn').forEach(b => { b.disabled = true; });
+      btn.classList.add(...(vote === 'up' ? upCls : downCls));
+      const label = wrap.querySelector('.kp-fb-label');
+      if (label) {
+        const isEn = document.documentElement.lang === 'en';
+        label.textContent = isEn ? 'Thanks for the feedback!' : 'Díky za zpětnou vazbu!';
+      }
+    });
+  })();
+
 })();
 
   
