@@ -132,6 +132,7 @@
     });
     const nr = $('#noResults'); if (nr) nr.classList.toggle('hidden', visible > 0 || !$('.searchable'));
     if (window.__kpRenderGlobalResults) window.__kpRenderGlobalResults(q);
+    if (window.__kpHighlightSearchTitles) window.__kpHighlightSearchTitles(q);
     if (q && visible > 0) {
       const first = $$('.searchable').find(e => e.style.display !== 'none');
       if (first) first.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1179,6 +1180,7 @@
 
   /* ================= Cross-page search (multi-page build) ================= */
   const SITE_INDEX = [{"id": "m1", "cs": "Modul 1: Základy blockchainu a kryptoměn", "en": "Modul 1: Základy blockchainu a kryptoměn", "page": "zaklady", "chap": "Základy"}, {"id": "l1l2", "cs": "Layer 1 vs. Layer 2 a blockchain trilema", "en": "Layer 1 vs. Layer 2 and the blockchain trilemma", "page": "zaklady", "chap": "Základy"}, {"id": "timeline", "cs": "Časová osa: historie kryptoměn", "en": "Timeline: the history of crypto", "page": "zaklady", "chap": "Základy"}, {"id": "cycle", "cs": "Čtyřletý cyklus a psychologie trhu", "en": "The four-year cycle and market psychology", "page": "zaklady", "chap": "Základy"}, {"id": "myths", "cs": "Mýty vs. realita o kryptoměnách", "en": "Crypto myths vs. reality", "page": "zaklady", "chap": "Základy"}, {"id": "lightning", "cs": "Bitcoin Lightning Network", "en": "Bitcoin Lightning Network", "page": "zaklady", "chap": "Základy"}, {"id": "nft", "cs": "NFT a digitální vlastnictví", "en": "NFTs and digital ownership", "page": "zaklady", "chap": "Základy"}, {"id": "token-creation", "cs": "Jak vzniká vlastní token/memecoin (Pump.fun, Remix) — a proč to skoro vždy skončí na nule", "en": "How tokens/memecoins get created (Pump.fun, Remix) — and why it almost always ends at zero", "page": "zaklady", "chap": "Základy"}, {"id": "stablecoins", "cs": "Průvodce stablecoiny: typy krytí a riziko algoritmických modelů", "en": "Stablecoin guide: types of backing and the risk of algorithmic models", "page": "zaklady", "chap": "Základy"}, {"id": "tokenomics", "cs": "Tokenomika a whitepaper: na co se zaměřit", "en": "Tokenomics and whitepapers: what to focus on", "page": "zaklady", "chap": "Základy"}, {"id": "psych-traps", "cs": "Psychologické pasti: FOMO, revenge trading a panika", "en": "Psychological traps: FOMO, revenge trading and panic", "page": "zaklady", "chap": "Základy"}, {"id": "about-project", "cs": "O projektu: nezávislost a poslání", "en": "About the project: independence and mission", "page": "zaklady", "chap": "Základy"}, {"id": "first-purchase", "cs": "Mapa prvního nákupu: od korun po bezpečné krypto", "en": "Your first-purchase map: from CZK to safely stored crypto", "page": "zaklady", "chap": "Základy"}, {"id": "penezenky", "cs": "Modul 2: Peněženky a zabezpečení", "en": "Modul 2: Peněženky a zabezpečení", "page": "penezenky", "chap": "Peněženky"}, {"id": "burzy", "cs": "Modul 3: Burzy (CEX) a decentralizované směnárny (DEX)", "en": "Modul 3: Burzy (CEX) a decentralizované směnárny (DEX)", "page": "burzy", "chap": "Burzy & DEX"}, {"id": "scam-checker", "cs": "Modul 4: Bezpečnost a anti-scam", "en": "Modul 4: Bezpečnost a anti-scam", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "selfcustody", "cs": "Self-custody a multi-sig peněženky", "en": "Self-custody and multi-sig wallets", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "hwwallet", "cs": "Bezpečné používání hardware peněženek", "en": "Using hardware wallets safely", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "airdrops", "cs": "Pravda a varování před airdropy", "en": "The truth about airdrops, and a warning", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "social", "cs": "Bezpečnost na sociálních sítích", "en": "Security on social networks", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "rescue", "cs": "DeFi záchranná brzda", "en": "The DeFi emergency brake", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "hacks", "cs": "Historické hacky a poučení", "en": "Historic hacks and lessons", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "cexdex", "cs": "Srovnání rizik CEX vs. DEX", "en": "CEX vs. DEX risk comparison", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "inheritance", "cs": "Krypto a rodina: dědictví", "en": "Crypto and family: inheritance", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "decalogue", "cs": "Desatero bezpečného investora", "en": "The safe investor’s ten rules", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "m5", "cs": "Modul 5: Technická a fundamentální analýza", "en": "Modul 5: Technická a fundamentální analýza", "page": "analyza", "chap": "Analýza"}, {"id": "candlesticks", "cs": "Čtení svíčkových grafů: základy", "en": "Reading candlestick charts: the basics", "page": "analyza", "chap": "Analýza"}, {"id": "onchain", "cs": "On-chain data a indikátory: RSI, MACD, TVL a aktivní peněženky", "en": "On-chain data and indicators: RSI, MACD, TVL and active wallets", "page": "analyza", "chap": "Analýza"}, {"id": "m6", "cs": "Modul 6: Strategie a DeFi", "en": "Modul 6: Strategie a DeFi", "page": "strategie", "chap": "Strategie"}, {"id": "staking", "cs": "Staking do hloubky: Native, Liquid staking a Yield farming", "en": "Staking in depth: native, liquid staking and yield farming", "page": "strategie", "chap": "Strategie"}, {"id": "tax-main", "cs": "Daně v ČR: časový test, hodnotový test a past směn krypto-za-krypto", "en": "Czech crypto tax: the time test, value test, and the crypto-swap trap", "page": "dane", "chap": "Daně v ČR"}, {"id": "nastroje", "cs": "Nástroje a kalkulačky", "en": "Tools & calculators", "page": "nastroje", "chap": "Nástroje"}, {"id": "kviz", "cs": "Kvíz", "en": "Quiz", "page": "nastroje", "chap": "Nástroje"}, {"id": "slovnik", "cs": "Slovník pojmů", "en": "Glossary", "page": "glosar", "chap": "Slovník"}, {"id": "faq", "cs": "Časté otázky", "en": "FAQ", "page": "glosar", "chap": "FAQ"}];
+  const ALL_MODULE_IDS = ["m1", "l1l2", "timeline", "cycle", "myths", "lightning", "nft", "token-creation", "stablecoins", "tokenomics", "psych-traps", "about-project", "first-purchase", "penezenky", "burzy", "scam-checker", "selfcustody", "hwwallet", "airdrops", "social", "rescue", "hacks", "cexdex", "inheritance", "decalogue", "m5", "candlesticks", "onchain", "m6", "staking", "tax-main"];
   const CURRENT_PAGE = document.documentElement.getAttribute('data-page') || 'index';
   function renderGlobalResults(q) {
     const box = document.getElementById('globalResults');
@@ -1193,12 +1195,55 @@
       '<p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">' + label + '</p>' +
       '<div class="flex flex-wrap gap-2">' + matches.slice(0, 12).map(e =>
         '<a href="' + e.page + '.html#' + e.id + '" class="px-3 py-1.5 rounded-full bg-brand-card border border-brand-border hover:border-brand-accent text-xs font-semibold text-slate-200 transition">' +
-        (isEn ? e.en : e.cs) + ' <span class="text-slate-500">&middot; ' + e.chap + '</span></a>').join('') + '</div></div>';
+        kpHighlight(isEn ? e.en : e.cs, q) + ' <span class="text-slate-500">&middot; ' + kpEscapeHtml(e.chap) + '</span></a>').join('') + '</div></div>';
     box.classList.remove('hidden');
   }
   window.__kpRenderGlobalResults = renderGlobalResults;
   new MutationObserver(() => { const si2 = document.getElementById('searchInput'); if (si2 && si2.value) renderGlobalResults(si2.value.toLowerCase().trim()); })
     .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
+
+  /* ================= Search result highlighting ================= */
+  function kpEscapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function kpEscapeRe(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function kpHighlight(text, q) {
+    const safe = kpEscapeHtml(text);
+    if (!q) return safe;
+    try {
+      return safe.replace(new RegExp('(' + kpEscapeRe(kpEscapeHtml(q)) + ')', 'ig'), '<mark class="bg-brand-accent/30 text-inherit rounded px-0.5">$1</mark>');
+    } catch (e) { return safe; }
+  }
+  window.__kpHighlight = kpHighlight;
+  function kpHighlightSearchTitles(q) {
+    document.querySelectorAll('.searchable h3').forEach(h3 => {
+      if (h3.dataset.kpOrig === undefined) h3.dataset.kpOrig = h3.innerHTML;
+      const orig = h3.dataset.kpOrig;
+      if (!q || /<[a-z]/i.test(orig)) { h3.innerHTML = orig; return; }
+      h3.innerHTML = kpHighlight(orig, q);
+    });
+  }
+  window.__kpHighlightSearchTitles = kpHighlightSearchTitles;
+
+  /* ================= "/" keyboard shortcut to jump to search ================= */
+  document.addEventListener('keydown', e => {
+    if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target && e.target.isContentEditable)) return;
+    const si = document.getElementById('searchInput');
+    if (!si) return;
+    e.preventDefault();
+    si.focus();
+    si.select();
+  });
+  (function searchShortcutHint() {
+    const si = document.getElementById('searchInput');
+    if (!si || !si.parentElement) return;
+    const hint = document.createElement('kbd');
+    hint.textContent = '/';
+    hint.className = 'absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 rounded-md bg-slate-800 border border-brand-border text-[10px] text-slate-400 font-mono pointer-events-none';
+    si.parentElement.appendChild(hint);
+    si.addEventListener('focus', () => { hint.style.display = 'none'; });
+    si.addEventListener('blur', () => { if (!si.value) hint.style.display = ''; });
+  })();
 
   /* ================= Cookie consent + (opt-in) analytics ================= */
   (function cookieConsent() {
@@ -1349,6 +1394,143 @@
         label.textContent = isEn ? 'Thanks for the feedback!' : 'Díky za zpětnou vazbu!';
       }
     });
+  })();
+
+  /* ================= Completion certificate / gamification ================= */
+  (function completionCertificate() {
+    const VKEY = 'kp_visited_v1';
+    const SKEY = 'kp_cert_seen_v1';
+    function getVisited() { try { return JSON.parse(localStorage.getItem(VKEY) || '[]'); } catch (e) { return []; } }
+    function setVisited(arr) { try { localStorage.setItem(VKEY, JSON.stringify(arr)); } catch (e) {} }
+    const visited = new Set(getVisited().filter(id => ALL_MODULE_IDS.indexOf(id) !== -1));
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function drawCertificate(name) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1200; canvas.height = 850;
+      const ctx = canvas.getContext('2d');
+      const isEn = document.documentElement.lang === 'en';
+      const grad = ctx.createLinearGradient(0, 0, 1200, 850);
+      grad.addColorStop(0, '#07090e'); grad.addColorStop(1, '#111827');
+      ctx.fillStyle = grad; ctx.fillRect(0, 0, 1200, 850);
+      ctx.strokeStyle = '#1fd98b'; ctx.lineWidth = 6; ctx.strokeRect(30, 30, 1140, 790);
+      ctx.strokeStyle = 'rgba(31,217,139,0.35)'; ctx.lineWidth = 2; ctx.strokeRect(46, 46, 1108, 758);
+      const lg = ctx.createLinearGradient(90, 90, 200, 200);
+      lg.addColorStop(0, '#1fd98b'); lg.addColorStop(1, '#0ea5e9');
+      ctx.fillStyle = lg; roundRect(ctx, 90, 90, 110, 110, 24); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 60px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('K', 145, 150);
+      ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 22px sans-serif';
+      ctx.fillText(isEn ? 'CERTIFICATE OF COMPLETION' : 'CERTIFIKÁT O DOKONČENÍ', 230, 120);
+      ctx.fillStyle = '#fff'; ctx.font = '900 44px sans-serif';
+      ctx.fillText('KryptoProfík Masterclass', 230, 172);
+      ctx.fillStyle = '#cbd5e1'; ctx.font = '22px sans-serif';
+      ctx.fillText(isEn ? 'This certifies that' : 'Tímto se potvrzuje, že', 90, 320);
+      ctx.fillStyle = '#1fd98b'; ctx.font = '900 54px sans-serif';
+      ctx.fillText(name || (isEn ? 'KryptoProfík Student' : 'Student KryptoProfík'), 90, 390);
+      ctx.fillStyle = '#cbd5e1'; ctx.font = '22px sans-serif';
+      const line2 = isEn
+        ? 'has completed all 31 lessons of the KryptoProfík crypto masterclass'
+        : 'dokončil(a) všech 31 lekcí krypto masterclass KryptoProfík';
+      const line3 = isEn
+        ? '— wallets, exchanges, anti-scam, analysis, strategy and Czech taxes.'
+        : '— peněženky, burzy, anti-scam, analýzu, strategii a daně v ČR.';
+      ctx.fillText(line2, 90, 440);
+      ctx.fillText(line3, 90, 475);
+      const today = new Date().toLocaleDateString(isEn ? 'en-US' : 'cs-CZ');
+      ctx.fillStyle = '#64748b'; ctx.font = '18px sans-serif';
+      ctx.fillText((isEn ? 'Date: ' : 'Datum: ') + today, 90, 750);
+      ctx.fillText('kryptoprofik.fun', 980, 750);
+      return canvas;
+    }
+
+    function openModal() {
+      const isEn = document.documentElement.lang === 'en';
+      let modal = document.getElementById('certModal');
+      if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); return; }
+      modal = document.createElement('div');
+      modal.id = 'certModal';
+      modal.className = 'fixed inset-0 z-[90] bg-black/80 flex items-center justify-center p-4 no-print';
+      modal.innerHTML =
+        '<div class="bg-brand-card border border-brand-border rounded-3xl p-6 max-w-lg w-full text-center max-h-[90vh] overflow-y-auto">' +
+        '<div class="text-5xl mb-3">\u{1F393}</div>' +
+        '<h2 class="text-2xl font-black text-white mb-2">' + (isEn ? 'Congratulations, you finished the masterclass!' : 'Gratulujeme, dokončili jste masterclass!') + '</h2>' +
+        '<p class="text-slate-400 text-sm mb-4">' + (isEn ? 'You went through all 31 lessons. Grab your certificate below.' : 'Prošli jste si všech 31 lekcí. Níže si můžete stáhnout certifikát.') + '</p>' +
+        '<input id="certName" type="text" placeholder="' + (isEn ? 'Your name (optional)' : 'Vaše jméno (nepovinné)') + '" class="w-full mb-4 px-4 py-2 rounded-xl bg-slate-900 border border-brand-border text-white text-sm" />' +
+        '<canvas id="certCanvas" class="w-full rounded-xl border border-brand-border mb-4"></canvas>' +
+        '<div class="flex gap-2">' +
+        '<button id="certDownload" type="button" class="flex-1 px-4 py-2.5 rounded-xl bg-brand-accent hover:opacity-90 text-white font-bold text-sm transition">' + (isEn ? 'Download certificate' : 'Stáhnout certifikát') + '</button>' +
+        '<button id="certClose" type="button" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm transition">' + (isEn ? 'Close' : 'Zavřít') + '</button>' +
+        '</div></div>';
+      document.body.appendChild(modal);
+      const nameInput = document.getElementById('certName');
+      const canvasBox = document.getElementById('certCanvas');
+      function refresh() {
+        const c = drawCertificate(nameInput.value.trim());
+        canvasBox.width = c.width; canvasBox.height = c.height;
+        canvasBox.getContext('2d').drawImage(c, 0, 0);
+      }
+      refresh();
+      nameInput.addEventListener('input', refresh);
+      document.getElementById('certClose').addEventListener('click', () => { modal.classList.add('hidden'); modal.classList.remove('flex'); });
+      document.getElementById('certDownload').addEventListener('click', () => {
+        const c = drawCertificate(nameInput.value.trim());
+        const a = document.createElement('a');
+        a.download = 'kryptoprofik-certifikat.png';
+        a.href = c.toDataURL('image/png');
+        a.click();
+        if (window.gtag) window.gtag('event', 'certificate_download');
+      });
+    }
+
+    function showTrophyBadge() {
+      if (document.getElementById('certTrophyBtn')) return;
+      const btn = document.createElement('button');
+      btn.id = 'certTrophyBtn';
+      btn.type = 'button';
+      btn.title = document.documentElement.lang === 'en' ? 'View your certificate' : 'Zobrazit certifikát';
+      btn.className = 'fixed bottom-24 right-4 sm:bottom-6 sm:right-6 z-[70] w-12 h-12 rounded-full bg-gradient-to-br from-brand-accent to-brand-blue shadow-lg flex items-center justify-center text-xl no-print';
+      btn.innerHTML = '\u{1F3C6}';
+      btn.addEventListener('click', openModal);
+      document.body.appendChild(btn);
+    }
+
+    function maybeShowCertificate() {
+      if (visited.size < ALL_MODULE_IDS.length) return;
+      showTrophyBadge();
+      let seen = null;
+      try { seen = localStorage.getItem(SKEY); } catch (e) {}
+      if (seen) return;
+      try { localStorage.setItem(SKEY, '1'); } catch (e) {}
+      openModal();
+      if (window.gtag) window.gtag('event', 'masterclass_completed');
+    }
+
+    const container = document.getElementById('modulesContainer');
+    if (container && 'IntersectionObserver' in window) {
+      const obs2 = new IntersectionObserver(entries => {
+        let changed = false;
+        entries.forEach(en => {
+          if (!en.isIntersecting) return;
+          const id = en.target.id;
+          if (id && ALL_MODULE_IDS.indexOf(id) !== -1 && !visited.has(id)) { visited.add(id); changed = true; }
+        });
+        if (changed) { setVisited(Array.from(visited)); maybeShowCertificate(); }
+      }, { rootMargin: '-10% 0px -60% 0px', threshold: 0 });
+      Array.from(container.children).forEach(a => { if (a.id) obs2.observe(a); });
+    }
+
+    if (visited.size >= ALL_MODULE_IDS.length) showTrophyBadge();
   })();
 
 })();
