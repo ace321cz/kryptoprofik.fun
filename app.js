@@ -1181,6 +1181,7 @@
   /* ================= Cross-page search (multi-page build) ================= */
   const SITE_INDEX = [{"id": "m1", "cs": "Modul 1: Základy blockchainu a kryptoměn", "en": "Modul 1: Základy blockchainu a kryptoměn", "page": "zaklady", "chap": "Základy"}, {"id": "l1l2", "cs": "Layer 1 vs. Layer 2 a blockchain trilema", "en": "Layer 1 vs. Layer 2 and the blockchain trilemma", "page": "zaklady", "chap": "Základy"}, {"id": "timeline", "cs": "Časová osa: historie kryptoměn", "en": "Timeline: the history of crypto", "page": "zaklady", "chap": "Základy"}, {"id": "cycle", "cs": "Čtyřletý cyklus a psychologie trhu", "en": "The four-year cycle and market psychology", "page": "zaklady", "chap": "Základy"}, {"id": "myths", "cs": "Mýty vs. realita o kryptoměnách", "en": "Crypto myths vs. reality", "page": "zaklady", "chap": "Základy"}, {"id": "lightning", "cs": "Bitcoin Lightning Network", "en": "Bitcoin Lightning Network", "page": "zaklady", "chap": "Základy"}, {"id": "nft", "cs": "NFT a digitální vlastnictví", "en": "NFTs and digital ownership", "page": "zaklady", "chap": "Základy"}, {"id": "token-creation", "cs": "Jak vzniká vlastní token/memecoin (Pump.fun, Remix) — a proč to skoro vždy skončí na nule", "en": "How tokens/memecoins get created (Pump.fun, Remix) — and why it almost always ends at zero", "page": "zaklady", "chap": "Základy"}, {"id": "stablecoins", "cs": "Průvodce stablecoiny: typy krytí a riziko algoritmických modelů", "en": "Stablecoin guide: types of backing and the risk of algorithmic models", "page": "zaklady", "chap": "Základy"}, {"id": "tokenomics", "cs": "Tokenomika a whitepaper: na co se zaměřit", "en": "Tokenomics and whitepapers: what to focus on", "page": "zaklady", "chap": "Základy"}, {"id": "psych-traps", "cs": "Psychologické pasti: FOMO, revenge trading a panika", "en": "Psychological traps: FOMO, revenge trading and panic", "page": "zaklady", "chap": "Základy"}, {"id": "about-project", "cs": "O projektu: nezávislost a poslání", "en": "About the project: independence and mission", "page": "zaklady", "chap": "Základy"}, {"id": "first-purchase", "cs": "Mapa prvního nákupu: od korun po bezpečné krypto", "en": "Your first-purchase map: from CZK to safely stored crypto", "page": "zaklady", "chap": "Základy"}, {"id": "penezenky", "cs": "Modul 2: Peněženky a zabezpečení", "en": "Modul 2: Peněženky a zabezpečení", "page": "penezenky", "chap": "Peněženky"}, {"id": "burzy", "cs": "Modul 3: Burzy (CEX) a decentralizované směnárny (DEX)", "en": "Modul 3: Burzy (CEX) a decentralizované směnárny (DEX)", "page": "burzy", "chap": "Burzy & DEX"}, {"id": "scam-checker", "cs": "Modul 4: Bezpečnost a anti-scam", "en": "Modul 4: Bezpečnost a anti-scam", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "selfcustody", "cs": "Self-custody a multi-sig peněženky", "en": "Self-custody and multi-sig wallets", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "hwwallet", "cs": "Bezpečné používání hardware peněženek", "en": "Using hardware wallets safely", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "airdrops", "cs": "Pravda a varování před airdropy", "en": "The truth about airdrops, and a warning", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "social", "cs": "Bezpečnost na sociálních sítích", "en": "Security on social networks", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "rescue", "cs": "DeFi záchranná brzda", "en": "The DeFi emergency brake", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "hacks", "cs": "Historické hacky a poučení", "en": "Historic hacks and lessons", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "cexdex", "cs": "Srovnání rizik CEX vs. DEX", "en": "CEX vs. DEX risk comparison", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "inheritance", "cs": "Krypto a rodina: dědictví", "en": "Crypto and family: inheritance", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "decalogue", "cs": "Desatero bezpečného investora", "en": "The safe investor’s ten rules", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "m5", "cs": "Modul 5: Technická a fundamentální analýza", "en": "Modul 5: Technická a fundamentální analýza", "page": "analyza", "chap": "Analýza"}, {"id": "candlesticks", "cs": "Čtení svíčkových grafů: základy", "en": "Reading candlestick charts: the basics", "page": "analyza", "chap": "Analýza"}, {"id": "onchain", "cs": "On-chain data a indikátory: RSI, MACD, TVL a aktivní peněženky", "en": "On-chain data and indicators: RSI, MACD, TVL and active wallets", "page": "analyza", "chap": "Analýza"}, {"id": "m6", "cs": "Modul 6: Strategie a DeFi", "en": "Modul 6: Strategie a DeFi", "page": "strategie", "chap": "Strategie"}, {"id": "staking", "cs": "Staking do hloubky: Native, Liquid staking a Yield farming", "en": "Staking in depth: native, liquid staking and yield farming", "page": "strategie", "chap": "Strategie"}, {"id": "tax-main", "cs": "Daně v ČR: časový test, hodnotový test a past směn krypto-za-krypto", "en": "Czech crypto tax: the time test, value test, and the crypto-swap trap", "page": "dane", "chap": "Daně v ČR"}, {"id": "nastroje", "cs": "Nástroje a kalkulačky", "en": "Tools & calculators", "page": "nastroje", "chap": "Nástroje"}, {"id": "kviz", "cs": "Kvíz", "en": "Quiz", "page": "nastroje", "chap": "Nástroje"}, {"id": "slovnik", "cs": "Slovník pojmů", "en": "Glossary", "page": "glosar", "chap": "Slovník"}, {"id": "faq", "cs": "Časté otázky", "en": "FAQ", "page": "glosar", "chap": "FAQ"}];
   const ALL_MODULE_IDS = ["m1", "l1l2", "timeline", "cycle", "myths", "lightning", "nft", "token-creation", "stablecoins", "tokenomics", "psych-traps", "about-project", "first-purchase", "penezenky", "burzy", "scam-checker", "selfcustody", "hwwallet", "airdrops", "social", "rescue", "hacks", "cexdex", "inheritance", "decalogue", "m5", "candlesticks", "onchain", "m6", "staking", "tax-main"];
+  const CHAPTER_MODULES = {"m1": ["m1", "l1l2", "timeline", "cycle", "myths", "lightning", "nft", "token-creation", "stablecoins", "tokenomics", "psych-traps", "about-project", "first-purchase"], "penezenky": ["penezenky"], "burzy": ["burzy"], "scam-checker": ["scam-checker", "selfcustody", "hwwallet", "airdrops", "social", "rescue", "hacks", "cexdex", "inheritance", "decalogue"], "m5": ["m5", "candlesticks", "onchain"], "m6": ["m6", "staking"], "tax-main": ["tax-main"]};
   const CURRENT_PAGE = document.documentElement.getAttribute('data-page') || 'index';
   function renderGlobalResults(q) {
     const box = document.getElementById('globalResults');
@@ -1531,6 +1532,78 @@
     }
 
     if (visited.size >= ALL_MODULE_IDS.length) showTrophyBadge();
+  })();
+
+  /* ================= Czech crypto tax calculator (estimate) ================= */
+  (function taxCalculator() {
+    const buy = document.getElementById('taxBuy');
+    const sell = document.getElementById('taxSell');
+    const other = document.getElementById('taxOther');
+    const held3y = document.getElementById('taxHeld3y');
+    if (!buy || !sell) return;
+    const BRACKET = 1582812;
+    function fmtCzk(n) {
+      const isEn = document.documentElement.lang === 'en';
+      const num = Math.round(n).toLocaleString(isEn ? 'en-US' : 'cs-CZ');
+      return num + ' ' + (isEn ? 'CZK' : 'Kč');
+    }
+    function calc() {
+      const b = parseFloat(buy.value) || 0;
+      const s = parseFloat(sell.value) || 0;
+      const o = Math.max(0, parseFloat(other.value) || 0);
+      const profit = Math.max(0, s - b);
+      const exempt = !!(held3y && held3y.checked);
+      const deminimis = !exempt && (profit + o) <= 100000;
+      let tax = 0;
+      if (!exempt && !deminimis) {
+        const base = profit + o;
+        if (base <= BRACKET) {
+          tax = profit * 0.15;
+        } else {
+          const overBase = Math.max(0, base - BRACKET);
+          const overProfit = Math.min(profit, overBase);
+          const normalProfit = profit - overProfit;
+          tax = normalProfit * 0.15 + overProfit * 0.23;
+        }
+      }
+      const pEl = document.getElementById('taxProfit');
+      const tEl = document.getElementById('taxOwed');
+      const nEl = document.getElementById('taxNet');
+      if (pEl) pEl.textContent = fmtCzk(profit);
+      if (tEl) tEl.textContent = fmtCzk(tax);
+      if (nEl) nEl.textContent = fmtCzk(profit - tax);
+      const exemptNote = document.getElementById('taxExemptNote');
+      const deminimisNote = document.getElementById('taxDeminimisNote');
+      if (exemptNote) exemptNote.classList.toggle('hidden', !exempt);
+      if (deminimisNote) deminimisNote.classList.toggle('hidden', !deminimis);
+    }
+    [buy, sell, other].forEach(el => el && el.addEventListener('input', calc));
+    if (held3y) held3y.addEventListener('change', calc);
+    calc();
+  })();
+
+  /* ================= Homepage chapter progress bars ================= */
+  (function chapterProgressWidget() {
+    const boxes = document.querySelectorAll('[data-kp-progress]');
+    if (!boxes.length) return;
+    let visited = [];
+    try { visited = JSON.parse(localStorage.getItem('kp_visited_v1') || '[]'); } catch (e) {}
+    if (!visited.length) return;
+    const visitedSet = new Set(visited);
+    const isEn = document.documentElement.lang === 'en';
+    boxes.forEach(box => {
+      const chip = box.getAttribute('data-kp-progress');
+      const ids = CHAPTER_MODULES[chip] || [];
+      if (!ids.length) return;
+      const done = ids.filter(id => visitedSet.has(id)).length;
+      if (done === 0) return;
+      const pct = Math.round((done / ids.length) * 100);
+      const fill = box.querySelector('div > div');
+      if (fill) fill.style.width = pct + '%';
+      const label = box.querySelector('[data-kp-progress-label]');
+      if (label) label.textContent = (isEn ? `${done}/${ids.length} done` : `${done}/${ids.length} hotovo`) + (pct >= 100 ? (isEn ? ' \u2713' : ' \u2713') : '');
+      box.classList.remove('hidden');
+    });
   })();
 
 })();
