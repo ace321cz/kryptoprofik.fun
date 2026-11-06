@@ -173,14 +173,19 @@
   function paintPrices() {
     if (!cards) return;
     COINS.forEach(c => {
-      const d = prices[c.id]; if (!d) return;
-      const u = $('#' + c.sym + '-usd'); u.classList.remove('skeleton'); u.textContent = fmtUsd(d.usd);
-      $('#' + c.sym + '-czk').textContent = (d.czk >= 100 ? fmtNum(d.czk) : d.czk.toLocaleString(U().locale, { maximumFractionDigits: 3 })) + ' ' + U().czk;
-      const ch = d.usd_24hr_change, ce = $('#' + c.sym + '-chg');
-      if (typeof ch === 'number') {
-        ce.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2).replace('.', lang === 'cs' ? ',' : '.') + ' %';
-        ce.className = 'text-[11px] font-bold mt-1 ' + (ch >= 0 ? 'text-emerald-400' : 'text-rose-400');
-      }
+      try {
+        const d = prices[c.id]; if (!d) return;
+        const u = $('#' + c.sym + '-usd');
+        if (typeof d.usd === 'number') { u.classList.remove('skeleton'); u.textContent = fmtUsd(d.usd); }
+        if (typeof d.czk === 'number') {
+          $('#' + c.sym + '-czk').textContent = (d.czk >= 100 ? fmtNum(d.czk) : d.czk.toLocaleString(U().locale, { maximumFractionDigits: 3 })) + ' ' + U().czk;
+        }
+        const ch = d.usd_24hr_change, ce = $('#' + c.sym + '-chg');
+        if (typeof ch === 'number') {
+          ce.textContent = (ch >= 0 ? '▲ +' : '▼ ') + ch.toFixed(2).replace('.', lang === 'cs' ? ',' : '.') + ' %';
+          ce.className = 'text-[11px] font-bold mt-1 ' + (ch >= 0 ? 'text-emerald-400' : 'text-rose-400');
+        }
+      } catch (e) {}
     });
     if (lastUpdate) $('#lastUpdate').textContent = lastUpdate.toLocaleTimeString(U().locale, { hour: '2-digit', minute: '2-digit' });
     $('#priceError').classList.toggle('hidden', !pricesFailed);
@@ -1585,24 +1590,276 @@
   /* ================= Homepage chapter progress bars ================= */
   (function chapterProgressWidget() {
     const boxes = document.querySelectorAll('[data-kp-progress]');
-    if (!boxes.length) return;
+    const badges = document.querySelectorAll('[data-kp-badge]');
+    if (!boxes.length && !badges.length) return;
     let visited = [];
     try { visited = JSON.parse(localStorage.getItem('kp_visited_v1') || '[]'); } catch (e) {}
-    if (!visited.length) return;
     const visitedSet = new Set(visited);
     const isEn = document.documentElement.lang === 'en';
-    boxes.forEach(box => {
-      const chip = box.getAttribute('data-kp-progress');
-      const ids = CHAPTER_MODULES[chip] || [];
-      if (!ids.length) return;
-      const done = ids.filter(id => visitedSet.has(id)).length;
-      if (done === 0) return;
-      const pct = Math.round((done / ids.length) * 100);
-      const fill = box.querySelector('div > div');
-      if (fill) fill.style.width = pct + '%';
-      const label = box.querySelector('[data-kp-progress-label]');
-      if (label) label.textContent = (isEn ? `${done}/${ids.length} done` : `${done}/${ids.length} hotovo`) + (pct >= 100 ? (isEn ? ' \u2713' : ' \u2713') : '');
-      box.classList.remove('hidden');
+
+    function showBadgeToast(chip) {
+      const names = { 'm1': ['Základy', 'Basics'], 'penezenky': ['Peněženky', 'Wallets'], 'burzy': ['Burzy & DEX', 'Exchanges & DEX'], 'scam-checker': ['Anti-scam', 'Anti-scam'], 'm5': ['Analýza', 'Analysis'], 'm6': ['Strategie', 'Strategy'], 'tax-main': ['Daně v ČR', 'Czech taxes'] };
+      const pair = names[chip] || [chip, chip];
+      const label = isEn ? pair[1] : pair[0];
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-[70] px-4 py-3 rounded-2xl bg-slate-900 border border-emerald-500/50 shadow-2xl flex items-center gap-3 text-sm max-w-[92vw]';
+      toast.innerHTML = '<span class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-award"></i></span>' +
+        '<span class="text-slate-200"><b class="text-white">' + (isEn ? 'Badge earned: ' : 'Odznak získán: ') + '</b>' + label + '</span>';
+      document.body.appendChild(toast);
+      setTimeout(() => { toast.style.transition = 'opacity .4s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3500);
+    }
+
+    if (visited.length) {
+      boxes.forEach(box => {
+        const chip = box.getAttribute('data-kp-progress');
+        const ids = CHAPTER_MODULES[chip] || [];
+        if (!ids.length) return;
+        const done = ids.filter(id => visitedSet.has(id)).length;
+        if (done === 0) return;
+        const pct = Math.round((done / ids.length) * 100);
+        const fill = box.querySelector('div > div');
+        if (fill) fill.style.width = pct + '%';
+        const label = box.querySelector('[data-kp-progress-label]');
+        if (label) label.textContent = (isEn ? `${done}/${ids.length} done` : `${done}/${ids.length} hotovo`) + (pct >= 100 ? ' \u2713' : '');
+        box.classList.remove('hidden');
+      });
+    }
+
+    if (badges.length) {
+      let seen = {};
+      try { seen = JSON.parse(localStorage.getItem('kp_badges_seen_v1') || '{}'); } catch (e) {}
+      let seenChanged = false;
+      badges.forEach(badge => {
+        const chip = badge.getAttribute('data-kp-badge');
+        const ids = CHAPTER_MODULES[chip] || [];
+        if (!ids.length) return;
+        const done = ids.filter(id => visitedSet.has(id)).length;
+        if (done < ids.length) return;
+        badge.classList.remove('hidden');
+        badge.classList.add('flex');
+        if (!seen[chip]) { seen[chip] = true; seenChanged = true; showBadgeToast(chip); }
+      });
+      if (seenChanged) { try { localStorage.setItem('kp_badges_seen_v1', JSON.stringify(seen)); } catch (e) {} }
+    }
+  })();
+
+  /* ================= Smart "where to start" homepage quiz ================= */
+  (function smartStartQuiz() {
+    const wrap = document.getElementById('smartStartWrap');
+    if (!wrap) return;
+    try {
+      const visited = JSON.parse(localStorage.getItem('kp_visited_v1') || '[]');
+      if (visited.length) { wrap.classList.add('hidden'); return; }
+    } catch (e) {}
+    const answers = {};
+    const resultEl = document.getElementById('ssqResult');
+    function evaluate() {
+      if (Object.keys(answers).length < 3) return;
+      const isEn = document.documentElement.lang === 'en';
+      const q1 = answers.q1, q2 = answers.q2, q3 = answers.q3;
+      let slug, label;
+      if (!q1 && !q2 && !q3) { slug = 'zaklady'; label = isEn ? 'Chapter 1: Basics' : 'Kapitola 1: Základy'; }
+      else if (q1 && !q2) { slug = 'burzy'; label = isEn ? 'Chapter 3: Exchanges & DEX' : 'Kapitola 3: Burzy & DEX'; }
+      else if (q1 && q2 && !q3) { slug = 'penezenky'; label = isEn ? 'Chapter 2: Wallets' : 'Kapitola 2: Peněženky'; }
+      else { slug = 'analyza'; label = isEn ? 'Chapter 5: Analysis' : 'Kapitola 5: Analýza'; }
+      const introText = isEn ? 'Based on your answers, start here:' : 'Podle vašich odpovědí začněte tady:';
+      resultEl.innerHTML =
+        '<p class="text-xs text-slate-400 mb-2">' + introText + '</p>' +
+        '<a href="' + slug + '.html" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-accent text-white font-bold text-sm hover:opacity-90 transition">' +
+        '<span>' + label + '</span><i class="fa-solid fa-arrow-right"></i></a>';
+      resultEl.classList.remove('hidden');
+    }
+    document.querySelectorAll('[data-quiz-q]').forEach(row => {
+      const qid = row.getAttribute('data-quiz-q');
+      row.querySelectorAll('.ssq-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          answers[qid] = btn.getAttribute('data-val') === '1';
+          row.querySelectorAll('.ssq-opt').forEach(b => {
+            b.classList.remove('bg-emerald-500/20', 'text-emerald-400', 'bg-rose-500/20', 'text-rose-400');
+          });
+          const isYes = btn.getAttribute('data-val') === '1';
+          btn.classList.add(isYes ? 'bg-emerald-500/20' : 'bg-rose-500/20', isYes ? 'text-emerald-400' : 'text-rose-400');
+          evaluate();
+        });
+      });
+    });
+  })();
+
+  /* ================= Portfolio tracker ================= */
+  (function portfolioTracker() {
+    const wrap = document.getElementById('portfolioTracker');
+    if (!wrap) return;
+    const KEY = 'kp_portfolio_v1';
+    const COIN_NAMES = { bitcoin: 'BTC', ethereum: 'ETH', solana: 'SOL', binancecoin: 'BNB', ripple: 'XRP', cardano: 'ADA' };
+    const rowsEl = document.getElementById('pfRows');
+    const emptyEl = document.getElementById('pfEmpty');
+    const totalsEl = document.getElementById('pfTotals');
+    const totalValueEl = document.getElementById('pfTotalValue');
+    const totalPlEl = document.getElementById('pfTotalPl');
+    let prices = {};
+
+    function load() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } }
+    function save(items) { try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {} }
+    function fmt(n) {
+      const isEn = document.documentElement.lang === 'en';
+      return Math.round(n).toLocaleString(isEn ? 'en-US' : 'cs-CZ') + ' ' + (isEn ? 'CZK' : 'Kč');
+    }
+
+    async function fetchJsonLocal(url) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 8000);
+      try {
+        const r = await fetch(url, { signal: ctrl.signal });
+        if (!r.ok) throw new Error(String(r.status));
+        return await r.json();
+      } finally { clearTimeout(t); }
+    }
+
+    function render() {
+      const items = load();
+      rowsEl.innerHTML = '';
+      if (!items.length) {
+        emptyEl.classList.remove('hidden');
+        totalsEl.classList.add('hidden');
+        return;
+      }
+      emptyEl.classList.add('hidden');
+      let totalValue = 0, totalCost = 0, haveAnyPrice = false;
+      items.forEach((it, idx) => {
+        const price = prices[it.id];
+        const value = price ? it.amount * price : null;
+        if (value !== null) { totalValue += value; haveAnyPrice = true; }
+        totalCost += it.buyCzk;
+        const pl = value !== null ? value - it.buyCzk : null;
+        const plPct = (value !== null && it.buyCzk > 0) ? (pl / it.buyCzk) * 100 : null;
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-3 p-3 rounded-xl bg-slate-900 border border-brand-border flex-wrap';
+        const plColor = pl === null ? 'text-slate-400' : (pl >= 0 ? 'text-emerald-400' : 'text-rose-400');
+        row.innerHTML =
+          '<span class="font-bold text-white w-14 shrink-0">' + (COIN_NAMES[it.id] || it.id) + '</span>' +
+          '<span class="text-slate-400 text-xs font-mono flex-1 min-w-[80px]">' + it.amount + '</span>' +
+          '<span class="font-mono text-xs text-slate-300 w-24 text-right">' + (value !== null ? fmt(value) : '…') + '</span>' +
+          '<span class="font-mono text-xs font-bold w-28 text-right ' + plColor + '">' + (pl !== null ? (pl >= 0 ? '+' : '') + fmt(pl) + (plPct !== null ? ' (' + plPct.toFixed(1) + '%)' : '') : '…') + '</span>' +
+          '<button type="button" class="pf-remove shrink-0 w-7 h-7 rounded-lg bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 text-slate-400 text-xs" aria-label="Odebrat" title="Odebrat"><i class="fa-solid fa-xmark"></i></button>';
+        row.querySelector('.pf-remove').addEventListener('click', () => {
+          const all = load();
+          all.splice(idx, 1);
+          save(all);
+          render();
+        });
+        rowsEl.appendChild(row);
+      });
+      if (haveAnyPrice) {
+        totalsEl.classList.remove('hidden');
+        totalValueEl.textContent = fmt(totalValue);
+        const totalPl = totalValue - totalCost;
+        totalPlEl.textContent = (totalPl >= 0 ? '+' : '') + fmt(totalPl);
+        totalPlEl.className = 'font-mono font-bold block sm:text-xl sm:mt-1 ' + (totalPl >= 0 ? 'text-emerald-400' : 'text-rose-400');
+      } else {
+        totalsEl.classList.add('hidden');
+      }
+    }
+
+    async function refreshPrices() {
+      const items = load();
+      if (!items.length) return;
+      const ids = Array.from(new Set(items.map(it => it.id))).join(',');
+      try {
+        const data = await fetchJsonLocal('https://api.coingecko.com/api/v3/simple/price?ids=' + ids + '&vs_currencies=czk');
+        prices = {};
+        Object.keys(data).forEach(id => { prices[id] = data[id].czk; });
+        render();
+      } catch (e) { /* offline or blocked: keep showing last-known values */ }
+    }
+
+    document.getElementById('pfAdd').addEventListener('click', () => {
+      const coin = document.getElementById('pfCoin').value;
+      const amount = parseFloat(document.getElementById('pfAmount').value);
+      const buyCzk = parseFloat(document.getElementById('pfBuyCzk').value);
+      if (!coin || !amount || amount <= 0 || isNaN(buyCzk) || buyCzk < 0) return;
+      const items = load();
+      items.push({ id: coin, amount: amount, buyCzk: buyCzk });
+      save(items);
+      document.getElementById('pfAmount').value = '';
+      document.getElementById('pfBuyCzk').value = '';
+      render();
+      refreshPrices();
+    });
+    document.getElementById('pfRefresh').addEventListener('click', refreshPrices);
+
+    render();
+    if (load().length) refreshPrices();
+  })();
+
+  /* ================= "Co kdybych investoval" historical what-if simulator ================= */
+  (function whatifSimulator() {
+    const wrap = document.getElementById('whatifSim');
+    if (!wrap) return;
+    const COIN_NAMES = { bitcoin: 'BTC', ethereum: 'ETH', solana: 'SOL', binancecoin: 'BNB', ripple: 'XRP', cardano: 'ADA' };
+    const dateInput = document.getElementById('wiDate');
+    if (dateInput) { dateInput.max = new Date().toISOString().slice(0, 10); dateInput.min = '2013-04-28'; }
+
+    async function fetchJsonLocal(url) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), 10000);
+      try {
+        const r = await fetch(url, { signal: ctrl.signal });
+        if (!r.ok) throw new Error(String(r.status));
+        return await r.json();
+      } finally { clearTimeout(t); }
+    }
+    function fmt(n) {
+      const isEn = document.documentElement.lang === 'en';
+      return Math.round(n).toLocaleString(isEn ? 'en-US' : 'cs-CZ') + ' ' + (isEn ? 'CZK' : 'Kč');
+    }
+
+    document.getElementById('wiCalc').addEventListener('click', async () => {
+      const isEn = document.documentElement.lang === 'en';
+      const amount = parseFloat(document.getElementById('wiAmount').value);
+      const coin = document.getElementById('wiCoin').value;
+      const dateVal = document.getElementById('wiDate').value;
+      const resultEl = document.getElementById('wiResult');
+      const errorEl = document.getElementById('wiError');
+      resultEl.classList.add('hidden');
+      errorEl.classList.add('hidden');
+      if (!amount || amount <= 0 || !dateVal) return;
+      const d = new Date(dateVal + 'T00:00:00Z');
+      if (isNaN(d.getTime()) || d > new Date()) return;
+      const dd = String(d.getUTCDate()).padStart(2, '0');
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const yyyy = d.getUTCFullYear();
+      const histDate = dd + '-' + mm + '-' + yyyy;
+      const btn = document.getElementById('wiCalc');
+      const origHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1.5"></i>' + (isEn ? 'Calculating…' : 'Počítám…');
+      try {
+        const [hist, now] = await Promise.all([
+          fetchJsonLocal('https://api.coingecko.com/api/v3/coins/' + coin + '/history?date=' + histDate + '&localization=false'),
+          fetchJsonLocal('https://api.coingecko.com/api/v3/simple/price?ids=' + coin + '&vs_currencies=czk'),
+        ]);
+        const pastPrice = hist && hist.market_data && hist.market_data.current_price && hist.market_data.current_price.czk;
+        const nowPrice = now && now[coin] && now[coin].czk;
+        if (!pastPrice || !nowPrice) throw new Error('no-data');
+        const units = amount / pastPrice;
+        const valueNow = units * nowPrice;
+        const diff = valueNow - amount;
+        const diffPct = (diff / amount) * 100;
+        const sym = COIN_NAMES[coin] || coin;
+        const diffColor = diff >= 0 ? 'text-emerald-400' : 'text-rose-400';
+        resultEl.innerHTML =
+          '<div class="flex justify-between text-xs text-slate-400 mb-2"><span>' + (isEn ? 'Bought' : 'Koupeno') + '</span><span class="font-mono">' + units.toFixed(6) + ' ' + sym + '</span></div>' +
+          '<div class="flex justify-between text-xs text-slate-400 mb-3"><span>' + (isEn ? 'Price then' : 'Cena tehdy') + '</span><span class="font-mono">' + fmt(pastPrice) + '</span></div>' +
+          '<div class="flex justify-between items-end pt-3 border-t border-brand-border"><span class="font-semibold text-slate-200">' + (isEn ? 'Value today' : 'Hodnota dnes') + '</span><span class="font-mono text-2xl font-black text-white">' + fmt(valueNow) + '</span></div>' +
+          '<div class="text-right font-mono text-sm font-bold ' + diffColor + ' mt-1">' + (diff >= 0 ? '+' : '') + fmt(diff) + ' (' + (diffPct >= 0 ? '+' : '') + diffPct.toFixed(1) + '%)</div>';
+        resultEl.classList.remove('hidden');
+      } catch (e) {
+        errorEl.textContent = isEn ? 'Could not load historical data. Try again later or pick a different date.' : 'Nepodařilo se načíst historická data. Zkuste to později nebo zvolte jiné datum.';
+        errorEl.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = origHtml;
+      }
     });
   })();
 
