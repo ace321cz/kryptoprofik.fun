@@ -123,7 +123,11 @@ code,.font-mono{overflow-wrap:anywhere}
 .z-\[90\]{z-index:90}
 .mb-5{margin-bottom:1.25rem}
 .w-24{width:6rem}
+.max-w-xs{max-width:20rem}
+.text-5xl{font-size:3rem;line-height:1}
 @media (min-width:640px){
 .sm\:bottom-6{bottom:1.5rem}
 .sm\:right-6{right:1.5rem}
+.sm\:text-lg{font-size:1.125rem;line-height:1.75rem}
 }
+.mb-1\.5{margin-bottom:.375rem}

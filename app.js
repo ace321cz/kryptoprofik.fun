@@ -152,7 +152,7 @@
     { id: 'cardano',     sym: 'ADA', name: 'Cardano',  icon: '<i class="fa-solid fa-shield text-cyan-400"></i>' }
   ];
   const prices = {};
-  let lastUpdate = null, fngState = null, domState = null, pricesFailed = false;
+  let lastUpdate = null, fngState = null, domState = null, pricesFailed = false, mcapState = null, volState = null;
   const cards = $('#heroPriceCards');
   if (cards) cards.innerHTML = COINS.map(c => `
     <div class="p-3 rounded-2xl bg-brand-card border border-brand-border">
@@ -189,14 +189,69 @@
     });
     if (lastUpdate) $('#lastUpdate').textContent = lastUpdate.toLocaleTimeString(U().locale, { hour: '2-digit', minute: '2-digit' });
     $('#priceError').classList.toggle('hidden', !pricesFailed);
+    paintGainersLosers();
+  }
+
+  function fmtBig(n) {
+    if (typeof n !== 'number') return '–';
+    if (n >= 1e12) return '$' + (n / 1e12).toFixed(2) + 'T';
+    if (n >= 1e9) return '$' + (n / 1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+    return '$' + n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  }
+
+  function paintGainersLosers() {
+    const rows = COINS.map(c => {
+      const d = prices[c.id];
+      const ch = d && typeof d.usd_24hr_change === 'number' ? d.usd_24hr_change : null;
+      return { c, ch };
+    }).filter(r => r.ch != null);
+    if (!rows.length) return;
+    const sorted = rows.slice().sort((a, b) => b.ch - a.ch);
+    const gainers = sorted.slice(0, 3), losers = sorted.slice(-3).reverse();
+    const row = r => `<div class="flex items-center justify-between text-xs py-1"><span class="font-bold text-white">${r.c.sym}</span><span class="font-bold ${r.ch >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${r.ch >= 0 ? '+' : ''}${r.ch.toFixed(2).replace('.', lang === 'cs' ? ',' : '.')}%</span></div>`;
+    const gl = $('#gainersList'), ll = $('#losersList');
+    if (gl) gl.innerHTML = gainers.map(row).join('');
+    if (ll) ll.innerHTML = losers.map(row).join('');
   }
 
   function paintPulse() {
-    const domEl = $('#btcDom'), fngEl = $('#fngValue');
-    if (domEl && domState != null) domEl.textContent = domState === 'n/a' ? 'n/a' : domState.toFixed(1).replace('.', lang === 'cs' ? ',' : '.') + ' %';
-    if (fngEl && fngState) {
-      if (fngState === 'n/a') fngEl.textContent = 'n/a';
-      else fngEl.textContent = fngState.value + ' – ' + (U().fng[fngState.cls] || fngState.cls);
+    if (domState != null) {
+      const domEl = $('#btcDom');
+      if (domEl) domEl.textContent = domState === 'n/a' ? 'n/a' : domState.toFixed(1).replace('.', lang === 'cs' ? ',' : '.') + ' %';
+      const bar = $('#btcDomBar');
+      if (bar) bar.style.width = (domState === 'n/a' ? 0 : Math.min(100, domState)) + '%';
+    }
+    if (fngState) {
+      const fngNum = $('#fngNum'), fngLabel = $('#fngLabel'), fngArc = $('#fngArc');
+      if (fngState === 'n/a') {
+        if (fngNum) fngNum.textContent = '–';
+        if (fngLabel) fngLabel.textContent = 'n/a';
+      } else {
+        const v = parseInt(fngState.value, 10);
+        if (fngNum) fngNum.textContent = String(v);
+        if (fngLabel) {
+          fngLabel.textContent = U().fng[fngState.cls] || fngState.cls;
+          fngLabel.className = 'text-[11px] font-bold ' + (v < 40 ? 'text-rose-400' : v > 60 ? 'text-emerald-400' : 'text-amber-400');
+        }
+        if (fngArc) {
+          const circumference = 138;
+          const offset = circumference - (circumference * Math.max(0, Math.min(100, v)) / 100);
+          fngArc.setAttribute('stroke-dashoffset', String(offset));
+        }
+      }
+    }
+    if (mcapState != null) {
+      const mv = $('#mcapValue'), mc = $('#mcapChg');
+      if (mv) mv.textContent = mcapState === 'n/a' ? 'n/a' : fmtBig(mcapState.usd);
+      if (mc && mcapState !== 'n/a' && typeof mcapState.chg === 'number') {
+        mc.textContent = (mcapState.chg >= 0 ? '▲ +' : '▼ ') + mcapState.chg.toFixed(2).replace('.', lang === 'cs' ? ',' : '.') + ' %';
+        mc.className = 'text-[11px] font-bold mt-1 ' + (mcapState.chg >= 0 ? 'text-emerald-400' : 'text-rose-400');
+      }
+    }
+    if (volState != null) {
+      const vv = $('#volValue');
+      if (vv) vv.textContent = volState === 'n/a' ? 'n/a' : fmtBig(volState);
     }
   }
 
@@ -225,7 +280,12 @@
       const g = await fetchJson('https://api.coingecko.com/api/v3/global');
       const dom = g && g.data && g.data.market_cap_percentage && g.data.market_cap_percentage.btc;
       domState = dom ? dom : 'n/a';
-    } catch (e) { domState = 'n/a'; }
+      const mcapUsd = g && g.data && g.data.total_market_cap && g.data.total_market_cap.usd;
+      const mcapChg = g && g.data && g.data.market_cap_change_percentage_24h_usd;
+      mcapState = typeof mcapUsd === 'number' ? { usd: mcapUsd, chg: mcapChg } : 'n/a';
+      const vol = g && g.data && g.data.total_volume && g.data.total_volume.usd;
+      volState = typeof vol === 'number' ? vol : 'n/a';
+    } catch (e) { domState = 'n/a'; mcapState = 'n/a'; volState = 'n/a'; }
     try {
       const f = await fetchJson('https://api.alternative.me/fng/?limit=1');
       const d = f && f.data && f.data[0];
@@ -733,6 +793,8 @@
     renderRoadmap(); renderGlossary(); renderFaq(); renderDonate(); renderQuiz(); renderModuleChrome(); updateFaqLd();
     updateAudit(); calcDCA(); calcRM(); paintPrices(); paintPulse(); updateConverter();
     handleSearch(si.value);
+    if (window.kpRerenderChQuiz) window.kpRerenderChQuiz();
+    if (window.kpRerenderRiskQuiz) window.kpRerenderRiskQuiz();
     if (pageLoaded) loadChart(currentSym);
   }
   $$('.lang-btn').forEach(b => b.addEventListener('click', () => { if (b.dataset.lang !== lang) setLang(b.dataset.lang, true); }));
@@ -1189,6 +1251,29 @@
   const CHAPTER_MODULES = {"m1": ["m1", "l1l2", "timeline", "cycle", "myths", "lightning", "nft", "token-creation", "stablecoins", "tokenomics", "psych-traps", "about-project", "first-purchase"], "penezenky": ["penezenky"], "burzy": ["burzy"], "scam-checker": ["scam-checker", "selfcustody", "hwwallet", "airdrops", "social", "rescue", "hacks", "cexdex", "inheritance", "decalogue"], "m5": ["m5", "candlesticks", "onchain"], "m6": ["m6", "staking"], "tax-main": ["tax-main"]};
   const CH_QUIZ = {"penezenky": [{"q": {"cs": "Komu smíte prozradit svoji seed phrase?", "en": "Who may you tell your seed phrase to?"}, "o": {"cs": ["Podpoře peněženky", "Nikomu", "Kamarádovi, kterému věříte", "Burze při ověření účtu"], "en": ["Wallet support", "Nobody", "A friend you trust", "An exchange during account verification"]}, "a": 1, "e": {"cs": "Nikomu. Kdo zná seed, ovládá celou peněženku. Skutečná podpora se na něj nikdy neptá.", "en": "Nobody. Whoever knows the seed controls the whole wallet. Real support never asks for it."}}], "burzy": [{"q": {"cs": "Co znamená limitní příkaz typu „maker“?", "en": "What does a \"maker\" limit order mean?"}, "o": {"cs": ["Koupě okamžitě za tržní cenu", "Příkaz, který přidává likviditu do knihy příkazů", "Prodej s pákou", "Převod na peněženku"], "en": ["A purchase executed immediately at the market price", "An order that adds liquidity to the order book", "A leveraged sale", "A transfer to a wallet"]}, "a": 1, "e": {"cs": "Maker příkaz čeká v knize, přidává likviditu a obvykle platí nižší poplatek než taker.", "en": "A maker order waits in the book, adds liquidity and usually pays a lower fee than a taker."}}, {"q": {"cs": "Co je „impermanent loss“ u poskytování likvidity na DEXu?", "en": "What is \"impermanent loss\" when providing liquidity on a DEX?"}, "o": {"cs": ["Poplatek za výběr z burzy", "Ztráta oproti prostému držení (HODL), když se ceny aktiv v poolu rozejdou", "Daň z příjmu z LP odměn", "Výpadek sítě"], "en": ["A withdrawal fee charged by the exchange", "A loss versus simply holding (HODL) when the pooled assets’ prices diverge", "Income tax on LP rewards", "A network outage"]}, "a": 1, "e": {"cs": "Když se poměr cen aktiv v poolu výrazně změní, hodnota LP pozice může zaostat za tím, co byste měli, kdybyste aktiva jen drželi.", "en": "When the price ratio of pooled assets shifts a lot, an LP position can end up worth less than simply holding the same assets."}}], "scam-checker": [{"q": {"cs": "Co je „honeypot“ token?", "en": "What is a \"honeypot\" token?"}, "o": {"cs": ["Token s vysokým staking výnosem", "Token, který lze koupit, ale ne prodat", "Token spálený týmem", "Stablecoin"], "en": ["A token with a high staking yield", "A token you can buy but not sell", "A token burned by the team", "A stablecoin"]}, "a": 1, "e": {"cs": "U honeypotu kontrakt blokuje prodej. Před nákupem ho ověřte nástrojem jako GoPlus nebo TokenSniffer.", "en": "With a honeypot the contract blocks selling. Check it with a tool such as GoPlus or TokenSniffer before buying."}}, {"q": {"cs": "Jaký podíl nově vzniklých tokenů na Pump.fun je podle analýzy Solidus Labs spojen s podvodným chováním?", "en": "What share of new Pump.fun tokens did a Solidus Labs analysis link to fraudulent behavior?"}, "o": {"cs": ["Přibližně 10 %", "Přibližně 50 %", "Přibližně 98,6 %", "Méně než 1 %"], "en": ["About 10%", "About 50%", "About 98.6%", "Less than 1%"]}, "a": 2, "e": {"cs": "Podle analýzy bylo s rug pully a pump-and-dump schématy spojeno přibližně 98,6 % nových tokenů — drtivá většina.", "en": "Roughly 98.6% of new tokens were linked to rug pulls and pump-and-dump schemes — the vast majority."}}, {"q": {"cs": "Co umožňuje aktivní „mint authority“ u tokenu?", "en": "What does an active \"mint authority\" on a token allow?"}, "o": {"cs": ["Zmrazit peněženky držitelů", "Vytvářet nové mince podle libosti a naředit nabídku", "Zamknout likviditu", "Snížit poplatky sítě"], "en": ["Freeze holders’ wallets", "Create new coins at will and dilute supply", "Lock liquidity", "Lower network fees"]}, "a": 1, "e": {"cs": "Neomezená mint authority znamená, že tvůrce může kdykoli vyrazit další mince a zhroutit cenu.", "en": "Unlimited mint authority means the creator can mint more coins at any time and crash the price."}}], "m5": [{"q": {"cs": "Proč je důležité sledovat FDV, nejen market cap?", "en": "Why watch FDV and not just market cap?"}, "o": {"cs": ["FDV je vždy nižší", "FDV ukáže hodnotu při všech vydaných mincích a riziko budoucího prodejního tlaku", "FDV určuje poplatky sítě", "Je to totéž"], "en": ["FDV is always lower", "FDV shows the value with all coins issued and the risk of future selling pressure", "FDV determines network fees", "They are the same thing"]}, "a": 1, "e": {"cs": "Velký rozdíl mezi FDV a market cap znamená, že se teprve uvolní spousta tokenů.", "en": "A big gap between FDV and market cap means many tokens are still to be released."}}], "m6": [{"q": {"cs": "Co je u stakingu „slashing“?", "en": "What is \"slashing\" in staking?"}, "o": {"cs": ["Bonus za dlouhodobé stakování", "Penalizace (ztráta části prostředků) při výpadku nebo zneužití validátora", "Poplatek burzy za staking", "Jiný název pro unbonding"], "en": ["A bonus for staking long-term", "A penalty (loss of part of the funds) when a validator misbehaves or goes offline", "An exchange’s staking fee", "Another name for unbonding"]}, "a": 1, "e": {"cs": "Slashing penalizuje nespolehlivé nebo škodlivé validátory — a tuto ztrátu často nese i delegující.", "en": "Slashing penalizes unreliable or malicious validators — and the delegator often bears part of that loss too."}}], "tax-main": [{"q": {"cs": "Po jaké době držení je v ČR příjem z prodeje krypta (u nepodnikatele) osvobozen časovým testem?", "en": "After what holding period is income from selling crypto (for a non-business individual) exempt in the Czech Republic under the time test?"}, "o": {"cs": ["Po 6 měsících", "Po 1 roce", "Po více než 3 letech", "Nikdy"], "en": ["After 6 months", "After 1 year", "After more than 3 years", "Never"]}, "a": 2, "e": {"cs": "Časový test je 3 roky. Alternativně je osvobozen úhrn příjmů do 100 000 Kč za rok. Vždy si to ověřte u poradce.", "en": "The time test is 3 years. Alternatively, total income up to CZK 100,000 per year is exempt. Always verify with an adviser."}}, {"q": {"cs": "Směníte BTC za ETH (krypto-za-krypto). Co se stane s časovým testem pro nově získané ETH?", "en": "You swap BTC for ETH (crypto-to-crypto). What happens to the time test for the newly received ETH?"}, "o": {"cs": ["Nic, pokračuje od data nabytí BTC", "Restartuje se — počítá se znovu od data směny", "Časový test na swapy neplatí", "Zdvojnásobí se na 6 let"], "en": ["Nothing, it continues from when the BTC was acquired", "It resets — it starts counting again from the swap date", "The time test does not apply to swaps", "It doubles to 6 years"]}, "a": 1, "e": {"cs": "Směna krypto-za-krypto je úplatný převod. Časový test pro nově získané aktivum začíná běžet znovu od data směny — na toto lidé v ČR často doplácejí.", "en": "A crypto-to-crypto swap is a taxable transfer. The time test for the newly received asset restarts from the swap date — this is a common costly surprise for Czech users."}}], "m1": [{"q": {"cs": "Jaký typ stablecoinu je historicky nejrizikovější, jak ukázal pád UST/Luna v roce 2022?", "en": "Which type of stablecoin is historically the riskiest, as the 2022 UST/Luna collapse showed?"}, "o": {"cs": ["Fiat-backed (např. USDC)", "Crypto-backed (např. DAI)", "Algoritmický, bez plného krytí aktivy", "Všechny jsou stejně rizikové"], "en": ["Fiat-backed (e.g. USDC)", "Crypto-backed (e.g. DAI)", "Algorithmic, without full asset backing", "They are all equally risky"]}, "a": 2, "e": {"cs": "Algoritmický stablecoin UST ztratil kolík a spadl k nule během pár dní, protože jeho hodnotu nekryla žádná rezerva aktiv.", "en": "The algorithmic stablecoin UST lost its peg and collapsed to near zero within days because no asset reserve backed its value."}}]};
   const CH_META = {"m1": {"cs": "Základy", "en": "Basics", "num": "1", "c1": "#3b82f6", "c2": "#06b6d4"}, "penezenky": {"cs": "Peněženky", "en": "Wallets", "num": "2", "c1": "#06b6d4", "c2": "#3b82f6"}, "burzy": {"cs": "Burzy & DEX", "en": "Exchanges & DEX", "num": "3", "c1": "#a855f7", "c2": "#6366f1"}, "scam-checker": {"cs": "Anti-scam", "en": "Anti-scam", "num": "4", "c1": "#f43f5e", "c2": "#ec4899"}, "m5": {"cs": "Analýza", "en": "Analysis", "num": "5", "c1": "#1fd98b", "c2": "#0ea5e9"}, "m6": {"cs": "Strategie", "en": "Strategy", "num": "6", "c1": "#f59e0b", "c2": "#f97316"}, "tax-main": {"cs": "Daně v ČR", "en": "Czech taxes", "num": "7", "c1": "#fb923c", "c2": "#f59e0b"}};
+  const RISK_QUIZ = [{"q": {"cs": "Jak by ses zachoval(a), kdyby tvé krypto portfolio kleslo o 30 % za týden?", "en": "What would you do if your crypto portfolio dropped 30% in a week?"}, "o": {"cs": ["Prodal(a) bych vše, abych omezil(a) ztráty", "Část bych prodal(a)", "Nedělal(a) bych nic a čekal(a)", "Dokoupil(a) bych za nižší cenu"], "en": ["I would sell everything to limit losses", "I would sell some of it", "I'd do nothing and wait", "I would buy more at the lower price"]}}, {"q": {"cs": "Jak velkou část svých celkových úspor jsi ochoten/ochotna mít v kryptu?", "en": "How much of your total savings are you willing to hold in crypto?"}, "o": {"cs": ["Méně než 5 %", "5–15 %", "15–30 %", "Více než 30 %"], "en": ["Less than 5%", "5-15%", "15-30%", "More than 30%"]}}, {"q": {"cs": "Jaký je tvůj investiční horizont?", "en": "What is your investment horizon?"}, "o": {"cs": ["Chci výsledky do pár měsíců", "1–2 roky", "3–5 let", "5+ let, nevadí mi čekat"], "en": ["I want results within a few months", "1-2 years", "3-5 years", "5+ years, I don't mind waiting"]}}, {"q": {"cs": "Jak hodnotíš své zkušenosti s kryptem?", "en": "How would you rate your crypto experience?"}, "o": {"cs": ["Úplný začátečník", "Rozumím základům", "Aktivně sleduji trh a obchoduji", "Zkouším i pokročilé strategie (DeFi, staking, trading)"], "en": ["Complete beginner", "I understand the basics", "I actively follow the market and trade", "I try advanced strategies (DeFi, staking, trading)"]}}, {"q": {"cs": "Co je pro tebe důležitější?", "en": "What matters more to you?"}, "o": {"cs": ["Ochrana kapitálu, raději méně, ale jistě", "Rozumná rovnováha rizika a výnosu", "Vyšší výnos, i za cenu větších výkyvů", "Maximální růst, i s rizikem větší ztráty"], "en": ["Capital protection, less but safer", "A reasonable risk/return balance", "Higher return, even with bigger swings", "Maximum growth, even at the risk of bigger losses"]}}];
+  const RISK_PROFILES = {"conservative": {"title": {"cs": "Konzervativní", "en": "Conservative"}, "tag": {"cs": "Ochrana kapitálu na prvním místě", "en": "Capital protection comes first"}, "desc": {"cs": "Dáváš přednost jistotě před vzrušením. To je naprosto v pořádku — v kryptu je spousta prostoru i pro opatrný přístup, hlavně přes zavedené mince, pravidelné malé nákupy (DCA) a bezpečné úschovné (cold storage).", "en": "You prefer safety over excitement. That's perfectly fine — crypto has plenty of room for a cautious approach too, mainly through established coins, small regular purchases (DCA), and safe cold storage."}, "chapters": [{"href": "penezenky.html", "cs": "Peněženky a bezpečná úschova", "en": "Wallets and safe custody"}, {"href": "anti-scam.html", "cs": "Jak poznat podvod", "en": "How to spot a scam"}, {"href": "dane.html", "cs": "Daně v ČR", "en": "Czech taxes"}], "c1": "#2563eb", "c2": "#60a5fa", "emoji": "🛡"}, "balanced": {"title": {"cs": "Vyvážený", "en": "Balanced"}, "tag": {"cs": "Rozumná rovnováha rizika a výnosu", "en": "A sensible risk/return balance"}, "desc": {"cs": "Hledáš zdravou rovnováhu mezi růstem a bezpečím. Pravděpodobně ti sedne diverzifikace napříč pár projekty, pravidelné investování a sledování základní analýzy, než se rozhodneš přikoupit nebo prodat.", "en": "You're looking for a healthy balance between growth and safety. You'll likely do well diversifying across a few projects, investing regularly, and following basic analysis before buying or selling more."}, "chapters": [{"href": "analyza.html", "cs": "Analýza trhu", "en": "Market analysis"}, {"href": "strategie.html", "cs": "Strategie a řízení rizika", "en": "Strategy and risk management"}, {"href": "burzy.html", "cs": "Burzy & DEX", "en": "Exchanges & DEX"}], "c1": "#1fd98b", "c2": "#0ea5e9", "emoji": "⚖"}, "aggressive": {"title": {"cs": "Růstově zaměřený", "en": "Growth-seeking"}, "tag": {"cs": "Vyšší potenciál růstu, vyšší kolísavost", "en": "Higher growth potential, higher volatility"}, "desc": {"cs": "Jsi ochoten/ochotna přijmout větší výkyvy výměnou za vyšší potenciální výnos. I tak se vyplatí mít pevná pravidla řízení rizika a nikdy neinvestovat víc, než si můžeš dovolit ztratit — a obzvlášť pozorně sledovat kapitolu o podvodech.", "en": "You're willing to accept bigger swings for higher potential returns. Even so, solid risk-management rules pay off — never invest more than you can afford to lose, and pay extra attention to the anti-scam chapter."}, "chapters": [{"href": "strategie.html", "cs": "Strategie a řízení rizika", "en": "Strategy and risk management"}, {"href": "anti-scam.html", "cs": "Jak poznat podvod", "en": "How to spot a scam"}, {"href": "analyza.html", "cs": "Pokročilá analýza", "en": "Advanced analysis"}], "c1": "#db2777", "c2": "#f97316", "emoji": "🚀"}};
+
+  /* ================= Shared: draw a QR code onto any 2D canvas context ================= */
+  function kpDrawQr(ctx, x, y, size, text) {
+    try {
+      if (typeof qrcode === 'undefined') return false;
+      const qr = qrcode(0, 'M');
+      qr.addData(text);
+      qr.make();
+      const n = qr.getModuleCount();
+      const cell = size / n;
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(x, y, size, size);
+      ctx.fillStyle = '#07090e';
+      for (let r = 0; r < n; r++) {
+        for (let c = 0; c < n; c++) {
+          if (qr.isDark(r, c)) ctx.fillRect(x + c * cell, y + r * cell, Math.ceil(cell), Math.ceil(cell));
+        }
+      }
+      return true;
+    } catch (e) { return false; }
+  }
   const CURRENT_PAGE = document.documentElement.getAttribute('data-page') || 'index';
   function renderGlobalResults(q) {
     const box = document.getElementById('globalResults');
@@ -1458,7 +1543,8 @@
       const today = new Date().toLocaleDateString(isEn ? 'en-US' : 'cs-CZ');
       ctx.fillStyle = '#64748b'; ctx.font = '18px sans-serif';
       ctx.fillText((isEn ? 'Date: ' : 'Datum: ') + today, 90, 750);
-      ctx.fillText('kryptoprofik.fun', 980, 750);
+      ctx.fillText('kryptoprofik.fun', 90, 775);
+      kpDrawQr(ctx, 1040, 650, 110, 'https://kryptoprofik.fun');
       return canvas;
     }
 
@@ -1981,6 +2067,11 @@
       ctx.fillStyle = pg; roundRect(ctx, barX, barY, barW * pct, barH, barH / 2); ctx.fill();
       ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 26px sans-serif';
       ctx.fillText((isEn ? `${done}/${total} lessons done overall` : `Celkem hotovo ${done}/${total} lekcí`), W / 2, barY + 64);
+      // QR code -> real traffic from shared Instagram stories
+      const qrSize = 220;
+      kpDrawQr(ctx, W / 2 - qrSize / 2, barY + 160, qrSize, 'https://kryptoprofik.fun');
+      ctx.fillStyle = '#64748b'; ctx.font = 'bold 24px sans-serif';
+      ctx.fillText(isEn ? 'Scan to start learning' : 'Naskenuj a začni se učit', W / 2, barY + 160 + qrSize + 50);
       // footer
       ctx.fillStyle = '#64748b'; ctx.font = '26px sans-serif';
       ctx.fillText('kryptoprofik.fun', W / 2, H - 90);
@@ -2001,10 +2092,12 @@
   (function chapterMiniQuiz() {
     const wraps = document.querySelectorAll('[data-ch-quiz]');
     if (!wraps.length) return;
-    const isEn = document.documentElement.lang === 'en';
+    let isEn = document.documentElement.lang === 'en';
     const PKEY = 'kp_quiz_passed_v1';
     function getPassed() { try { return JSON.parse(localStorage.getItem(PKEY) || '{}'); } catch (e) { return {}; } }
     function setPassed(obj) { try { localStorage.setItem(PKEY, JSON.stringify(obj)); } catch (e) {} }
+    const rerenders = [];
+    window.kpRerenderChQuiz = function () { rerenders.forEach(fn => { try { fn(); } catch (e) {} }); };
 
     wraps.forEach(wrap => {
       const chip = wrap.getAttribute('data-ch-quiz');
@@ -2017,6 +2110,7 @@
       function pct(o) { return isEn ? o.en : o.cs; }
 
       function render() {
+        isEn = document.documentElement.lang === 'en';
         if (qi >= qs.length) {
           const passed = score === qs.length;
           if (passed && !passedMap[chip]) { passedMap[chip] = true; setPassed(passedMap); }
@@ -2070,7 +2164,8 @@
         });
       }
 
-      if (already) {
+      function renderAlready() {
+        isEn = document.documentElement.lang === 'en';
         wrap.innerHTML =
           '<div class="text-center">' +
           '<div class="text-4xl mb-3">\u{2705}</div>' +
@@ -2079,12 +2174,137 @@
           '<button type="button" class="chQuizRetry px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm transition">' + (isEn ? 'Try again' : 'Zkusit znovu') + '</button>' +
           '<button type="button" class="chQuizShare px-4 py-2.5 rounded-xl bg-brand-accent hover:opacity-90 text-white font-bold text-sm transition"><i class="fa-solid fa-download mr-1.5"></i>' + (isEn ? 'Download badge' : 'Stáhnout odznak') + '</button>' +
           '</div></div>';
-        wrap.querySelector('.chQuizRetry').addEventListener('click', () => { qi = 0; score = 0; render(); });
+        wrap.querySelector('.chQuizRetry').addEventListener('click', () => { qi = 0; score = 0; stillAlready = false; render(); });
         wrap.querySelector('.chQuizShare').addEventListener('click', () => { if (window.kpDownloadChapterBadge) window.kpDownloadChapterBadge(chip); });
-      } else {
-        render();
       }
+
+      let stillAlready = already;
+      rerenders.push(() => { if (stillAlready) renderAlready(); else render(); });
+      if (already) { renderAlready(); } else { render(); }
     });
+  })();
+
+  /* ================= Investor risk-profile quiz + shareable result ================= */
+  (function riskProfileQuiz() {
+    const wrap = document.querySelector('[data-risk-quiz]');
+    if (!wrap) return;
+    let isEn = document.documentElement.lang === 'en';
+    let qi = 0, score = 0;
+
+    function band(s) { return s <= 4 ? 'conservative' : (s <= 10 ? 'balanced' : 'aggressive'); }
+    function t(o) { return isEn ? o.en : o.cs; }
+
+    function drawRiskCard(key) {
+      const p = RISK_PROFILES[key]; if (!p) return null;
+      const W = 1080, H = 1920;
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#07090e'); bg.addColorStop(1, '#0f172a');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = p.c1; ctx.lineWidth = 8; ctx.strokeRect(36, 36, W - 72, H - 72);
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 2; ctx.strokeRect(58, 58, W - 116, H - 116);
+      const lg = ctx.createLinearGradient(W / 2 - 54, 140, W / 2 + 54, 248);
+      lg.addColorStop(0, '#1fd98b'); lg.addColorStop(1, '#0ea5e9');
+      ctx.fillStyle = lg; ctx.beginPath(); ctx.moveTo(W / 2 - 54 + 26, 140); ctx.lineTo(W / 2 + 54 - 26, 140);
+      ctx.arcTo(W / 2 + 54, 140, W / 2 + 54, 140 + 26, 26); ctx.lineTo(W / 2 + 54, 140 + 108 - 26);
+      ctx.arcTo(W / 2 + 54, 140 + 108, W / 2 + 54 - 26, 140 + 108, 26); ctx.lineTo(W / 2 - 54 + 26, 140 + 108);
+      ctx.arcTo(W / 2 - 54, 140 + 108, W / 2 - 54, 140 + 108 - 26, 26); ctx.lineTo(W / 2 - 54, 140 + 26);
+      ctx.arcTo(W / 2 - 54, 140, W / 2 - 54 + 26, 140, 26); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '900 58px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('K', W / 2, 198);
+      ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 30px sans-serif'; ctx.textBaseline = 'alphabetic';
+      ctx.fillText('KRYPTOPROFÍK', W / 2, 300);
+      ctx.font = '160px sans-serif';
+      ctx.fillText(p.emoji, W / 2, 560);
+      ctx.fillStyle = p.c1; ctx.font = '900 32px sans-serif';
+      ctx.fillText((isEn ? 'YOUR INVESTOR PROFILE' : 'TVŮJ INVESTIČNÍ PROFIL'), W / 2, 660);
+      ctx.fillStyle = '#fff'; ctx.font = '900 70px sans-serif';
+      ctx.fillText(t(p.title), W / 2, 745);
+      ctx.fillStyle = '#cbd5e1'; ctx.font = '30px sans-serif';
+      wrapText(ctx, t(p.tag), W / 2, 805, 820, 40);
+      ctx.fillStyle = '#64748b'; ctx.font = '24px sans-serif';
+      wrapText(ctx, (isEn ? 'Educational result, not financial advice.' : 'Vzdělávací výsledek, ne finanční poradenství.'), W / 2, 920, 760, 32);
+      const qrSize = 230;
+      kpDrawQr(ctx, W / 2 - qrSize / 2, 1020, qrSize, 'https://kryptoprofik.fun');
+      ctx.fillStyle = '#64748b'; ctx.font = 'bold 24px sans-serif';
+      ctx.fillText(isEn ? 'Take the test yourself' : 'Udělej si test sám/sama', W / 2, 1020 + qrSize + 50);
+      ctx.fillStyle = '#64748b'; ctx.font = '26px sans-serif';
+      ctx.fillText('kryptoprofik.fun', W / 2, H - 90);
+      return canvas;
+    }
+    function wrapText(ctx, text, cx, y, maxWidth, lineHeight) {
+      const words = text.split(' ');
+      let line = '', lines = [];
+      words.forEach(w => {
+        const test = line ? line + ' ' + w : w;
+        if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = w; }
+        else line = test;
+      });
+      if (line) lines.push(line);
+      lines.forEach((l, i) => ctx.fillText(l, cx, y + i * lineHeight));
+    }
+    window.kpDownloadRiskProfile = function (key) {
+      const c = drawRiskCard(key);
+      if (!c) return;
+      const a = document.createElement('a');
+      a.download = 'kryptoprofik-profil-' + key + '.png';
+      a.href = c.toDataURL('image/png');
+      a.click();
+      if (window.gtag) window.gtag('event', 'risk_profile_download', { profile: key });
+    };
+
+    function renderResult() {
+      isEn = document.documentElement.lang === 'en';
+      const key = band(score);
+      const p = RISK_PROFILES[key];
+      let chaptersHtml = '';
+      p.chapters.forEach(c => {
+        chaptersHtml += '<a href="' + c.href + '" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 transition text-xs font-bold text-slate-200 mb-2"><i class="fa-solid fa-arrow-right text-brand-accent"></i>' + t({ cs: c.cs, en: c.en }) + '</a>';
+      });
+      wrap.innerHTML =
+        '<div class="text-center">' +
+        '<div class="text-5xl mb-2">' + p.emoji + '</div>' +
+        '<span class="text-brand-accent text-xs font-bold uppercase tracking-widest">' + (isEn ? 'Your investor profile' : 'Tvůj investiční profil') + '</span>' +
+        '<h3 class="text-2xl font-black text-white mt-1 mb-2">' + t(p.title) + '</h3>' +
+        '<p class="text-slate-400 text-sm mb-4 max-w-md mx-auto">' + t(p.desc) + '</p>' +
+        '<p class="text-slate-500 text-[11px] mb-5">' + (isEn ? 'This is an educational self-assessment, not financial advice.' : 'Jde o vzdělávací sebehodnocení, ne finanční poradenství.') + '</p>' +
+        '<p class="text-slate-300 text-xs font-bold mb-2">' + (isEn ? 'Recommended for you:' : 'Doporučujeme ti:') + '</p>' +
+        '<div class="flex flex-col max-w-xs mx-auto mb-5">' + chaptersHtml + '</div>' +
+        '<div class="flex gap-2 justify-center flex-wrap">' +
+        '<button type="button" class="riskRetry px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm transition">' + (isEn ? 'Try again' : 'Zkusit znovu') + '</button>' +
+        '<button type="button" class="riskShare px-4 py-2.5 rounded-xl bg-brand-accent hover:opacity-90 text-white font-bold text-sm transition"><i class="fa-solid fa-download mr-1.5"></i>' + (isEn ? 'Download result' : 'Stáhnout výsledek') + '</button>' +
+        '</div></div>';
+      wrap.querySelector('.riskRetry').addEventListener('click', () => { qi = 0; score = 0; renderQuestion(); });
+      wrap.querySelector('.riskShare').addEventListener('click', () => window.kpDownloadRiskProfile(key));
+      if (window.gtag) window.gtag('event', 'risk_profile_complete', { profile: key });
+    }
+
+    window.kpRerenderRiskQuiz = function () { if (qi >= RISK_QUIZ.length) renderResult(); else renderQuestion(); };
+
+    function renderQuestion() {
+      isEn = document.documentElement.lang === 'en';
+      if (qi >= RISK_QUIZ.length) { renderResult(); return; }
+      const it = RISK_QUIZ[qi];
+      let optsHtml = '';
+      t(it.o).forEach((opt, i) => {
+        optsHtml += '<button type="button" class="riskOpt w-full text-left px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 transition text-sm font-bold text-slate-200 mb-2" data-i="' + i + '">' + opt + '</button>';
+      });
+      wrap.innerHTML =
+        '<div class="flex justify-between text-xs font-bold text-slate-400 mb-3"><span>' + (isEn ? 'Question ' : 'Otázka ') + (qi + 1) + ' / ' + RISK_QUIZ.length + '</span></div>' +
+        '<h3 class="text-base sm:text-lg font-bold text-white mb-4">' + t(it.q) + '</h3>' +
+        '<div>' + optsHtml + '</div>';
+      wrap.querySelectorAll('.riskOpt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          score += parseInt(btn.getAttribute('data-i'), 10);
+          qi++;
+          renderQuestion();
+        });
+      });
+    }
+
+    renderQuestion();
   })();
 
 })();

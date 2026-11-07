@@ -1,5 +1,5 @@
 const CACHE = 'kryptoprofik-v2';
-const ASSETS = ['index.html', 'zaklady.html', 'penezenky.html', 'burzy.html', 'anti-scam.html', 'analyza.html', 'strategie.html', 'dane.html', 'nastroje.html', 'glosar.html', 'style.css', 'app.js', 'i18n-data.js'];
+const ASSETS = ['index.html', 'zaklady.html', 'penezenky.html', 'burzy.html', 'anti-scam.html', 'analyza.html', 'strategie.html', 'dane.html', 'nastroje.html', 'glosar.html', 'style.css', 'app.js', 'i18n-data.js', 'qrcode.min.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).catch(() => {}));
