@@ -1643,6 +1643,37 @@
     }
   })();
 
+  /* ================= Visual learning roadmap (homepage) ================= */
+  (function roadmapMap() {
+    const nodes = document.querySelectorAll('[data-road-id]');
+    if (!nodes.length) return;
+    let visited = [];
+    try { visited = JSON.parse(localStorage.getItem('kp_visited_v1') || '[]'); } catch (e) {}
+    const visitedSet = new Set(visited);
+    let currentNode = null;
+    nodes.forEach(node => {
+      const id = node.getAttribute('data-road-id');
+      const done = visitedSet.has(id);
+      const numEl = node.querySelector('[data-road-num]');
+      const checkEl = node.querySelector('[data-road-check]');
+      if (done) {
+        node.classList.add('kp-done');
+        if (numEl) numEl.classList.add('hidden');
+        if (checkEl) checkEl.classList.remove('hidden');
+      } else if (!currentNode) {
+        currentNode = node;
+      }
+    });
+    if (currentNode) {
+      currentNode.classList.add('kp-current');
+      const badge = document.createElement('span');
+      const isEn = document.documentElement.lang === 'en';
+      badge.textContent = isEn ? 'you are here' : 'jste tady';
+      badge.className = 'kp-road-here';
+      currentNode.appendChild(badge);
+    }
+  })();
+
   /* ================= Smart "where to start" homepage quiz ================= */
   (function smartStartQuiz() {
     const wrap = document.getElementById('smartStartWrap');
