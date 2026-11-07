@@ -1187,6 +1187,8 @@
   const SITE_INDEX = [{"id": "m1", "cs": "Modul 1: Základy blockchainu a kryptoměn", "en": "Modul 1: Základy blockchainu a kryptoměn", "page": "zaklady", "chap": "Základy"}, {"id": "l1l2", "cs": "Layer 1 vs. Layer 2 a blockchain trilema", "en": "Layer 1 vs. Layer 2 and the blockchain trilemma", "page": "zaklady", "chap": "Základy"}, {"id": "timeline", "cs": "Časová osa: historie kryptoměn", "en": "Timeline: the history of crypto", "page": "zaklady", "chap": "Základy"}, {"id": "cycle", "cs": "Čtyřletý cyklus a psychologie trhu", "en": "The four-year cycle and market psychology", "page": "zaklady", "chap": "Základy"}, {"id": "myths", "cs": "Mýty vs. realita o kryptoměnách", "en": "Crypto myths vs. reality", "page": "zaklady", "chap": "Základy"}, {"id": "lightning", "cs": "Bitcoin Lightning Network", "en": "Bitcoin Lightning Network", "page": "zaklady", "chap": "Základy"}, {"id": "nft", "cs": "NFT a digitální vlastnictví", "en": "NFTs and digital ownership", "page": "zaklady", "chap": "Základy"}, {"id": "token-creation", "cs": "Jak vzniká vlastní token/memecoin (Pump.fun, Remix) — a proč to skoro vždy skončí na nule", "en": "How tokens/memecoins get created (Pump.fun, Remix) — and why it almost always ends at zero", "page": "zaklady", "chap": "Základy"}, {"id": "stablecoins", "cs": "Průvodce stablecoiny: typy krytí a riziko algoritmických modelů", "en": "Stablecoin guide: types of backing and the risk of algorithmic models", "page": "zaklady", "chap": "Základy"}, {"id": "tokenomics", "cs": "Tokenomika a whitepaper: na co se zaměřit", "en": "Tokenomics and whitepapers: what to focus on", "page": "zaklady", "chap": "Základy"}, {"id": "psych-traps", "cs": "Psychologické pasti: FOMO, revenge trading a panika", "en": "Psychological traps: FOMO, revenge trading and panic", "page": "zaklady", "chap": "Základy"}, {"id": "about-project", "cs": "O projektu: nezávislost a poslání", "en": "About the project: independence and mission", "page": "zaklady", "chap": "Základy"}, {"id": "first-purchase", "cs": "Mapa prvního nákupu: od korun po bezpečné krypto", "en": "Your first-purchase map: from CZK to safely stored crypto", "page": "zaklady", "chap": "Základy"}, {"id": "penezenky", "cs": "Modul 2: Peněženky a zabezpečení", "en": "Modul 2: Peněženky a zabezpečení", "page": "penezenky", "chap": "Peněženky"}, {"id": "burzy", "cs": "Modul 3: Burzy (CEX) a decentralizované směnárny (DEX)", "en": "Modul 3: Burzy (CEX) a decentralizované směnárny (DEX)", "page": "burzy", "chap": "Burzy & DEX"}, {"id": "scam-checker", "cs": "Modul 4: Bezpečnost a anti-scam", "en": "Modul 4: Bezpečnost a anti-scam", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "selfcustody", "cs": "Self-custody a multi-sig peněženky", "en": "Self-custody and multi-sig wallets", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "hwwallet", "cs": "Bezpečné používání hardware peněženek", "en": "Using hardware wallets safely", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "airdrops", "cs": "Pravda a varování před airdropy", "en": "The truth about airdrops, and a warning", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "social", "cs": "Bezpečnost na sociálních sítích", "en": "Security on social networks", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "rescue", "cs": "DeFi záchranná brzda", "en": "The DeFi emergency brake", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "hacks", "cs": "Historické hacky a poučení", "en": "Historic hacks and lessons", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "cexdex", "cs": "Srovnání rizik CEX vs. DEX", "en": "CEX vs. DEX risk comparison", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "inheritance", "cs": "Krypto a rodina: dědictví", "en": "Crypto and family: inheritance", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "decalogue", "cs": "Desatero bezpečného investora", "en": "The safe investor’s ten rules", "page": "anti-scam", "chap": "Anti-scam"}, {"id": "m5", "cs": "Modul 5: Technická a fundamentální analýza", "en": "Modul 5: Technická a fundamentální analýza", "page": "analyza", "chap": "Analýza"}, {"id": "candlesticks", "cs": "Čtení svíčkových grafů: základy", "en": "Reading candlestick charts: the basics", "page": "analyza", "chap": "Analýza"}, {"id": "onchain", "cs": "On-chain data a indikátory: RSI, MACD, TVL a aktivní peněženky", "en": "On-chain data and indicators: RSI, MACD, TVL and active wallets", "page": "analyza", "chap": "Analýza"}, {"id": "m6", "cs": "Modul 6: Strategie a DeFi", "en": "Modul 6: Strategie a DeFi", "page": "strategie", "chap": "Strategie"}, {"id": "staking", "cs": "Staking do hloubky: Native, Liquid staking a Yield farming", "en": "Staking in depth: native, liquid staking and yield farming", "page": "strategie", "chap": "Strategie"}, {"id": "tax-main", "cs": "Daně v ČR: časový test, hodnotový test a past směn krypto-za-krypto", "en": "Czech crypto tax: the time test, value test, and the crypto-swap trap", "page": "dane", "chap": "Daně v ČR"}, {"id": "nastroje", "cs": "Nástroje a kalkulačky", "en": "Tools & calculators", "page": "nastroje", "chap": "Nástroje"}, {"id": "kviz", "cs": "Kvíz", "en": "Quiz", "page": "nastroje", "chap": "Nástroje"}, {"id": "slovnik", "cs": "Slovník pojmů", "en": "Glossary", "page": "glosar", "chap": "Slovník"}, {"id": "faq", "cs": "Časté otázky", "en": "FAQ", "page": "glosar", "chap": "FAQ"}];
   const ALL_MODULE_IDS = ["m1", "l1l2", "timeline", "cycle", "myths", "lightning", "nft", "token-creation", "stablecoins", "tokenomics", "psych-traps", "about-project", "first-purchase", "penezenky", "burzy", "scam-checker", "selfcustody", "hwwallet", "airdrops", "social", "rescue", "hacks", "cexdex", "inheritance", "decalogue", "m5", "candlesticks", "onchain", "m6", "staking", "tax-main"];
   const CHAPTER_MODULES = {"m1": ["m1", "l1l2", "timeline", "cycle", "myths", "lightning", "nft", "token-creation", "stablecoins", "tokenomics", "psych-traps", "about-project", "first-purchase"], "penezenky": ["penezenky"], "burzy": ["burzy"], "scam-checker": ["scam-checker", "selfcustody", "hwwallet", "airdrops", "social", "rescue", "hacks", "cexdex", "inheritance", "decalogue"], "m5": ["m5", "candlesticks", "onchain"], "m6": ["m6", "staking"], "tax-main": ["tax-main"]};
+  const CH_QUIZ = {"penezenky": [{"q": {"cs": "Komu smíte prozradit svoji seed phrase?", "en": "Who may you tell your seed phrase to?"}, "o": {"cs": ["Podpoře peněženky", "Nikomu", "Kamarádovi, kterému věříte", "Burze při ověření účtu"], "en": ["Wallet support", "Nobody", "A friend you trust", "An exchange during account verification"]}, "a": 1, "e": {"cs": "Nikomu. Kdo zná seed, ovládá celou peněženku. Skutečná podpora se na něj nikdy neptá.", "en": "Nobody. Whoever knows the seed controls the whole wallet. Real support never asks for it."}}], "burzy": [{"q": {"cs": "Co znamená limitní příkaz typu „maker“?", "en": "What does a \"maker\" limit order mean?"}, "o": {"cs": ["Koupě okamžitě za tržní cenu", "Příkaz, který přidává likviditu do knihy příkazů", "Prodej s pákou", "Převod na peněženku"], "en": ["A purchase executed immediately at the market price", "An order that adds liquidity to the order book", "A leveraged sale", "A transfer to a wallet"]}, "a": 1, "e": {"cs": "Maker příkaz čeká v knize, přidává likviditu a obvykle platí nižší poplatek než taker.", "en": "A maker order waits in the book, adds liquidity and usually pays a lower fee than a taker."}}, {"q": {"cs": "Co je „impermanent loss“ u poskytování likvidity na DEXu?", "en": "What is \"impermanent loss\" when providing liquidity on a DEX?"}, "o": {"cs": ["Poplatek za výběr z burzy", "Ztráta oproti prostému držení (HODL), když se ceny aktiv v poolu rozejdou", "Daň z příjmu z LP odměn", "Výpadek sítě"], "en": ["A withdrawal fee charged by the exchange", "A loss versus simply holding (HODL) when the pooled assets’ prices diverge", "Income tax on LP rewards", "A network outage"]}, "a": 1, "e": {"cs": "Když se poměr cen aktiv v poolu výrazně změní, hodnota LP pozice může zaostat za tím, co byste měli, kdybyste aktiva jen drželi.", "en": "When the price ratio of pooled assets shifts a lot, an LP position can end up worth less than simply holding the same assets."}}], "scam-checker": [{"q": {"cs": "Co je „honeypot“ token?", "en": "What is a \"honeypot\" token?"}, "o": {"cs": ["Token s vysokým staking výnosem", "Token, který lze koupit, ale ne prodat", "Token spálený týmem", "Stablecoin"], "en": ["A token with a high staking yield", "A token you can buy but not sell", "A token burned by the team", "A stablecoin"]}, "a": 1, "e": {"cs": "U honeypotu kontrakt blokuje prodej. Před nákupem ho ověřte nástrojem jako GoPlus nebo TokenSniffer.", "en": "With a honeypot the contract blocks selling. Check it with a tool such as GoPlus or TokenSniffer before buying."}}, {"q": {"cs": "Jaký podíl nově vzniklých tokenů na Pump.fun je podle analýzy Solidus Labs spojen s podvodným chováním?", "en": "What share of new Pump.fun tokens did a Solidus Labs analysis link to fraudulent behavior?"}, "o": {"cs": ["Přibližně 10 %", "Přibližně 50 %", "Přibližně 98,6 %", "Méně než 1 %"], "en": ["About 10%", "About 50%", "About 98.6%", "Less than 1%"]}, "a": 2, "e": {"cs": "Podle analýzy bylo s rug pully a pump-and-dump schématy spojeno přibližně 98,6 % nových tokenů — drtivá většina.", "en": "Roughly 98.6% of new tokens were linked to rug pulls and pump-and-dump schemes — the vast majority."}}, {"q": {"cs": "Co umožňuje aktivní „mint authority“ u tokenu?", "en": "What does an active \"mint authority\" on a token allow?"}, "o": {"cs": ["Zmrazit peněženky držitelů", "Vytvářet nové mince podle libosti a naředit nabídku", "Zamknout likviditu", "Snížit poplatky sítě"], "en": ["Freeze holders’ wallets", "Create new coins at will and dilute supply", "Lock liquidity", "Lower network fees"]}, "a": 1, "e": {"cs": "Neomezená mint authority znamená, že tvůrce může kdykoli vyrazit další mince a zhroutit cenu.", "en": "Unlimited mint authority means the creator can mint more coins at any time and crash the price."}}], "m5": [{"q": {"cs": "Proč je důležité sledovat FDV, nejen market cap?", "en": "Why watch FDV and not just market cap?"}, "o": {"cs": ["FDV je vždy nižší", "FDV ukáže hodnotu při všech vydaných mincích a riziko budoucího prodejního tlaku", "FDV určuje poplatky sítě", "Je to totéž"], "en": ["FDV is always lower", "FDV shows the value with all coins issued and the risk of future selling pressure", "FDV determines network fees", "They are the same thing"]}, "a": 1, "e": {"cs": "Velký rozdíl mezi FDV a market cap znamená, že se teprve uvolní spousta tokenů.", "en": "A big gap between FDV and market cap means many tokens are still to be released."}}], "m6": [{"q": {"cs": "Co je u stakingu „slashing“?", "en": "What is \"slashing\" in staking?"}, "o": {"cs": ["Bonus za dlouhodobé stakování", "Penalizace (ztráta části prostředků) při výpadku nebo zneužití validátora", "Poplatek burzy za staking", "Jiný název pro unbonding"], "en": ["A bonus for staking long-term", "A penalty (loss of part of the funds) when a validator misbehaves or goes offline", "An exchange’s staking fee", "Another name for unbonding"]}, "a": 1, "e": {"cs": "Slashing penalizuje nespolehlivé nebo škodlivé validátory — a tuto ztrátu často nese i delegující.", "en": "Slashing penalizes unreliable or malicious validators — and the delegator often bears part of that loss too."}}], "tax-main": [{"q": {"cs": "Po jaké době držení je v ČR příjem z prodeje krypta (u nepodnikatele) osvobozen časovým testem?", "en": "After what holding period is income from selling crypto (for a non-business individual) exempt in the Czech Republic under the time test?"}, "o": {"cs": ["Po 6 měsících", "Po 1 roce", "Po více než 3 letech", "Nikdy"], "en": ["After 6 months", "After 1 year", "After more than 3 years", "Never"]}, "a": 2, "e": {"cs": "Časový test je 3 roky. Alternativně je osvobozen úhrn příjmů do 100 000 Kč za rok. Vždy si to ověřte u poradce.", "en": "The time test is 3 years. Alternatively, total income up to CZK 100,000 per year is exempt. Always verify with an adviser."}}, {"q": {"cs": "Směníte BTC za ETH (krypto-za-krypto). Co se stane s časovým testem pro nově získané ETH?", "en": "You swap BTC for ETH (crypto-to-crypto). What happens to the time test for the newly received ETH?"}, "o": {"cs": ["Nic, pokračuje od data nabytí BTC", "Restartuje se — počítá se znovu od data směny", "Časový test na swapy neplatí", "Zdvojnásobí se na 6 let"], "en": ["Nothing, it continues from when the BTC was acquired", "It resets — it starts counting again from the swap date", "The time test does not apply to swaps", "It doubles to 6 years"]}, "a": 1, "e": {"cs": "Směna krypto-za-krypto je úplatný převod. Časový test pro nově získané aktivum začíná běžet znovu od data směny — na toto lidé v ČR často doplácejí.", "en": "A crypto-to-crypto swap is a taxable transfer. The time test for the newly received asset restarts from the swap date — this is a common costly surprise for Czech users."}}], "m1": [{"q": {"cs": "Jaký typ stablecoinu je historicky nejrizikovější, jak ukázal pád UST/Luna v roce 2022?", "en": "Which type of stablecoin is historically the riskiest, as the 2022 UST/Luna collapse showed?"}, "o": {"cs": ["Fiat-backed (např. USDC)", "Crypto-backed (např. DAI)", "Algoritmický, bez plného krytí aktivy", "Všechny jsou stejně rizikové"], "en": ["Fiat-backed (e.g. USDC)", "Crypto-backed (e.g. DAI)", "Algorithmic, without full asset backing", "They are all equally risky"]}, "a": 2, "e": {"cs": "Algoritmický stablecoin UST ztratil kolík a spadl k nule během pár dní, protože jeho hodnotu nekryla žádná rezerva aktiv.", "en": "The algorithmic stablecoin UST lost its peg and collapsed to near zero within days because no asset reserve backed its value."}}]};
+  const CH_META = {"m1": {"cs": "Základy", "en": "Basics", "num": "1", "c1": "#3b82f6", "c2": "#06b6d4"}, "penezenky": {"cs": "Peněženky", "en": "Wallets", "num": "2", "c1": "#06b6d4", "c2": "#3b82f6"}, "burzy": {"cs": "Burzy & DEX", "en": "Exchanges & DEX", "num": "3", "c1": "#a855f7", "c2": "#6366f1"}, "scam-checker": {"cs": "Anti-scam", "en": "Anti-scam", "num": "4", "c1": "#f43f5e", "c2": "#ec4899"}, "m5": {"cs": "Analýza", "en": "Analysis", "num": "5", "c1": "#1fd98b", "c2": "#0ea5e9"}, "m6": {"cs": "Strategie", "en": "Strategy", "num": "6", "c1": "#f59e0b", "c2": "#f97316"}, "tax-main": {"cs": "Daně v ČR", "en": "Czech taxes", "num": "7", "c1": "#fb923c", "c2": "#f59e0b"}};
   const CURRENT_PAGE = document.documentElement.getAttribute('data-page') || 'index';
   function renderGlobalResults(q) {
     const box = document.getElementById('globalResults');
@@ -1604,9 +1606,20 @@
       const toast = document.createElement('div');
       toast.className = 'fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-[70] px-4 py-3 rounded-2xl bg-slate-900 border border-emerald-500/50 shadow-2xl flex items-center gap-3 text-sm max-w-[92vw]';
       toast.innerHTML = '<span class="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-award"></i></span>' +
-        '<span class="text-slate-200"><b class="text-white">' + (isEn ? 'Badge earned: ' : 'Odznak získán: ') + '</b>' + label + '</span>';
+        '<span class="text-slate-200"><b class="text-white">' + (isEn ? 'Badge earned: ' : 'Odznak získán: ') + '</b>' + label + '</span>' +
+        '<button type="button" class="kpBadgeShareBtn shrink-0 px-2.5 py-1.5 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 text-xs font-bold transition" style="min-height:1.75rem" title="' + (isEn ? 'Download image' : 'Stáhnout obrázek') + '"><i class="fa-solid fa-download"></i> ' + (isEn ? 'Save' : 'Uložit') + '</button>';
       document.body.appendChild(toast);
-      setTimeout(() => { toast.style.transition = 'opacity .4s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 3500);
+      // the cookie-consent bar (z-[80], full-width, bottom-0) can sit above and
+      // cover this toast for first-time visitors -- lift above it when present
+      const cookieBar = document.getElementById('cookieBar');
+      if (cookieBar) {
+        const h = cookieBar.getBoundingClientRect().height;
+        toast.style.bottom = (h + 16) + 'px';
+      }
+      toast.style.zIndex = '85';
+      const shareBtn = toast.querySelector('.kpBadgeShareBtn');
+      if (shareBtn) shareBtn.addEventListener('click', () => { if (window.kpDownloadChapterBadge) window.kpDownloadChapterBadge(chip); });
+      setTimeout(() => { toast.style.transition = 'opacity .4s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 400); }, 5000);
     }
 
     if (visited.length) {
@@ -1637,6 +1650,19 @@
         if (done < ids.length) return;
         badge.classList.remove('hidden');
         badge.classList.add('flex');
+        if (!badge.parentElement.querySelector('.kpBadgeDl')) {
+          const dl = document.createElement('button');
+          dl.type = 'button';
+          dl.className = 'kpBadgeDl';
+          dl.title = isEn ? 'Download image' : 'Stáhnout obrázek';
+          dl.innerHTML = '<i class="fa-solid fa-download"></i>';
+          dl.setAttribute('style', 'position:absolute;top:.5rem;right:3rem;width:2rem;height:2rem;border-radius:9999px;background:rgba(7,9,14,.85);border:1px solid rgba(16,185,129,.5);color:#34d399;display:flex;align-items:center;justify-content:center;font-size:.7rem;box-shadow:0 2px 8px rgba(0,0,0,.4);z-index:5');
+          dl.addEventListener('click', e => {
+            e.preventDefault(); e.stopPropagation();
+            if (window.kpDownloadChapterBadge) window.kpDownloadChapterBadge(chip);
+          });
+          badge.parentElement.appendChild(dl);
+        }
         if (!seen[chip]) { seen[chip] = true; seenChanged = true; showBadgeToast(chip); }
       });
       if (seenChanged) { try { localStorage.setItem('kp_badges_seen_v1', JSON.stringify(seen)); } catch (e) {} }
@@ -1890,6 +1916,173 @@
       } finally {
         btn.disabled = false;
         btn.innerHTML = origHtml;
+      }
+    });
+  })();
+
+  /* ================= Shareable chapter badge image (IG story format) ================= */
+  (function chapterBadgeShare() {
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+    function drawChapterBadge(chip) {
+      const meta = CH_META[chip]; if (!meta) return null;
+      const isEn = document.documentElement.lang === 'en';
+      let visited = [];
+      try { visited = JSON.parse(localStorage.getItem('kp_visited_v1') || '[]'); } catch (e) {}
+      const visitedSet = new Set(visited);
+      const total = ALL_MODULE_IDS.length;
+      const done = ALL_MODULE_IDS.filter(id => visitedSet.has(id)).length;
+      const W = 1080, H = 1920;
+      const canvas = document.createElement('canvas');
+      canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#07090e'); bg.addColorStop(1, '#0f172a');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = meta.c1; ctx.lineWidth = 8; ctx.strokeRect(36, 36, W - 72, H - 72);
+      ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 2; ctx.strokeRect(58, 58, W - 116, H - 116);
+      // wordmark
+      const lg = ctx.createLinearGradient(W / 2 - 54, 140, W / 2 + 54, 248);
+      lg.addColorStop(0, '#1fd98b'); lg.addColorStop(1, '#0ea5e9');
+      ctx.fillStyle = lg; roundRect(ctx, W / 2 - 54, 140, 108, 108, 26); ctx.fill();
+      ctx.fillStyle = '#fff'; ctx.font = '900 58px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('K', W / 2, 198);
+      ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 30px sans-serif'; ctx.textBaseline = 'alphabetic';
+      ctx.fillText('KRYPTOPROFÍK', W / 2, 300);
+      // big chapter circle
+      const cy = 620, r = 220;
+      const grad = ctx.createLinearGradient(W / 2 - r, cy - r, W / 2 + r, cy + r);
+      grad.addColorStop(0, meta.c1); grad.addColorStop(1, meta.c2);
+      ctx.beginPath(); ctx.arc(W / 2, cy, r, 0, Math.PI * 2); ctx.fillStyle = grad; ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,.25)'; ctx.lineWidth = 6; ctx.stroke();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 22; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(W / 2 - 95, cy + 5); ctx.lineTo(W / 2 - 25, cy + 80); ctx.lineTo(W / 2 + 105, cy - 90); ctx.stroke();
+      // labels
+      ctx.fillStyle = meta.c1; ctx.font = '900 32px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText((isEn ? 'CHAPTER COMPLETE' : 'KAPITOLA DOKONČENA'), W / 2, cy + r + 90);
+      ctx.fillStyle = '#fff'; ctx.font = '900 64px sans-serif';
+      const title = (isEn ? meta.en : meta.cs);
+      ctx.fillText(title, W / 2, cy + r + 170);
+      ctx.fillStyle = '#cbd5e1'; ctx.font = '30px sans-serif';
+      ctx.fillText('KryptoProfík masterclass', W / 2, cy + r + 225);
+      // overall progress bar
+      const barW = 760, barX = W / 2 - barW / 2, barY = cy + r + 300, barH = 20;
+      ctx.fillStyle = 'rgba(255,255,255,.1)'; roundRect(ctx, barX, barY, barW, barH, barH / 2); ctx.fill();
+      const pct = total ? Math.max(0.02, done / total) : 0;
+      const pg = ctx.createLinearGradient(barX, 0, barX + barW, 0);
+      pg.addColorStop(0, '#1fd98b'); pg.addColorStop(1, '#0ea5e9');
+      ctx.fillStyle = pg; roundRect(ctx, barX, barY, barW * pct, barH, barH / 2); ctx.fill();
+      ctx.fillStyle = '#94a3b8'; ctx.font = 'bold 26px sans-serif';
+      ctx.fillText((isEn ? `${done}/${total} lessons done overall` : `Celkem hotovo ${done}/${total} lekcí`), W / 2, barY + 64);
+      // footer
+      ctx.fillStyle = '#64748b'; ctx.font = '26px sans-serif';
+      ctx.fillText('kryptoprofik.fun', W / 2, H - 90);
+      return canvas;
+    }
+    window.kpDownloadChapterBadge = function (chip) {
+      const c = drawChapterBadge(chip);
+      if (!c) return;
+      const a = document.createElement('a');
+      a.download = 'kryptoprofik-' + chip + '.png';
+      a.href = c.toDataURL('image/png');
+      a.click();
+      if (window.gtag) window.gtag('event', 'chapter_badge_download', { chip });
+    };
+  })();
+
+  /* ================= Chapter mini-quiz ("Otestujte se") ================= */
+  (function chapterMiniQuiz() {
+    const wraps = document.querySelectorAll('[data-ch-quiz]');
+    if (!wraps.length) return;
+    const isEn = document.documentElement.lang === 'en';
+    const PKEY = 'kp_quiz_passed_v1';
+    function getPassed() { try { return JSON.parse(localStorage.getItem(PKEY) || '{}'); } catch (e) { return {}; } }
+    function setPassed(obj) { try { localStorage.setItem(PKEY, JSON.stringify(obj)); } catch (e) {} }
+
+    wraps.forEach(wrap => {
+      const chip = wrap.getAttribute('data-ch-quiz');
+      const qs = (CH_QUIZ[chip] || []);
+      if (!qs.length) { wrap.closest('section') && wrap.closest('section').remove(); return; }
+      let qi = 0, score = 0, answered = false;
+      const passedMap = getPassed();
+      const already = !!passedMap[chip];
+
+      function pct(o) { return isEn ? o.en : o.cs; }
+
+      function render() {
+        if (qi >= qs.length) {
+          const passed = score === qs.length;
+          if (passed && !passedMap[chip]) { passedMap[chip] = true; setPassed(passedMap); }
+          wrap.innerHTML =
+            '<div class="text-center">' +
+            '<div class="text-4xl mb-3">' + (passed ? '\u{1F3C5}' : '\u{1F504}') + '</div>' +
+            '<h3 class="text-xl font-black text-white mb-2">' + (passed
+              ? (isEn ? 'Great, you know this chapter!' : 'Skvěle, tuhle kapitolu umíte!')
+              : (isEn ? 'Almost — give it another try' : 'Skoro — zkuste to ještě jednou')) + '</h3>' +
+            '<p class="text-slate-400 text-sm mb-5">' + (isEn ? 'Score: ' : 'Skóre: ') + score + ' / ' + qs.length + '</p>' +
+            '<div class="flex gap-2 justify-center flex-wrap">' +
+            '<button type="button" class="chQuizRetry px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm transition">' + (isEn ? 'Try again' : 'Zkusit znovu') + '</button>' +
+            (passed ? '<button type="button" class="chQuizShare px-4 py-2.5 rounded-xl bg-brand-accent hover:opacity-90 text-white font-bold text-sm transition"><i class="fa-solid fa-download mr-1.5"></i>' + (isEn ? 'Download badge' : 'Stáhnout odznak') + '</button>' : '') +
+            '</div></div>';
+          wrap.querySelector('.chQuizRetry').addEventListener('click', () => { qi = 0; score = 0; render(); });
+          const shareBtn = wrap.querySelector('.chQuizShare');
+          if (shareBtn) shareBtn.addEventListener('click', () => { if (window.kpDownloadChapterBadge) window.kpDownloadChapterBadge(chip); });
+          return;
+        }
+        const it = qs[qi];
+        answered = false;
+        let optsHtml = '';
+        pct(it.o).forEach((opt, i) => {
+          optsHtml += '<button type="button" class="chQuizOpt w-full text-left px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 transition text-sm font-bold text-slate-200 mb-2" data-i="' + i + '">' + opt + '</button>';
+        });
+        wrap.innerHTML =
+          '<div class="flex justify-between text-xs font-bold text-slate-400 mb-3"><span>' + (isEn ? 'Question ' : 'Otázka ') + (qi + 1) + ' / ' + qs.length + '</span><span>' + (isEn ? 'Score: ' : 'Skóre: ') + score + '</span></div>' +
+          '<h3 class="text-base sm:text-lg font-bold text-white mb-4">' + pct(it.q) + '</h3>' +
+          '<div id="chQuizOpts">' + optsHtml + '</div>' +
+          '<p class="hidden mt-3 text-xs text-slate-300 bg-slate-900 border border-brand-border rounded-xl p-3" id="chQuizExplain"></p>' +
+          '<div class="mt-4 flex justify-end"><button type="button" class="hidden chQuizNext px-5 py-2 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition">' + (isEn ? 'Next' : 'Další') + '</button></div>';
+        wrap.querySelectorAll('.chQuizOpt').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (answered) return;
+            answered = true;
+            const i = parseInt(btn.getAttribute('data-i'), 10);
+            const correct = i === it.a;
+            if (correct) score++;
+            wrap.querySelectorAll('.chQuizOpt').forEach(b2 => {
+              const i2 = parseInt(b2.getAttribute('data-i'), 10);
+              if (i2 === it.a) { b2.style.background = 'rgba(16,185,129,.25)'; b2.style.color = '#34d399'; }
+              else if (i2 === i) { b2.style.background = 'rgba(244,63,94,.2)'; b2.style.color = '#fb7185'; }
+            });
+            const ex = wrap.querySelector('#chQuizExplain');
+            ex.textContent = pct(it.e); ex.classList.remove('hidden');
+            const nx = wrap.querySelector('.chQuizNext');
+            nx.textContent = qi === qs.length - 1 ? (isEn ? 'See result' : 'Zobrazit výsledek') : (isEn ? 'Next' : 'Další');
+            nx.classList.remove('hidden');
+            nx.addEventListener('click', () => { qi++; render(); }, { once: true });
+          });
+        });
+      }
+
+      if (already) {
+        wrap.innerHTML =
+          '<div class="text-center">' +
+          '<div class="text-4xl mb-3">\u{2705}</div>' +
+          '<h3 class="text-lg font-black text-white mb-2">' + (isEn ? 'You already passed this quiz' : 'Tenhle kvíz už máte splněný') + '</h3>' +
+          '<div class="flex gap-2 justify-center flex-wrap">' +
+          '<button type="button" class="chQuizRetry px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-sm transition">' + (isEn ? 'Try again' : 'Zkusit znovu') + '</button>' +
+          '<button type="button" class="chQuizShare px-4 py-2.5 rounded-xl bg-brand-accent hover:opacity-90 text-white font-bold text-sm transition"><i class="fa-solid fa-download mr-1.5"></i>' + (isEn ? 'Download badge' : 'Stáhnout odznak') + '</button>' +
+          '</div></div>';
+        wrap.querySelector('.chQuizRetry').addEventListener('click', () => { qi = 0; score = 0; render(); });
+        wrap.querySelector('.chQuizShare').addEventListener('click', () => { if (window.kpDownloadChapterBadge) window.kpDownloadChapterBadge(chip); });
+      } else {
+        render();
       }
     });
   })();
