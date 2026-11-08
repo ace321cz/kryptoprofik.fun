@@ -30,7 +30,8 @@
       qBadgeTitle: 'KryptoProfík – Certifikovaný začátečník',
       qBadgeSub: 'Úspěšně jste splnili certifikační kvíz portálu KryptoProfík.',
       qBadgeDownload: 'Stáhnout certifikát (.txt)',
-      fng: { 'Extreme Fear': 'Extrémní strach', 'Fear': 'Strach', 'Neutral': 'Neutrální', 'Greed': 'Chamtivost', 'Extreme Greed': 'Extrémní chamtivost' }
+      fng: { 'Extreme Fear': 'Extrémní strach', 'Fear': 'Strach', 'Neutral': 'Neutrální', 'Greed': 'Chamtivost', 'Extreme Greed': 'Extrémní chamtivost' },
+      days: 'dní'
     },
     en: {
       locale: 'en-US', czk: 'CZK',
@@ -49,7 +50,8 @@
       qBadgeTitle: 'KryptoProfík – Certified Beginner',
       qBadgeSub: 'You passed the KryptoProfík certification quiz.',
       qBadgeDownload: 'Download certificate (.txt)',
-      fng: {}
+      fng: {},
+      days: 'days'
     }
   };
   const U = () => UI[lang];
@@ -162,7 +164,10 @@
       </div>
       <div id="${c.sym}-usd" class="text-base font-black text-white font-mono skeleton">$00000</div>
       <div id="${c.sym}-czk" class="text-[11px] text-slate-400 font-mono mt-1">&nbsp;</div>
-      <div id="${c.sym}-chg" class="text-[11px] font-bold mt-1">&nbsp;</div>
+      <div class="flex items-center justify-between mt-1">
+        <span id="${c.sym}-chg" class="text-[11px] font-bold">&nbsp;</span>
+        <span id="${c.sym}-spark" class="shrink-0"></span>
+      </div>
     </div>`).join('');
 
   const cvCoin = $('#cvCoin');
@@ -253,6 +258,86 @@
       const vv = $('#volValue');
       if (vv) vv.textContent = volState === 'n/a' ? 'n/a' : fmtBig(volState);
     }
+  }
+
+  /* ================= Sparklines ================= */
+  function renderSparkline(points) {
+    if (!Array.isArray(points) || points.length < 2) return '';
+    const w = 56, h = 20;
+    const min = Math.min.apply(null, points), max = Math.max.apply(null, points);
+    const range = (max - min) || 1;
+    const step = w / (points.length - 1);
+    const path = points.map((p, i) => (i * step).toFixed(1) + ',' + (h - ((p - min) / range) * h).toFixed(1)).join(' ');
+    const up = points[points.length - 1] >= points[0];
+    const color = up ? '#34d399' : '#fb7185';
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '"><polyline points="' + path + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  }
+
+  const sparkData = {};
+  function paintSparklines() {
+    COINS.forEach(c => {
+      const el = $('#' + c.sym + '-spark');
+      if (el && sparkData[c.id]) el.innerHTML = renderSparkline(sparkData[c.id]);
+    });
+  }
+
+  /* ================= Bitcoin halving countdown ================= */
+  function paintHalving() {
+    const LAST_HALVING = new Date('2024-04-20T00:09:26Z');
+    const NEXT_HALVING_EST = new Date('2028-04-17T00:00:00Z');
+    const now = new Date();
+    const totalMs = NEXT_HALVING_EST - LAST_HALVING;
+    const elapsedMs = now - LAST_HALVING;
+    const pct = Math.max(0, Math.min(100, (elapsedMs / totalMs) * 100));
+    const msLeft = Math.max(0, NEXT_HALVING_EST - now);
+    const daysLeft = Math.ceil(msLeft / 86400000);
+    const bar = $('#halvingBar'); if (bar) bar.style.width = pct.toFixed(1) + '%';
+    const daysEl = $('#halvingDays');
+    if (daysEl) daysEl.textContent = daysLeft.toLocaleString(U().locale) + ' ' + U().days;
+    const dateEl = $('#halvingDate');
+    if (dateEl) dateEl.textContent = '~' + NEXT_HALVING_EST.toLocaleDateString(U().locale, { year: 'numeric', month: 'long' });
+  }
+
+  /* ================= Top 20 ranking table ================= */
+  let top20Data = [];
+  let top20Sort = { key: 'rank', dir: 1 };
+  function paintTop20() {
+    const body = $('#top20Body'); if (!body || !top20Data.length) return;
+    const rows = top20Data.slice().sort((a, b) => {
+      const k = top20Sort.key;
+      const av = k === 'rank' ? a.market_cap_rank : k === 'name' ? a.symbol : k === 'price' ? a.current_price : k === 'chg24' ? a.price_change_percentage_24h : a.market_cap;
+      const bv = k === 'rank' ? b.market_cap_rank : k === 'name' ? b.symbol : k === 'price' ? b.current_price : k === 'chg24' ? b.price_change_percentage_24h : b.market_cap;
+      return ((av || 0) > (bv || 0) ? 1 : -1) * top20Sort.dir;
+    });
+    body.innerHTML = rows.map(r => {
+      const ch = typeof r.price_change_percentage_24h === 'number' ? r.price_change_percentage_24h : null;
+      const spark = r.sparkline_in_7d && r.sparkline_in_7d.price ? renderSparkline(r.sparkline_in_7d.price) : '';
+      return '<tr class="border-b border-brand-border/60">' +
+        '<td class="py-2 pr-2 text-slate-500">' + r.market_cap_rank + '</td>' +
+        '<td class="py-2 pr-2 font-bold text-white">' + r.symbol.toUpperCase() + '<span class="text-slate-500 font-normal ml-1 hidden sm:inline">' + r.name + '</span></td>' +
+        '<td class="py-2 pr-2 text-right font-mono text-white">' + fmtUsd(r.current_price) + '</td>' +
+        '<td class="py-2 pr-2 text-right font-bold ' + (ch >= 0 ? 'text-emerald-400' : 'text-rose-400') + '">' + (ch == null ? '–' : (ch >= 0 ? '+' : '') + ch.toFixed(2).replace('.', lang === 'cs' ? ',' : '.') + '%') + '</td>' +
+        '<td class="py-2 pr-2 text-center hidden sm:table-cell">' + spark + '</td>' +
+        '<td class="py-2 pl-2 text-right text-slate-300">' + fmtBig(r.market_cap) + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  async function fetchMarkets() {
+    try {
+      const m = await fetchJson('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=true&price_change_percentage=24h');
+      if (Array.isArray(m)) {
+        top20Data = m;
+        m.forEach(row => {
+          const match = COINS.find(c => c.id === row.id);
+          if (match && row.sparkline_in_7d && Array.isArray(row.sparkline_in_7d.price)) {
+            sparkData[match.id] = row.sparkline_in_7d.price;
+          }
+        });
+        paintSparklines();
+        paintTop20();
+      }
+    } catch (e) {}
   }
 
   async function fetchJson(url) {
@@ -793,6 +878,7 @@
     renderRoadmap(); renderGlossary(); renderFaq(); renderDonate(); renderQuiz(); renderModuleChrome(); updateFaqLd();
     updateAudit(); calcDCA(); calcRM(); paintPrices(); paintPulse(); updateConverter();
     handleSearch(si.value);
+    paintHalving(); paintTop20(); paintTop20ToggleLabel();
     if (window.kpRerenderChQuiz) window.kpRerenderChQuiz();
     if (window.kpRerenderRiskQuiz) window.kpRerenderRiskQuiz();
     if (pageLoaded) loadChart(currentSym);
@@ -811,8 +897,35 @@
   }
 
   setLang(initialLang(), false);
-  fetchPrices(); fetchPulse();
+  fetchPrices(); fetchPulse(); fetchMarkets(); paintHalving();
   setInterval(() => { if (!document.hidden) fetchPrices(); }, 60000);
+  setInterval(paintHalving, 3600000);
+
+  /* ================= Top 20 toggle + sort ================= */
+  function paintTop20ToggleLabel() {
+    const lbl = $('#top20ToggleLabel'); if (!lbl) return;
+    const open = !$('#top20Wrap').classList.contains('hidden');
+    const dict = (window.I18N && window.I18N[lang]) || {};
+    lbl.textContent = open ? (dict['kmkt0016'] || 'Skrýt žebříček') : (dict['kmkt0015'] || 'Zobrazit žebříček Top 20');
+  }
+  const top20Toggle = $('#top20Toggle');
+  if (top20Toggle) {
+    top20Toggle.addEventListener('click', () => {
+      const wrap = $('#top20Wrap'), chev = $('#top20Chevron');
+      const willOpen = wrap.classList.contains('hidden');
+      wrap.classList.toggle('hidden');
+      if (chev) chev.classList.toggle('rotate-180', willOpen);
+      paintTop20ToggleLabel();
+      if (willOpen) paintTop20();
+    });
+  }
+  $$('#top20Table th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const key = th.dataset.sort;
+      if (top20Sort.key === key) top20Sort.dir *= -1; else { top20Sort.key = key; top20Sort.dir = key === 'name' ? 1 : -1; }
+      paintTop20();
+    });
+  });
 })();
 
 

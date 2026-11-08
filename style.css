@@ -131,3 +131,13 @@ code,.font-mono{overflow-wrap:anywhere}
 .sm\:text-lg{font-size:1.125rem;line-height:1.75rem}
 }
 .mb-1\.5{margin-bottom:.375rem}
+.rotate-180{--tw-rotate:180deg;transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}
+.table-cell{display:table-cell}
+.pr-2{padding-right:.5rem}
+.pl-2{padding-left:.5rem}
+.to-emerald-400{--tw-gradient-to:#34d399 var(--tw-gradient-to-position)}
+.hover\:text-white:hover{color:#fff}
+@media (min-width:640px){
+.sm\:table-cell{display:table-cell}
+}
+.mt-8{margin-top:2rem}
