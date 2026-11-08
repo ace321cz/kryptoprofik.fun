@@ -881,6 +881,7 @@
     paintHalving(); paintTop20(); paintTop20ToggleLabel();
     if (window.kpRerenderChQuiz) window.kpRerenderChQuiz();
     if (window.kpRerenderRiskQuiz) window.kpRerenderRiskQuiz();
+    if (window.kpRerenderMyProgress) window.kpRerenderMyProgress();
     if (pageLoaded) loadChart(currentSym);
   }
   $$('.lang-btn').forEach(b => b.addEventListener('click', () => { if (b.dataset.lang !== lang) setLang(b.dataset.lang, true); }));
@@ -1952,7 +1953,36 @@
     const totalsEl = document.getElementById('pfTotals');
     const totalValueEl = document.getElementById('pfTotalValue');
     const totalPlEl = document.getElementById('pfTotalPl');
+    const chartEl = document.getElementById('pfChart');
+    const pieEl = chartEl ? chartEl.querySelector('.pfPie') : null;
+    const legendEl = chartEl ? chartEl.querySelector('.pfLegend') : null;
+    const PIE_COLORS = ['#10b981', '#3b82f6', '#a855f7', '#f59e0b', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
     let prices = {};
+
+    function renderChart(items) {
+      if (!chartEl || !pieEl || !legendEl) return;
+      const byCoin = {};
+      items.forEach(it => {
+        const price = prices[it.id];
+        if (!price) return;
+        byCoin[it.id] = (byCoin[it.id] || 0) + it.amount * price;
+      });
+      const entries = Object.entries(byCoin).filter(e => e[1] > 0).sort((a, b) => b[1] - a[1]);
+      const total = entries.reduce((s, e) => s + e[1], 0);
+      if (!entries.length || total <= 0) { chartEl.classList.add('hidden'); return; }
+      chartEl.classList.remove('hidden');
+      let acc = 0;
+      const stops = entries.map((e, i) => {
+        const pct = (e[1] / total) * 100;
+        const start = acc; acc += pct;
+        return PIE_COLORS[i % PIE_COLORS.length] + ' ' + start.toFixed(2) + '% ' + acc.toFixed(2) + '%';
+      }).join(', ');
+      pieEl.style.background = 'conic-gradient(' + stops + ')';
+      legendEl.innerHTML = entries.map((e, i) => {
+        const pct = ((e[1] / total) * 100).toFixed(1);
+        return '<div class="flex items-center gap-2 text-xs"><span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:' + PIE_COLORS[i % PIE_COLORS.length] + '"></span><span class="font-bold text-white">' + (COIN_NAMES[e[0]] || e[0]) + '</span><span class="text-slate-400 ml-auto">' + pct + '%</span></div>';
+      }).join('');
+    }
 
     function load() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { return []; } }
     function save(items) { try { localStorage.setItem(KEY, JSON.stringify(items)); } catch (e) {} }
@@ -1977,9 +2007,11 @@
       if (!items.length) {
         emptyEl.classList.remove('hidden');
         totalsEl.classList.add('hidden');
+        if (chartEl) chartEl.classList.add('hidden');
         return;
       }
       emptyEl.classList.add('hidden');
+      renderChart(items);
       let totalValue = 0, totalCost = 0, haveAnyPrice = false;
       items.forEach((it, idx) => {
         const price = prices[it.id];
@@ -2392,6 +2424,8 @@
       wrap.querySelector('.riskRetry').addEventListener('click', () => { qi = 0; score = 0; renderQuestion(); });
       wrap.querySelector('.riskShare').addEventListener('click', () => window.kpDownloadRiskProfile(key));
       if (window.gtag) window.gtag('event', 'risk_profile_complete', { profile: key });
+      try { localStorage.setItem('kp_risk_profile_v1', JSON.stringify({ key: key, ts: Date.now() })); } catch (e) {}
+      if (window.kpRerenderMyProgress) window.kpRerenderMyProgress();
     }
 
     window.kpRerenderRiskQuiz = function () { if (qi >= RISK_QUIZ.length) renderResult(); else renderQuestion(); };
@@ -2418,6 +2452,116 @@
     }
 
     renderQuestion();
+  })();
+
+  /* ================= "Můj postup" (progress) page ================= */
+  (function myProgressPage() {
+    const wrap = document.querySelector('[data-my-progress]');
+    if (!wrap) return;
+    function getJSON(k, d) { try { return JSON.parse(localStorage.getItem(k) || 'null') || d; } catch (e) { return d; } }
+    function render() {
+      const isEn = document.documentElement.lang === 'en';
+      const visited = new Set(getJSON('kp_visited_v1', []));
+      const quizPassed = getJSON('kp_quiz_passed_v1', {});
+      const checklist = getJSON('kp_roadmap_v2', []);
+      const risk = getJSON('kp_risk_profile_v1', null);
+      const chips = Object.keys(CHAPTER_MODULES);
+
+      let doneChapters = 0, totalIds = 0, doneIds = 0;
+      chips.forEach(chip => {
+        const ids = CHAPTER_MODULES[chip] || [];
+        totalIds += ids.length;
+        const d = ids.filter(id => visited.has(id)).length;
+        doneIds += d;
+        if (ids.length && d === ids.length) doneChapters++;
+      });
+      const chaptersEl = document.getElementById('mpChapters');
+      if (chaptersEl) chaptersEl.textContent = doneChapters + ' / ' + chips.length;
+
+      const quizCount = Object.values(quizPassed).filter(Boolean).length;
+      const quizzesEl = document.getElementById('mpQuizzes');
+      if (quizzesEl) quizzesEl.textContent = quizCount + ' / ' + chips.length;
+
+      const checklistEl = document.getElementById('mpChecklist');
+      if (checklistEl) checklistEl.textContent = (Array.isArray(checklist) ? checklist.length : 0) + ' / 7';
+
+      const pct = totalIds ? Math.round((doneIds / totalIds) * 100) : 0;
+      const bar = document.getElementById('mpOverallBar'); if (bar) bar.style.width = pct + '%';
+      const pctEl = document.getElementById('mpOverallPct'); if (pctEl) pctEl.textContent = pct + '%';
+
+      const riskWrap = document.getElementById('mpRiskWrap'), riskEmpty = document.getElementById('mpRiskEmpty');
+      if (risk && RISK_PROFILES[risk.key]) {
+        const p = RISK_PROFILES[risk.key];
+        if (riskWrap) {
+          riskWrap.classList.remove('hidden');
+          riskWrap.innerHTML = '<div class="text-5xl mb-2">' + p.emoji + '</div>' +
+            '<h3 class="text-xl font-black text-white mb-1">' + (isEn ? p.title.en : p.title.cs) + '</h3>' +
+            '<p class="text-slate-400 text-sm max-w-md mx-auto mb-4">' + (isEn ? p.tag.en : p.tag.cs) + '</p>' +
+            '<a href="index.html#riskProfileWrap" class="inline-block px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition">' + (isEn ? 'Retake' : 'Udělat znovu') + '</a>';
+        }
+        if (riskEmpty) riskEmpty.classList.add('hidden');
+      } else {
+        if (riskWrap) riskWrap.classList.add('hidden');
+        if (riskEmpty) riskEmpty.classList.remove('hidden');
+      }
+    }
+    window.kpRerenderMyProgress = render;
+    render();
+  })();
+
+  /* ================= Chapter listen (text-to-speech) ================= */
+  (function textToSpeech() {
+    const btn = document.getElementById('ttsToggle');
+    const container = document.getElementById('modulesContainer');
+    if (!btn || !container || !('speechSynthesis' in window)) return;
+    btn.classList.remove('hidden');
+    let utterances = [], idx = 0, playing = false;
+    const icon = document.getElementById('ttsIcon');
+
+    function buildUtterances() {
+      const voiceLang = document.documentElement.lang === 'en' ? 'en-US' : 'cs-CZ';
+      const text = (container.innerText || '').replace(/\s+/g, ' ').trim();
+      const chunks = text.match(/[^.!?]+[.!?]*/g) || [text];
+      const merged = [];
+      let buf = '';
+      chunks.forEach(c => {
+        if ((buf + c).length > 220) { if (buf) merged.push(buf); buf = c; }
+        else buf += c;
+      });
+      if (buf) merged.push(buf);
+      return merged.map(s => {
+        const u = new SpeechSynthesisUtterance(s.trim());
+        u.lang = voiceLang;
+        u.rate = 1;
+        return u;
+      });
+    }
+
+    function setIcon(name) { if (icon) icon.className = 'fa-solid fa-' + name; }
+
+    function speakNext() {
+      if (idx >= utterances.length) { playing = false; setIcon('volume-high'); idx = 0; return; }
+      const u = utterances[idx];
+      u.onend = () => { idx++; speakNext(); };
+      u.onerror = () => { playing = false; setIcon('volume-high'); };
+      window.speechSynthesis.speak(u);
+    }
+
+    btn.addEventListener('click', () => {
+      if (playing) {
+        window.speechSynthesis.cancel();
+        playing = false; idx = 0; setIcon('volume-high');
+        return;
+      }
+      utterances = buildUtterances();
+      if (!utterances.length) return;
+      idx = 0; playing = true; setIcon('pause');
+      speakNext();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && playing) { window.speechSynthesis.cancel(); playing = false; idx = 0; setIcon('volume-high'); }
+    });
   })();
 
 })();
