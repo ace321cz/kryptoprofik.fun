@@ -31,7 +31,8 @@
       qBadgeSub: 'Úspěšně jste splnili certifikační kvíz portálu KryptoProfík.',
       qBadgeDownload: 'Stáhnout certifikát (.txt)',
       fng: { 'Extreme Fear': 'Extrémní strach', 'Fear': 'Strach', 'Neutral': 'Neutrální', 'Greed': 'Chamtivost', 'Extreme Greed': 'Extrémní chamtivost' },
-      days: 'dní'
+      days: 'dní',
+      vol: { low: 'Nízká', med: 'Střední', high: 'Vysoká' }
     },
     en: {
       locale: 'en-US', czk: 'CZK',
@@ -51,7 +52,8 @@
       qBadgeSub: 'You passed the KryptoProfík certification quiz.',
       qBadgeDownload: 'Download certificate (.txt)',
       fng: {},
-      days: 'days'
+      days: 'days',
+      vol: { low: 'Low', med: 'Medium', high: 'High' }
     }
   };
   const U = () => UI[lang];
@@ -195,6 +197,7 @@
     if (lastUpdate) $('#lastUpdate').textContent = lastUpdate.toLocaleTimeString(U().locale, { hour: '2-digit', minute: '2-digit' });
     $('#priceError').classList.toggle('hidden', !pricesFailed);
     paintGainersLosers();
+    checkAlerts();
   }
 
   function fmtBig(n) {
@@ -298,12 +301,103 @@
     if (dateEl) dateEl.textContent = '~' + NEXT_HALVING_EST.toLocaleDateString(U().locale, { year: 'numeric', month: 'long' });
   }
 
+  /* ================= Watchlist (localStorage only) ================= */
+  const WL_KEY = 'kp_watchlist_v1';
+  function wlGet() { try { return JSON.parse(localStorage.getItem(WL_KEY) || '[]'); } catch (e) { return []; } }
+  function wlSet(arr) { try { localStorage.setItem(WL_KEY, JSON.stringify(arr)); } catch (e) {} }
+  function wlToggle(id) {
+    const arr = wlGet();
+    const i = arr.indexOf(id);
+    if (i === -1) arr.push(id); else arr.splice(i, 1);
+    wlSet(arr);
+    paintTop20();
+  }
+
+  /* ================= Price alerts (localStorage + browser Notification API) ================= */
+  const AL_KEY = 'kp_alerts_v1';
+  function alGet() { try { return JSON.parse(localStorage.getItem(AL_KEY) || '[]'); } catch (e) { return []; } }
+  function alSet(arr) { try { localStorage.setItem(AL_KEY, JSON.stringify(arr)); } catch (e) {} }
+  function alAdd(id, symbol, currentPrice) {
+    const msg = lang === 'cs' ? 'Při jaké ceně (USD) tě má ' + symbol + ' upozornit?' : 'At what price (USD) should ' + symbol + ' alert you?';
+    const raw = window.prompt(msg, currentPrice ? currentPrice.toFixed(2) : '');
+    const target = parseFloat(raw);
+    if (!target || target <= 0) return;
+    const dir = currentPrice != null && target >= currentPrice ? 'above' : 'below';
+    const arr = alGet();
+    arr.push({ id: id, symbol: symbol, target: target, dir: dir, createdAt: Date.now() });
+    alSet(arr);
+    if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
+    paintAlerts();
+  }
+  function alRemove(idx) {
+    const arr = alGet(); arr.splice(idx, 1); alSet(arr); paintAlerts();
+  }
+  function paintAlerts() {
+    const panel = $('#alertsPanel'), list = $('#alertsList');
+    if (!panel || !list) return;
+    const arr = alGet();
+    panel.classList.toggle('hidden', !arr.length);
+    list.innerHTML = arr.map((a, i) => {
+      const dirLabel = a.dir === 'above' ? '≥' : '≤';
+      return '<div class="flex items-center justify-between text-xs py-1.5">' +
+        '<span class="text-slate-300"><b class="text-white">' + a.symbol + '</b> ' + dirLabel + ' $' + a.target.toLocaleString('en-US') + '</span>' +
+        '<button type="button" class="alertDel text-slate-500 hover:text-rose-400 transition" data-i="' + i + '"><i class="fa-solid fa-xmark"></i></button>' +
+        '</div>';
+    }).join(arr.length ? '' : '<p class="text-[11px] text-slate-500">' + (lang === 'cs' ? 'Zatím nemáš žádná upozornění.' : "You don't have any alerts yet.") + '</p>');
+    $$('.alertDel', list).forEach(btn => btn.addEventListener('click', () => alRemove(parseInt(btn.dataset.i, 10))));
+  }
+  function checkAlerts() {
+    const arr = alGet();
+    if (!arr.length) return;
+    let changed = false;
+    const remaining = arr.filter(a => {
+      const d = prices[a.id];
+      let p = d && typeof d.usd === 'number' ? d.usd : null;
+      if (p == null) {
+        const m = top20Data.find(x => x.id === a.id);
+        if (m && typeof m.current_price === 'number') p = m.current_price;
+      }
+      if (p == null) return true;
+      const hit = a.dir === 'above' ? p >= a.target : p <= a.target;
+      if (hit) {
+        changed = true;
+        try {
+          if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification('KryptoProfík', { body: a.symbol + ' ' + (a.dir === 'above' ? 'dosáhl' : 'kleslo na') + ' $' + a.target.toLocaleString('en-US'), icon: 'icon-192.png' });
+          }
+        } catch (e) {}
+        return false;
+      }
+      return true;
+    });
+    if (changed) { alSet(remaining); paintAlerts(); }
+  }
+  window.kpCheckAlerts = checkAlerts;
+
+  /* ================= Volatility badge (from 7-day sparkline) ================= */
+  function volatilityBadge(points) {
+    if (!Array.isArray(points) || points.length < 3) return '';
+    const mean = points.reduce((s, p) => s + p, 0) / points.length;
+    if (!mean) return '';
+    const variance = points.reduce((s, p) => s + Math.pow(p - mean, 2), 0) / points.length;
+    const cv = (Math.sqrt(variance) / mean) * 100;
+    let label, cls;
+    if (cv < 3) { label = U().vol.low; cls = 'bg-emerald-500/15 text-emerald-400'; }
+    else if (cv < 7) { label = U().vol.med; cls = 'bg-amber-500/15 text-amber-400'; }
+    else { label = U().vol.high; cls = 'bg-rose-500/15 text-rose-400'; }
+    return '<span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold ' + cls + '">' + label + '</span>';
+  }
+
   /* ================= Top 20 ranking table ================= */
   let top20Data = [];
   let top20Sort = { key: 'rank', dir: 1 };
   function paintTop20() {
     const body = $('#top20Body'); if (!body || !top20Data.length) return;
-    const rows = top20Data.slice().sort((a, b) => {
+    const watchOnly = $('#top20WatchOnly') && $('#top20WatchOnly').checked;
+    const wl = wlGet();
+    let rows = top20Data.slice();
+    if (watchOnly) rows = rows.filter(r => wl.indexOf(r.id) !== -1);
+    rows.sort((a, b) => {
       const k = top20Sort.key;
       const av = k === 'rank' ? a.market_cap_rank : k === 'name' ? a.symbol : k === 'price' ? a.current_price : k === 'chg24' ? a.price_change_percentage_24h : a.market_cap;
       const bv = k === 'rank' ? b.market_cap_rank : k === 'name' ? b.symbol : k === 'price' ? b.current_price : k === 'chg24' ? b.price_change_percentage_24h : b.market_cap;
@@ -311,16 +405,25 @@
     });
     body.innerHTML = rows.map(r => {
       const ch = typeof r.price_change_percentage_24h === 'number' ? r.price_change_percentage_24h : null;
-      const spark = r.sparkline_in_7d && r.sparkline_in_7d.price ? renderSparkline(r.sparkline_in_7d.price) : '';
+      const sparkPoints = r.sparkline_in_7d && r.sparkline_in_7d.price;
+      const spark = sparkPoints ? renderSparkline(sparkPoints) : '';
+      const vol = sparkPoints ? volatilityBadge(sparkPoints) : '';
+      const starred = wl.indexOf(r.id) !== -1;
       return '<tr class="border-b border-brand-border/60">' +
+        '<td class="py-2 pr-1"><button type="button" class="wlStar text-xs ' + (starred ? 'text-amber-400' : 'text-slate-600 hover:text-amber-400') + ' transition" data-id="' + r.id + '"><i class="fa-' + (starred ? 'solid' : 'regular') + ' fa-star"></i></button></td>' +
         '<td class="py-2 pr-2 text-slate-500">' + r.market_cap_rank + '</td>' +
         '<td class="py-2 pr-2 font-bold text-white">' + r.symbol.toUpperCase() + '<span class="text-slate-500 font-normal ml-1 hidden sm:inline">' + r.name + '</span></td>' +
         '<td class="py-2 pr-2 text-right font-mono text-white">' + fmtUsd(r.current_price) + '</td>' +
         '<td class="py-2 pr-2 text-right font-bold ' + (ch >= 0 ? 'text-emerald-400' : 'text-rose-400') + '">' + (ch == null ? '–' : (ch >= 0 ? '+' : '') + ch.toFixed(2).replace('.', lang === 'cs' ? ',' : '.') + '%') + '</td>' +
+        '<td class="py-2 pr-2 text-center hidden sm:table-cell">' + vol + '</td>' +
         '<td class="py-2 pr-2 text-center hidden sm:table-cell">' + spark + '</td>' +
-        '<td class="py-2 pl-2 text-right text-slate-300">' + fmtBig(r.market_cap) + '</td>' +
+        '<td class="py-2 pr-2 text-right text-slate-300">' + fmtBig(r.market_cap) + '</td>' +
+        '<td class="py-2 pl-2 text-right"><button type="button" class="alertBell text-slate-600 hover:text-brand-accent transition" data-id="' + r.id + '" data-sym="' + r.symbol.toUpperCase() + '" data-price="' + r.current_price + '"><i class="fa-solid fa-bell"></i></button></td>' +
         '</tr>';
     }).join('');
+    $$('.wlStar', body).forEach(btn => btn.addEventListener('click', () => wlToggle(btn.dataset.id)));
+    $$('.alertBell', body).forEach(btn => btn.addEventListener('click', () => alAdd(btn.dataset.id, btn.dataset.sym, parseFloat(btn.dataset.price))));
+    paintAlerts();
   }
 
   async function fetchMarkets() {
@@ -882,6 +985,7 @@
     if (window.kpRerenderChQuiz) window.kpRerenderChQuiz();
     if (window.kpRerenderRiskQuiz) window.kpRerenderRiskQuiz();
     if (window.kpRerenderMyProgress) window.kpRerenderMyProgress();
+    if (window.kpRerenderStaking) window.kpRerenderStaking();
     if (pageLoaded) loadChart(currentSym);
   }
   $$('.lang-btn').forEach(b => b.addEventListener('click', () => { if (b.dataset.lang !== lang) setLang(b.dataset.lang, true); }));
@@ -898,7 +1002,7 @@
   }
 
   setLang(initialLang(), false);
-  fetchPrices(); fetchPulse(); fetchMarkets(); paintHalving();
+  fetchPrices(); fetchPulse(); fetchMarkets(); paintHalving(); paintAlerts();
   setInterval(() => { if (!document.hidden) fetchPrices(); }, 60000);
   setInterval(paintHalving, 3600000);
 
@@ -927,6 +1031,8 @@
       paintTop20();
     });
   });
+  const top20WatchOnly = $('#top20WatchOnly');
+  if (top20WatchOnly) top20WatchOnly.addEventListener('change', paintTop20);
 })();
 
 
@@ -2151,6 +2257,49 @@
     });
   })();
 
+  /* ================= Staking yield calculator ================= */
+  (function stakingCalculator() {
+    const wrap = document.getElementById('stakingCalc');
+    if (!wrap) return;
+    const amountEl = document.getElementById('stkAmount');
+    const apyEl = document.getElementById('stkApy');
+    const monthsEl = document.getElementById('stkMonths');
+    const freqEl = document.getElementById('stkFreq');
+    const valueOut = document.getElementById('stkTotalValue');
+    const yieldOut = document.getElementById('stkTotalYield');
+
+    function fmt(n) {
+      const isEn = document.documentElement.lang === 'en';
+      return Math.round(n).toLocaleString(isEn ? 'en-US' : 'cs-CZ') + ' ' + (isEn ? 'CZK' : 'Kč');
+    }
+
+    function calc() {
+      const amount = parseFloat(amountEl.value);
+      const apy = parseFloat(apyEl.value);
+      const months = parseFloat(monthsEl.value);
+      const n = parseFloat(freqEl.value);
+      if (!(amount > 0) || !(apy >= 0) || !(months > 0) || !(n > 0)) {
+        valueOut.textContent = '–';
+        yieldOut.textContent = '–';
+        return;
+      }
+      const years = months / 12;
+      const r = apy / 100;
+      const futureValue = amount * Math.pow(1 + r / n, n * years);
+      const yieldAmount = futureValue - amount;
+      valueOut.textContent = fmt(futureValue);
+      yieldOut.textContent = (yieldAmount >= 0 ? '+' : '') + fmt(yieldAmount);
+    }
+
+    const btn = document.getElementById('stkCalc');
+    if (btn) btn.addEventListener('click', calc);
+    [amountEl, apyEl, monthsEl, freqEl].forEach(el => {
+      if (el) el.addEventListener('change', calc);
+    });
+    window.kpRerenderStaking = calc;
+    calc();
+  })();
+
   /* ================= Shareable chapter badge image (IG story format) ================= */
   (function chapterBadgeShare() {
     function roundRect(ctx, x, y, w, h, r) {
@@ -2454,6 +2603,33 @@
     renderQuestion();
   })();
 
+  /* ================= Daily visit streak (sitewide, runs on every page) ================= */
+  (function dailyStreak() {
+    const KEY = 'kp_streak_v1';
+    function todayStr() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    function dayBefore(dateStr) {
+      const d = new Date(dateStr + 'T00:00:00');
+      d.setDate(d.getDate() - 1);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+    try {
+      const today = todayStr();
+      let data;
+      try { data = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { data = null; }
+      if (!data || typeof data.count !== 'number') data = { count: 0, best: 0, lastVisitDate: null };
+      if (data.lastVisitDate !== today) {
+        if (data.lastVisitDate === dayBefore(today)) data.count += 1;
+        else data.count = 1;
+        data.lastVisitDate = today;
+        data.best = Math.max(data.best || 0, data.count);
+        localStorage.setItem(KEY, JSON.stringify(data));
+      }
+    } catch (e) {}
+  })();
+
   /* ================= "Můj postup" (progress) page ================= */
   (function myProgressPage() {
     const wrap = document.querySelector('[data-my-progress]');
@@ -2484,6 +2660,10 @@
 
       const checklistEl = document.getElementById('mpChecklist');
       if (checklistEl) checklistEl.textContent = (Array.isArray(checklist) ? checklist.length : 0) + ' / 7';
+
+      const streak = getJSON('kp_streak_v1', null);
+      const streakEl = document.getElementById('mpStreak');
+      if (streakEl) streakEl.textContent = String((streak && streak.count) || 0);
 
       const pct = totalIds ? Math.round((doneIds / totalIds) * 100) : 0;
       const bar = document.getElementById('mpOverallBar'); if (bar) bar.style.width = pct + '%';

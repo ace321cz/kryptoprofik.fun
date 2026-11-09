@@ -141,3 +141,8 @@ code,.font-mono{overflow-wrap:anywhere}
 .sm\:table-cell{display:table-cell}
 }
 .mt-8{margin-top:2rem}
+.w-5{width:1.25rem}
+.hover\:text-amber-400:hover{color:rgb(251 191 36)}
+@media (min-width:1024px){
+.lg\:col-span-2{grid-column:span 2/span 2}
+}
