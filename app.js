@@ -449,6 +449,24 @@
     finally { clearTimeout(t); }
   }
 
+  /* ================= Trending coins (CoinGecko /search/trending) ================= */
+  async function fetchTrending() {
+    try {
+      const data = await fetchJson('https://api.coingecko.com/api/v3/search/trending');
+      const items = data && Array.isArray(data.coins) ? data.coins.slice(0, 7) : [];
+      const wrap = $('#trendingWrap'), list = $('#trendingList');
+      if (!wrap || !list) return;
+      if (!items.length) { wrap.classList.add('hidden'); return; }
+      list.innerHTML = items.map(({ item }) => {
+        const sym = (item.symbol || '').toUpperCase();
+        const rank = item.market_cap_rank;
+        return '<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-900 border border-brand-border text-[11px] font-bold text-slate-200">' +
+          '<span class="text-brand-amber">#' + (rank || '–') + '</span> ' + (item.name || sym) + ' <span class="text-slate-500">' + sym + '</span></span>';
+      }).join('');
+      wrap.classList.remove('hidden');
+    } catch (e) {}
+  }
+
   async function fetchPrices() {
     try {
       const ids = COINS.map(c => c.id).join(',');
@@ -1002,7 +1020,7 @@
   }
 
   setLang(initialLang(), false);
-  fetchPrices(); fetchPulse(); fetchMarkets(); paintHalving(); paintAlerts();
+  fetchPrices(); fetchPulse(); fetchMarkets(); fetchTrending(); paintHalving(); paintAlerts();
   setInterval(() => { if (!document.hidden) fetchPrices(); }, 60000);
   setInterval(paintHalving, 3600000);
 
@@ -1075,6 +1093,12 @@
         const k = el.getAttribute('data-i18n-h');
         const v = dict[k] != null ? dict[k] : cs[k];
         if (v != null) el.innerHTML = v;
+      });
+      /* ---- data-i18n-ph: same, but sets the placeholder attribute (inputs/textareas) ---- */
+      $$('[data-i18n-ph]').forEach(el => {
+        const k = el.getAttribute('data-i18n-ph');
+        const v = dict[k] != null ? dict[k] : cs[k];
+        if (v != null) el.setAttribute('placeholder', v);
       });
     }
     applyStaticH();
@@ -2107,6 +2131,44 @@
       } finally { clearTimeout(t); }
     }
 
+    function renderRebalance(items) {
+      const wrap = document.getElementById('pfRebalanceWrap');
+      const list = document.getElementById('pfRebalanceList');
+      const hint = document.getElementById('pfRebalanceHint');
+      if (!wrap || !list) return;
+      const isEn = document.documentElement.lang === 'en';
+      const byCoin = {};
+      items.forEach(it => {
+        const price = prices[it.id];
+        const value = price ? it.amount * price : 0;
+        if (!byCoin[it.id]) byCoin[it.id] = { value: 0, target: null };
+        byCoin[it.id].value += value;
+        if (typeof it.target === 'number' && !isNaN(it.target)) byCoin[it.id].target = it.target;
+      });
+      const entries = Object.entries(byCoin).filter(e => e[1].target !== null);
+      if (!entries.length) { wrap.classList.add('hidden'); list.innerHTML = ''; if (hint) hint.classList.remove('hidden'); return; }
+      const totalValue = Object.values(byCoin).reduce((s, v) => s + v.value, 0);
+      wrap.classList.remove('hidden');
+      if (hint) hint.classList.add('hidden');
+      if (!totalValue) { list.innerHTML = ''; return; }
+      list.innerHTML = entries.map(([id, info]) => {
+        const currentPct = (info.value / totalValue) * 100;
+        const targetPct = info.target;
+        const diffPct = targetPct - currentPct;
+        const diffValue = (diffPct / 100) * totalValue;
+        const onTarget = Math.abs(diffPct) < 1;
+        const action = onTarget ? null : (diffValue > 0 ? 'buy' : 'sell');
+        const label = COIN_NAMES[id] || id;
+        const color = action === 'buy' ? 'text-emerald-400' : action === 'sell' ? 'text-rose-400' : 'text-slate-500';
+        const actionLabel = onTarget ? (isEn ? 'On target' : 'Na cíli') : (action === 'buy' ? (isEn ? 'Buy' : 'Dokoupit') : (isEn ? 'Sell' : 'Prodat'));
+        return '<div class="flex items-center justify-between py-1 gap-2 flex-wrap">' +
+          '<span class="text-slate-300 font-bold w-14 shrink-0">' + label + '</span>' +
+          '<span class="text-slate-500 font-mono">' + currentPct.toFixed(1) + '% → ' + targetPct.toFixed(0) + '%</span>' +
+          '<span class="font-mono font-bold ' + color + '">' + actionLabel + (action ? ' ' + fmt(Math.abs(diffValue)) : '') + '</span>' +
+          '</div>';
+      }).join('');
+    }
+
     function render() {
       const items = load();
       rowsEl.innerHTML = '';
@@ -2114,6 +2176,8 @@
         emptyEl.classList.remove('hidden');
         totalsEl.classList.add('hidden');
         if (chartEl) chartEl.classList.add('hidden');
+        const rbWrap = document.getElementById('pfRebalanceWrap');
+        if (rbWrap) rbWrap.classList.add('hidden');
         return;
       }
       emptyEl.classList.add('hidden');
@@ -2152,6 +2216,7 @@
       } else {
         totalsEl.classList.add('hidden');
       }
+      renderRebalance(items);
     }
 
     async function refreshPrices() {
@@ -2170,16 +2235,53 @@
       const coin = document.getElementById('pfCoin').value;
       const amount = parseFloat(document.getElementById('pfAmount').value);
       const buyCzk = parseFloat(document.getElementById('pfBuyCzk').value);
+      const targetRaw = document.getElementById('pfTarget').value;
+      const target = targetRaw === '' ? null : parseFloat(targetRaw);
       if (!coin || !amount || amount <= 0 || isNaN(buyCzk) || buyCzk < 0) return;
+      const entry = { id: coin, amount: amount, buyCzk: buyCzk };
+      if (target !== null && !isNaN(target) && target >= 0) entry.target = target;
       const items = load();
-      items.push({ id: coin, amount: amount, buyCzk: buyCzk });
+      items.push(entry);
       save(items);
       document.getElementById('pfAmount').value = '';
       document.getElementById('pfBuyCzk').value = '';
+      document.getElementById('pfTarget').value = '';
       render();
       refreshPrices();
     });
     document.getElementById('pfRefresh').addEventListener('click', refreshPrices);
+
+    const exportBtn = document.getElementById('pfExportCsv');
+    if (exportBtn) exportBtn.addEventListener('click', () => {
+      const items = load();
+      if (!items.length) return;
+      const isEn = document.documentElement.lang === 'en';
+      const header = isEn
+        ? ['Coin', 'Amount', 'Purchase price (CZK)', 'Current price (CZK)', 'Current value (CZK)', 'Profit/Loss (CZK)', 'Target allocation %']
+        : ['Mince', 'Množství', 'Nákupní cena (Kč)', 'Aktuální cena (Kč)', 'Aktuální hodnota (Kč)', 'Zisk/ztráta (Kč)', 'Cílová alokace %'];
+      const rows = items.map(it => {
+        const price = prices[it.id];
+        const value = price ? it.amount * price : '';
+        const pl = price ? (value - it.buyCzk) : '';
+        return [COIN_NAMES[it.id] || it.id, it.amount, it.buyCzk, price || '', value, pl, (typeof it.target === 'number' ? it.target : '')];
+      });
+      const csvLines = [header].concat(rows).map(r => r.map(v => {
+        const s = String(v);
+        return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      }).join(';'));
+      const csv = '\uFEFF' + csvLines.join('\r\n');
+      try {
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'kryptoprofik-portfolio.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } catch (e) {}
+    });
 
     render();
     if (load().length) refreshPrices();
@@ -2601,6 +2703,59 @@
     }
 
     renderQuestion();
+  })();
+
+  /* ================= Personal notes under each lesson ================= */
+  (function lessonNotes() {
+    const boxes = document.querySelectorAll('[data-mod-notes]');
+    if (!boxes.length) return;
+    const KEY = 'kp_notes_v1';
+    function load() { try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; } }
+    function save(all) { try { localStorage.setItem(KEY, JSON.stringify(all)); } catch (e) {} }
+    const all = load();
+
+    boxes.forEach(box => {
+      const mid = box.getAttribute('data-mod-notes');
+      const toggle = box.querySelector('.kp-notes-toggle');
+      const chevron = box.querySelector('.kp-notes-chevron');
+      const body = box.querySelector('.kp-notes-body');
+      const textarea = box.querySelector('.kp-notes-text');
+      const savedTag = box.querySelector('.kp-notes-saved');
+      if (!toggle || !body || !textarea) return;
+
+      const existing = all[mid] || '';
+      textarea.value = existing;
+      if (existing) {
+        body.classList.remove('hidden');
+        if (chevron) chevron.classList.add('rotate-180');
+        toggle.classList.add('text-brand-accent');
+      }
+
+      function setOpen(open) {
+        body.classList.toggle('hidden', !open);
+        if (chevron) chevron.classList.toggle('rotate-180', open);
+      }
+      toggle.addEventListener('click', () => {
+        setOpen(body.classList.contains('hidden'));
+      });
+
+      let saveTimer = null;
+      textarea.addEventListener('input', () => {
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          const data = load();
+          const val = textarea.value;
+          if (val.trim()) { data[mid] = val; toggle.classList.add('text-brand-accent'); }
+          else { delete data[mid]; toggle.classList.remove('text-brand-accent'); }
+          save(data);
+          if (savedTag) {
+            savedTag.classList.remove('hidden');
+            clearTimeout(savedTag._hideTimer);
+            savedTag._hideTimer = setTimeout(() => savedTag.classList.add('hidden'), 1500);
+          }
+        }, 500);
+      });
+    });
   })();
 
   /* ================= Daily visit streak (sitewide, runs on every page) ================= */
