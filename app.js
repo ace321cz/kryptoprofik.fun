@@ -1519,14 +1519,16 @@
     if (!res.ok) throw new Error('Supabase select failed: ' + res.status);
     return res.json();
   }
-  async function kpSbInsert(table, row) {
+  async function kpSbInsert(table, row, minimal) {
     const res = await fetch(KP_SB_URL + '/rest/v1/' + table, {
       method: 'POST',
-      headers: kpSbHeaders({ 'Prefer': 'return=representation' }),
+      headers: kpSbHeaders({ 'Prefer': minimal ? 'return=minimal' : 'return=representation' }),
       body: JSON.stringify(row),
     });
     if (!res.ok) throw new Error('Supabase insert failed: ' + res.status);
-    return res.json();
+    if (minimal) return null;
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
   }
   async function kpSbDelete(table, query) {
     const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, { method: 'DELETE', headers: kpSbHeaders() });
@@ -2941,7 +2943,7 @@
           if (!name || !body) return;
           const btn = form.querySelector('button[type="submit"]');
           if (btn) btn.disabled = true;
-          kpSbInsert('comments', { module_id: mid, name: name.slice(0, 50), body: body.slice(0, 1000) }).then(function () {
+          kpSbInsert('comments', { module_id: mid, name: name.slice(0, 50), body: body.slice(0, 1000) }, true).then(function () {
             bodyEl.value = '';
             if (statusEl) {
               statusEl.textContent = isEn ? 'Thanks! Your comment is awaiting moderator approval.' : 'Díky! Komentář čeká na schválení moderátorem.';
