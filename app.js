@@ -1100,6 +1100,12 @@
         const v = dict[k] != null ? dict[k] : cs[k];
         if (v != null) el.setAttribute('placeholder', v);
       });
+      /* ---- data-i18n-aria: same, but sets the aria-label attribute ---- */
+      $$('[data-i18n-aria]').forEach(el => {
+        const k = el.getAttribute('data-i18n-aria');
+        const v = dict[k] != null ? dict[k] : cs[k];
+        if (v != null) el.setAttribute('aria-label', v);
+      });
     }
     applyStaticH();
 
@@ -1497,6 +1503,48 @@
   const CH_META = {"m1": {"cs": "Základy", "en": "Basics", "num": "1", "c1": "#3b82f6", "c2": "#06b6d4"}, "penezenky": {"cs": "Peněženky", "en": "Wallets", "num": "2", "c1": "#06b6d4", "c2": "#3b82f6"}, "burzy": {"cs": "Burzy & DEX", "en": "Exchanges & DEX", "num": "3", "c1": "#a855f7", "c2": "#6366f1"}, "scam-checker": {"cs": "Anti-scam", "en": "Anti-scam", "num": "4", "c1": "#f43f5e", "c2": "#ec4899"}, "m5": {"cs": "Analýza", "en": "Analysis", "num": "5", "c1": "#1fd98b", "c2": "#0ea5e9"}, "m6": {"cs": "Strategie", "en": "Strategy", "num": "6", "c1": "#f59e0b", "c2": "#f97316"}, "tax-main": {"cs": "Daně v ČR", "en": "Czech taxes", "num": "7", "c1": "#fb923c", "c2": "#f59e0b"}};
   const RISK_QUIZ = [{"q": {"cs": "Jak by ses zachoval(a), kdyby tvé krypto portfolio kleslo o 30 % za týden?", "en": "What would you do if your crypto portfolio dropped 30% in a week?"}, "o": {"cs": ["Prodal(a) bych vše, abych omezil(a) ztráty", "Část bych prodal(a)", "Nedělal(a) bych nic a čekal(a)", "Dokoupil(a) bych za nižší cenu"], "en": ["I would sell everything to limit losses", "I would sell some of it", "I'd do nothing and wait", "I would buy more at the lower price"]}}, {"q": {"cs": "Jak velkou část svých celkových úspor jsi ochoten/ochotna mít v kryptu?", "en": "How much of your total savings are you willing to hold in crypto?"}, "o": {"cs": ["Méně než 5 %", "5–15 %", "15–30 %", "Více než 30 %"], "en": ["Less than 5%", "5-15%", "15-30%", "More than 30%"]}}, {"q": {"cs": "Jaký je tvůj investiční horizont?", "en": "What is your investment horizon?"}, "o": {"cs": ["Chci výsledky do pár měsíců", "1–2 roky", "3–5 let", "5+ let, nevadí mi čekat"], "en": ["I want results within a few months", "1-2 years", "3-5 years", "5+ years, I don't mind waiting"]}}, {"q": {"cs": "Jak hodnotíš své zkušenosti s kryptem?", "en": "How would you rate your crypto experience?"}, "o": {"cs": ["Úplný začátečník", "Rozumím základům", "Aktivně sleduji trh a obchoduji", "Zkouším i pokročilé strategie (DeFi, staking, trading)"], "en": ["Complete beginner", "I understand the basics", "I actively follow the market and trade", "I try advanced strategies (DeFi, staking, trading)"]}}, {"q": {"cs": "Co je pro tebe důležitější?", "en": "What matters more to you?"}, "o": {"cs": ["Ochrana kapitálu, raději méně, ale jistě", "Rozumná rovnováha rizika a výnosu", "Vyšší výnos, i za cenu větších výkyvů", "Maximální růst, i s rizikem větší ztráty"], "en": ["Capital protection, less but safer", "A reasonable risk/return balance", "Higher return, even with bigger swings", "Maximum growth, even at the risk of bigger losses"]}}];
   const RISK_PROFILES = {"conservative": {"title": {"cs": "Konzervativní", "en": "Conservative"}, "tag": {"cs": "Ochrana kapitálu na prvním místě", "en": "Capital protection comes first"}, "desc": {"cs": "Dáváš přednost jistotě před vzrušením. To je naprosto v pořádku — v kryptu je spousta prostoru i pro opatrný přístup, hlavně přes zavedené mince, pravidelné malé nákupy (DCA) a bezpečné úschovné (cold storage).", "en": "You prefer safety over excitement. That's perfectly fine — crypto has plenty of room for a cautious approach too, mainly through established coins, small regular purchases (DCA), and safe cold storage."}, "chapters": [{"href": "penezenky.html", "cs": "Peněženky a bezpečná úschova", "en": "Wallets and safe custody"}, {"href": "anti-scam.html", "cs": "Jak poznat podvod", "en": "How to spot a scam"}, {"href": "dane.html", "cs": "Daně v ČR", "en": "Czech taxes"}], "c1": "#2563eb", "c2": "#60a5fa", "emoji": "🛡"}, "balanced": {"title": {"cs": "Vyvážený", "en": "Balanced"}, "tag": {"cs": "Rozumná rovnováha rizika a výnosu", "en": "A sensible risk/return balance"}, "desc": {"cs": "Hledáš zdravou rovnováhu mezi růstem a bezpečím. Pravděpodobně ti sedne diverzifikace napříč pár projekty, pravidelné investování a sledování základní analýzy, než se rozhodneš přikoupit nebo prodat.", "en": "You're looking for a healthy balance between growth and safety. You'll likely do well diversifying across a few projects, investing regularly, and following basic analysis before buying or selling more."}, "chapters": [{"href": "analyza.html", "cs": "Analýza trhu", "en": "Market analysis"}, {"href": "strategie.html", "cs": "Strategie a řízení rizika", "en": "Strategy and risk management"}, {"href": "burzy.html", "cs": "Burzy & DEX", "en": "Exchanges & DEX"}], "c1": "#1fd98b", "c2": "#0ea5e9", "emoji": "⚖"}, "aggressive": {"title": {"cs": "Růstově zaměřený", "en": "Growth-seeking"}, "tag": {"cs": "Vyšší potenciál růstu, vyšší kolísavost", "en": "Higher growth potential, higher volatility"}, "desc": {"cs": "Jsi ochoten/ochotna přijmout větší výkyvy výměnou za vyšší potenciální výnos. I tak se vyplatí mít pevná pravidla řízení rizika a nikdy neinvestovat víc, než si můžeš dovolit ztratit — a obzvlášť pozorně sledovat kapitolu o podvodech.", "en": "You're willing to accept bigger swings for higher potential returns. Even so, solid risk-management rules pay off — never invest more than you can afford to lose, and pay extra attention to the anti-scam chapter."}, "chapters": [{"href": "strategie.html", "cs": "Strategie a řízení rizika", "en": "Strategy and risk management"}, {"href": "anti-scam.html", "cs": "Jak poznat podvod", "en": "How to spot a scam"}, {"href": "analyza.html", "cs": "Pokročilá analýza", "en": "Advanced analysis"}], "c1": "#db2777", "c2": "#f97316", "emoji": "🚀"}};
+
+  /* ================= Supabase (komunita: komentáře, lajky, chat) ================= */
+  const KP_SB_URL = 'https://lhiodwgtwouvjlpvmqcm.supabase.co';
+  const KP_SB_KEY = 'sb_publishable_7se7f4t5EDVAyVHU726tsQ_myQqn-iH';
+  function kpSbHeaders(extra) {
+    return Object.assign({
+      'apikey': KP_SB_KEY,
+      'Authorization': 'Bearer ' + KP_SB_KEY,
+      'Content-Type': 'application/json',
+    }, extra || {});
+  }
+  async function kpSbSelect(table, query) {
+    const res = await fetch(KP_SB_URL + '/rest/v1/' + table + (query ? '?' + query : ''), { headers: kpSbHeaders() });
+    if (!res.ok) throw new Error('Supabase select failed: ' + res.status);
+    return res.json();
+  }
+  async function kpSbInsert(table, row) {
+    const res = await fetch(KP_SB_URL + '/rest/v1/' + table, {
+      method: 'POST',
+      headers: kpSbHeaders({ 'Prefer': 'return=representation' }),
+      body: JSON.stringify(row),
+    });
+    if (!res.ok) throw new Error('Supabase insert failed: ' + res.status);
+    return res.json();
+  }
+  async function kpSbDelete(table, query) {
+    const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, { method: 'DELETE', headers: kpSbHeaders() });
+    return res.ok;
+  }
+  function kpVisitorId() {
+    try {
+      let id = localStorage.getItem('kp_visitor_id');
+      if (!id) {
+        id = 'v_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem('kp_visitor_id', id);
+      }
+      return id;
+    } catch (e) { return 'v_anon_' + Date.now(); }
+  }
+  function kpEscapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
 
   /* ================= Shared: draw a QR code onto any 2D canvas context ================= */
   function kpDrawQr(ctx, x, y, size, text) {
@@ -2783,6 +2831,394 @@
         localStorage.setItem(KEY, JSON.stringify(data));
       }
     } catch (e) {}
+  })();
+
+  /* ================= Komentáře + lajky u lekcí (Supabase) ================= */
+  (function commentsAndLikes() {
+    const likeBtns = document.querySelectorAll('.kp-like-btn');
+    const commentBoxes = document.querySelectorAll('[data-mod-comments]');
+    if (!likeBtns.length && !commentBoxes.length) return;
+    const isEn = document.documentElement.lang === 'en';
+    const visitorId = kpVisitorId();
+
+    function myLikedSet() {
+      try { return new Set(JSON.parse(localStorage.getItem('kp_my_likes_v1') || '[]')); } catch (e) { return new Set(); }
+    }
+    function saveMyLiked(set) {
+      try { localStorage.setItem('kp_my_likes_v1', JSON.stringify(Array.from(set))); } catch (e) {}
+    }
+
+    async function loadLikeCount(btn, targetType, targetId) {
+      try {
+        const rows = await kpSbSelect('likes', 'target_type=eq.' + targetType + '&target_id=eq.' + encodeURIComponent(targetId) + '&select=id');
+        const countEl = btn.querySelector('.kp-like-count');
+        if (countEl) countEl.textContent = String(rows.length);
+      } catch (e) {}
+    }
+
+    async function toggleLike(btn, targetType, targetId) {
+      const liked = myLikedSet();
+      const key = targetType + ':' + targetId;
+      const countEl = btn.querySelector('.kp-like-count');
+      btn.disabled = true;
+      try {
+        if (liked.has(key)) {
+          await kpSbDelete('likes', 'target_type=eq.' + targetType + '&target_id=eq.' + encodeURIComponent(targetId) + '&visitor_id=eq.' + visitorId);
+          liked.delete(key);
+          btn.classList.remove('text-rose-400');
+          if (countEl) countEl.textContent = String(Math.max(0, parseInt(countEl.textContent || '0', 10) - 1));
+        } else {
+          await kpSbInsert('likes', { target_type: targetType, target_id: targetId, visitor_id: visitorId });
+          liked.add(key);
+          btn.classList.add('text-rose-400');
+          if (countEl) countEl.textContent = String(parseInt(countEl.textContent || '0', 10) + 1);
+        }
+        saveMyLiked(liked);
+      } catch (e) {}
+      btn.disabled = false;
+    }
+
+    likeBtns.forEach(btn => {
+      const targetType = btn.getAttribute('data-like-target');
+      const targetId = btn.getAttribute('data-like-id');
+      if (!targetType || !targetId) return;
+      const liked = myLikedSet();
+      if (liked.has(targetType + ':' + targetId)) btn.classList.add('text-rose-400');
+      loadLikeCount(btn, targetType, targetId);
+      btn.addEventListener('click', () => toggleLike(btn, targetType, targetId));
+    });
+
+    function fmtTime(iso) {
+      try {
+        const d = new Date(iso);
+        return d.toLocaleDateString(isEn ? 'en-GB' : 'cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
+      } catch (e) { return ''; }
+    }
+
+    function renderComments(listEl, countWrap, rows) {
+      if (countWrap) countWrap.textContent = rows.length ? ' (' + rows.length + ')' : '';
+      if (!rows.length) {
+        const emptyText = isEn ? 'No comments yet. Be the first!' : 'Zatím žádné komentáře. Buď první!';
+        listEl.innerHTML = '<div class="text-xs text-slate-500 italic">' + kpEscapeHtml(emptyText) + '</div>';
+        return;
+      }
+      listEl.innerHTML = rows.map(c => (
+        '<div class="rounded-xl bg-slate-900 border border-brand-border px-3 py-2">' +
+        '<div class="flex items-center justify-between mb-1">' +
+        '<span class="text-xs font-bold text-slate-200">' + kpEscapeHtml(c.name) + '</span>' +
+        '<span class="text-[10px] text-slate-500">' + fmtTime(c.created_at) + '</span>' +
+        '</div>' +
+        '<div class="text-sm text-slate-300 whitespace-pre-wrap">' + kpEscapeHtml(c.body) + '</div>' +
+        '</div>'
+      )).join('');
+    }
+
+    commentBoxes.forEach(box => {
+      const mid = box.getAttribute('data-mod-comments');
+      const listEl = box.querySelector('.kp-comments-list');
+      const countWrap = box.querySelector('.kp-comments-count');
+      const form = box.querySelector('.kp-comments-form');
+      const statusEl = box.querySelector('.kp-comment-status');
+      if (!listEl) return;
+
+      async function refresh() {
+        try {
+          const rows = await kpSbSelect('comments', 'module_id=eq.' + encodeURIComponent(mid) + '&approved=eq.true&select=name,body,created_at&order=created_at.asc');
+          renderComments(listEl, countWrap, rows);
+        } catch (e) {
+          listEl.innerHTML = '<div class="text-xs text-slate-500 italic">' + (isEn ? 'Comments could not be loaded.' : 'Komentáře se nepodařilo načíst.') + '</div>';
+        }
+      }
+      refresh();
+
+      if (form) {
+        form.addEventListener('submit', function (ev) {
+          ev.preventDefault();
+          const nameEl = form.querySelector('.kp-comment-name');
+          const bodyEl = form.querySelector('.kp-comment-body');
+          const name = (nameEl.value || '').trim();
+          const body = (bodyEl.value || '').trim();
+          if (!name || !body) return;
+          const btn = form.querySelector('button[type="submit"]');
+          if (btn) btn.disabled = true;
+          kpSbInsert('comments', { module_id: mid, name: name.slice(0, 50), body: body.slice(0, 1000) }).then(function () {
+            bodyEl.value = '';
+            if (statusEl) {
+              statusEl.textContent = isEn ? 'Thanks! Your comment is awaiting moderator approval.' : 'Díky! Komentář čeká na schválení moderátorem.';
+              statusEl.classList.remove('hidden');
+            }
+          }).catch(function () {
+            if (statusEl) {
+              statusEl.textContent = isEn ? 'Something went wrong, please try again later.' : 'Něco se nepovedlo, zkus to prosím později.';
+              statusEl.classList.remove('hidden');
+            }
+          }).finally(function () {
+            if (btn) btn.disabled = false;
+          });
+        });
+      }
+    });
+  })();
+
+  /* ================= Veřejný chat (jedna místnost, Supabase) ================= */
+  (function chatRoom() {
+    const wrap = document.getElementById('chatMessages');
+    const form = document.getElementById('chatForm');
+    if (!wrap || !form) return;
+    const isEn = document.documentElement.lang === 'en';
+    const nameInput = document.getElementById('chatName');
+    const bodyInput = document.getElementById('chatBody');
+    let lastSeenId = null;
+    let polling = null;
+
+    try {
+      const savedName = localStorage.getItem('kp_chat_name');
+      if (savedName && nameInput) nameInput.value = savedName;
+    } catch (e) {}
+
+    function fmtTime(iso) {
+      try {
+        const d = new Date(iso);
+        return d.toLocaleTimeString(isEn ? 'en-GB' : 'cs-CZ', { hour: '2-digit', minute: '2-digit' });
+      } catch (e) { return ''; }
+    }
+
+    function renderMessages(rows) {
+      if (!rows.length) {
+        const emptyText = isEn ? 'No one has posted yet. Be the first!' : 'Zatím tu nikdo nepsal. Buď první!';
+        wrap.innerHTML = '<div class="text-xs text-slate-500 italic">' + kpEscapeHtml(emptyText) + '</div>';
+        return;
+      }
+      const atBottom = wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 20;
+      wrap.innerHTML = rows.map(m => (
+        '<div class="text-sm"><span class="font-bold text-brand-accent">' + kpEscapeHtml(m.name) + '</span> ' +
+        '<span class="text-[10px] text-slate-500">' + fmtTime(m.created_at) + '</span><br>' +
+        '<span class="text-slate-300 whitespace-pre-wrap">' + kpEscapeHtml(m.body) + '</span></div>'
+      )).join('');
+      if (atBottom) wrap.scrollTop = wrap.scrollHeight;
+    }
+
+    async function loadMessages() {
+      try {
+        const rows = await kpSbSelect('chat_messages', 'select=id,name,body,created_at&order=created_at.desc&limit=50');
+        rows.reverse();
+        renderMessages(rows);
+        if (rows.length) lastSeenId = rows[rows.length - 1].id;
+        wrap.scrollTop = wrap.scrollHeight;
+      } catch (e) {
+        wrap.innerHTML = '<div class="text-xs text-slate-500 italic">' + (isEn ? 'Chat could not be loaded.' : 'Chat se nepodařilo načíst.') + '</div>';
+      }
+    }
+
+    async function pollNew() {
+      try {
+        const rows = await kpSbSelect('chat_messages', 'select=id,name,body,created_at&order=created_at.desc&limit=50');
+        rows.reverse();
+        if (rows.length && rows[rows.length - 1].id !== lastSeenId) {
+          renderMessages(rows);
+          lastSeenId = rows[rows.length - 1].id;
+        }
+      } catch (e) {}
+    }
+
+    loadMessages();
+    polling = setInterval(pollNew, 5000);
+    window.addEventListener('beforeunload', () => { if (polling) clearInterval(polling); });
+
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      const name = (nameInput.value || '').trim();
+      const body = (bodyInput.value || '').trim();
+      if (!name || !body) return;
+      const btn = form.querySelector('button[type="submit"]');
+      if (btn) btn.disabled = true;
+      try { localStorage.setItem('kp_chat_name', name.slice(0, 40)); } catch (e) {}
+      kpSbInsert('chat_messages', { name: name.slice(0, 40), body: body.slice(0, 500) }).then(function () {
+        bodyInput.value = '';
+        loadMessages();
+      }).finally(function () {
+        if (btn) btn.disabled = false;
+      });
+    });
+  })();
+
+  /* ================= Moderace (admin: komentáře + chat) ================= */
+  (function moderation() {
+    const loginBox = document.getElementById('modLogin');
+    const dash = document.getElementById('modDash');
+    if (!loginBox || !dash) return;
+
+    let activeTab = 'pending';
+
+    function getToken() {
+      try { return sessionStorage.getItem('kp_admin_token'); } catch (e) { return null; }
+    }
+    function setToken(t) {
+      try {
+        if (t) sessionStorage.setItem('kp_admin_token', t);
+        else sessionStorage.removeItem('kp_admin_token');
+      } catch (e) {}
+    }
+    function authHeaders(extra) {
+      const token = getToken();
+      return Object.assign({
+        'apikey': KP_SB_KEY,
+        'Authorization': 'Bearer ' + (token || KP_SB_KEY),
+        'Content-Type': 'application/json',
+      }, extra || {});
+    }
+    async function authSelect(table, query) {
+      const res = await fetch(KP_SB_URL + '/rest/v1/' + table + (query ? '?' + query : ''), { headers: authHeaders() });
+      if (!res.ok) throw new Error('select failed: ' + res.status);
+      return res.json();
+    }
+    async function authPatch(table, query, data) {
+      const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, {
+        method: 'PATCH',
+        headers: authHeaders({ 'Prefer': 'return=minimal' }),
+        body: JSON.stringify(data),
+      });
+      return res.ok;
+    }
+    async function authDelete(table, query) {
+      const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, { method: 'DELETE', headers: authHeaders() });
+      return res.ok;
+    }
+
+    function showDash() { loginBox.classList.add('hidden'); dash.classList.remove('hidden'); }
+    function showLogin() { loginBox.classList.remove('hidden'); dash.classList.add('hidden'); }
+
+    function fmtDateTime(iso) {
+      try {
+        const d = new Date(iso);
+        return d.toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      } catch (e) { return ''; }
+    }
+
+    function renderComments(rows, approved) {
+      const list = document.getElementById('modList');
+      if (!rows.length) { list.innerHTML = '<div class="text-xs text-slate-500 italic">Žádné položky.</div>'; return; }
+      list.innerHTML = rows.map(c => (
+        '<div class="p-4 rounded-2xl bg-brand-card border border-brand-border">' +
+        '<div class="flex items-center justify-between mb-1 gap-2 flex-wrap">' +
+        '<span class="font-bold text-white text-sm">' + kpEscapeHtml(c.name) + '</span>' +
+        '<span class="text-[10px] text-slate-500">' + kpEscapeHtml(c.module_id) + ' &middot; ' + fmtDateTime(c.created_at) + '</span>' +
+        '</div>' +
+        '<div class="text-sm text-slate-300 mb-3 whitespace-pre-wrap">' + kpEscapeHtml(c.body) + '</div>' +
+        '<div class="flex gap-2">' +
+        (approved ? '' : '<button type="button" class="mod-approve px-3 py-1.5 rounded-lg bg-emerald-500 text-white text-xs font-bold hover:opacity-90 transition" data-id="' + c.id + '">Schválit</button>') +
+        '<button type="button" class="mod-delete px-3 py-1.5 rounded-lg bg-rose-500 text-white text-xs font-bold hover:opacity-90 transition" data-table="comments" data-id="' + c.id + '">Smazat</button>' +
+        '</div></div>'
+      )).join('');
+    }
+
+    function renderChat(rows) {
+      const list = document.getElementById('modList');
+      if (!rows.length) { list.innerHTML = '<div class="text-xs text-slate-500 italic">Žádné zprávy.</div>'; return; }
+      list.innerHTML = rows.map(m => (
+        '<div class="p-4 rounded-2xl bg-brand-card border border-brand-border">' +
+        '<div class="flex items-center justify-between mb-1 gap-2 flex-wrap">' +
+        '<span class="font-bold text-white text-sm">' + kpEscapeHtml(m.name) + '</span>' +
+        '<span class="text-[10px] text-slate-500">' + fmtDateTime(m.created_at) + '</span>' +
+        '</div>' +
+        '<div class="text-sm text-slate-300 mb-3 whitespace-pre-wrap">' + kpEscapeHtml(m.body) + '</div>' +
+        '<button type="button" class="mod-delete px-3 py-1.5 rounded-lg bg-rose-500 text-white text-xs font-bold hover:opacity-90 transition" data-table="chat_messages" data-id="' + m.id + '">Smazat</button>' +
+        '</div>'
+      )).join('');
+    }
+
+    async function refreshPendingCount() {
+      try {
+        const rows = await authSelect('comments', 'approved=eq.false&select=id');
+        const el = document.getElementById('modPendingCount');
+        if (el) el.textContent = rows.length ? '(' + rows.length + ')' : '';
+      } catch (e) {}
+    }
+
+    async function loadTab(tab) {
+      const list = document.getElementById('modList');
+      list.innerHTML = '<div class="text-xs text-slate-500 italic">Načítám…</div>';
+      try {
+        if (tab === 'pending' || tab === 'approved') {
+          const approved = tab === 'approved';
+          const rows = await authSelect('comments', 'approved=eq.' + approved + '&select=id,module_id,name,body,created_at&order=created_at.desc');
+          renderComments(rows, approved);
+          refreshPendingCount();
+        } else if (tab === 'chat') {
+          const rows = await authSelect('chat_messages', 'select=id,name,body,created_at&order=created_at.desc&limit=100');
+          renderChat(rows);
+        }
+      } catch (e) {
+        list.innerHTML = '<div class="text-xs text-rose-400">Nepodařilo se načíst data. Zkus se prosím znovu přihlásit.</div>';
+      }
+    }
+
+    document.querySelectorAll('.mod-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeTab = btn.getAttribute('data-tab');
+        document.querySelectorAll('.mod-tab').forEach(b => {
+          b.className = 'mod-tab px-4 py-2 rounded-xl text-sm font-bold transition ' +
+            (b === btn ? 'bg-brand-accent text-white' : 'bg-slate-900 border border-brand-border text-slate-300 hover:text-white');
+        });
+        loadTab(activeTab);
+      });
+    });
+
+    const loginForm = document.getElementById('modLoginForm');
+    if (loginForm) {
+      loginForm.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        const email = document.getElementById('modEmail').value.trim();
+        const password = document.getElementById('modPassword').value;
+        const errEl = document.getElementById('modLoginError');
+        errEl.classList.add('hidden');
+        const btn = loginForm.querySelector('button[type="submit"]');
+        if (btn) btn.disabled = true;
+        fetch(KP_SB_URL + '/auth/v1/token?grant_type=password', {
+          method: 'POST',
+          headers: { 'apikey': KP_SB_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: email, password: password }),
+        }).then(function (res) {
+          if (!res.ok) throw new Error('login failed');
+          return res.json();
+        }).then(function (data) {
+          setToken(data.access_token);
+          showDash();
+          activeTab = 'pending';
+          loadTab('pending');
+        }).catch(function () {
+          errEl.textContent = 'Přihlášení se nepovedlo. Zkontroluj e-mail a heslo.';
+          errEl.classList.remove('hidden');
+        }).finally(function () {
+          if (btn) btn.disabled = false;
+        });
+      });
+    }
+
+    const logoutBtn = document.getElementById('modLogout');
+    if (logoutBtn) logoutBtn.addEventListener('click', function () { setToken(null); showLogin(); });
+
+    const listWrap = document.getElementById('modList');
+    if (listWrap) {
+      listWrap.addEventListener('click', function (ev) {
+        const approveBtn = ev.target.closest('.mod-approve');
+        const deleteBtn = ev.target.closest('.mod-delete');
+        if (approveBtn) {
+          approveBtn.disabled = true;
+          authPatch('comments', 'id=eq.' + approveBtn.getAttribute('data-id'), { approved: true }).then(function (ok) {
+            if (ok) loadTab(activeTab); else approveBtn.disabled = false;
+          });
+        } else if (deleteBtn) {
+          if (!window.confirm('Opravdu smazat?')) return;
+          deleteBtn.disabled = true;
+          authDelete(deleteBtn.getAttribute('data-table'), 'id=eq.' + deleteBtn.getAttribute('data-id')).then(function (ok) {
+            if (ok) loadTab(activeTab); else deleteBtn.disabled = false;
+          });
+        }
+      });
+    }
+
+    if (getToken()) { showDash(); loadTab('pending'); }
   })();
 
   /* ================= "Můj postup" (progress) page ================= */

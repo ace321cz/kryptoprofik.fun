@@ -146,3 +146,13 @@ code,.font-mono{overflow-wrap:anywhere}
 @media (min-width:1024px){
 .lg\:col-span-2{grid-column:span 2/span 2}
 }
+.max-h-64{max-height:16rem}
+.max-h-80{max-height:20rem}
+.overflow-y-auto{overflow-y:auto}
+.w-48{width:12rem}
+@media (min-width:640px){
+.sm\:w-48{width:12rem}
+.sm\:flex-row{flex-direction:row}
+}
+.bg-rose-500{background-color:rgb(244 63 94)}
+.hover\:text-white:hover{color:rgb(255 255 255)}
