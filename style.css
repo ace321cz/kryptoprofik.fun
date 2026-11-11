@@ -156,3 +156,7 @@ code,.font-mono{overflow-wrap:anywhere}
 }
 .bg-rose-500{background-color:rgb(244 63 94)}
 .hover\:text-white:hover{color:rgb(255 255 255)}
+.max-h-96{max-height:24rem}
+.gap-0\.5{gap:.125rem}
+@keyframes kp-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.animate-pulse{animation:kp-pulse 1.6s cubic-bezier(.4,0,.6,1) infinite}

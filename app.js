@@ -1547,6 +1547,14 @@
   function kpEscapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
+  /* Escapes first, then turns http(s):// links in the (already-escaped) text into
+     clickable, safe anchors. Never run on raw unescaped input. */
+  function kpLinkify(rawText) {
+    const escaped = kpEscapeHtml(rawText);
+    return escaped.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/gi, function (url) {
+      return '<a href="' + url + '" target="_blank" rel="noopener noreferrer nofollow" class="underline text-brand-accent hover:text-white break-all">' + url + '</a>';
+    });
+  }
 
   /* ================= Shared: draw a QR code onto any 2D canvas context ================= */
   function kpDrawQr(ctx, x, y, size, text) {
@@ -2992,10 +3000,11 @@
         return;
       }
       const atBottom = wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 20;
+      /* IRC/shoutbox style: "[HH:MM] <jméno> zpráva" on one compact line, wraps if too long */
       wrap.innerHTML = rows.map(m => (
-        '<div class="text-sm"><span class="font-bold text-brand-accent">' + kpEscapeHtml(m.name) + '</span> ' +
-        '<span class="text-[10px] text-slate-500">' + fmtTime(m.created_at) + '</span><br>' +
-        '<span class="text-slate-300 whitespace-pre-wrap">' + kpEscapeHtml(m.body) + '</span></div>'
+        '<div class="leading-snug break-words"><span class="text-slate-600">[' + fmtTime(m.created_at) + ']</span> ' +
+        '<span class="font-bold text-brand-accent">&lt;' + kpEscapeHtml(m.name) + '&gt;</span> ' +
+        '<span class="text-slate-300 whitespace-pre-wrap">' + kpLinkify(m.body) + '</span></div>'
       )).join('');
       if (atBottom) wrap.scrollTop = wrap.scrollHeight;
     }
@@ -3026,6 +3035,21 @@
     loadMessages();
     polling = setInterval(pollNew, 5000);
     window.addEventListener('beforeunload', () => { if (polling) clearInterval(polling); });
+
+    const emojiBar = document.getElementById('chatEmojiBar');
+    if (emojiBar && bodyInput) {
+      emojiBar.addEventListener('click', e => {
+        const btn = e.target.closest('.kp-emoji-btn');
+        if (!btn) return;
+        const emoji = btn.getAttribute('data-emoji') || '';
+        const start = bodyInput.selectionStart != null ? bodyInput.selectionStart : bodyInput.value.length;
+        const end = bodyInput.selectionEnd != null ? bodyInput.selectionEnd : bodyInput.value.length;
+        bodyInput.value = bodyInput.value.slice(0, start) + emoji + bodyInput.value.slice(end);
+        bodyInput.focus();
+        const pos = start + emoji.length;
+        try { bodyInput.setSelectionRange(pos, pos); } catch (e2) {}
+      });
+    }
 
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
