@@ -160,3 +160,8 @@ code,.font-mono{overflow-wrap:anywhere}
 .gap-0\.5{gap:.125rem}
 @keyframes kp-pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .animate-pulse{animation:kp-pulse 1.6s cubic-bezier(.4,0,.6,1) infinite}
+.object-cover{object-fit:cover}
+.w-6{width:1.5rem}
+.min-h-\[4rem\]{min-height:4rem}
+.opacity-0{opacity:0}
+.group:hover .group-hover\:opacity-100{opacity:1}

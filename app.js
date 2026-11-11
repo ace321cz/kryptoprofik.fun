@@ -1534,6 +1534,45 @@
     const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, { method: 'DELETE', headers: kpSbHeaders() });
     return res.ok;
   }
+  /* Same as kpSbInsert/kpSbDelete, but authenticated as the logged-in user
+     (needed once an insert/update/delete must satisfy a "user_id = auth.uid()"
+     RLS policy instead of the public "anon" policies). */
+  async function kpSbInsertAuth(table, row, minimal) {
+    const headers = await window.kpAuth.authHeaders({ 'Prefer': minimal ? 'return=minimal' : 'return=representation' });
+    const res = await fetch(KP_SB_URL + '/rest/v1/' + table, { method: 'POST', headers: headers, body: JSON.stringify(row) });
+    if (!res.ok) throw new Error('Supabase auth insert failed: ' + res.status);
+    if (minimal) return null;
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
+  async function kpSbPatchAuth(table, query, data) {
+    const headers = await window.kpAuth.authHeaders({ 'Prefer': 'return=minimal' });
+    const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, { method: 'PATCH', headers: headers, body: JSON.stringify(data) });
+    return res.ok;
+  }
+  async function kpSbDeleteAuth(table, query) {
+    const headers = await window.kpAuth.authHeaders();
+    const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, { method: 'DELETE', headers: headers });
+    return res.ok;
+  }
+  /* Uploads a File to the public "avatars" Supabase Storage bucket, under the
+     logged-in user's own folder (required by the storage RLS policies), and
+     returns its public URL. */
+  async function kpUploadAvatar(file) {
+    const user = window.kpAuth.currentUser();
+    if (!user) throw new Error('not logged in');
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+    const path = user.id + '/avatar_' + Date.now() + '.' + ext;
+    const authH = await window.kpAuth.authHeaders();
+    delete authH['Content-Type'];
+    const res = await fetch(KP_SB_URL + '/storage/v1/object/avatars/' + path, {
+      method: 'POST',
+      headers: Object.assign({}, authH, { 'Content-Type': file.type || 'application/octet-stream', 'x-upsert': 'true' }),
+      body: file,
+    });
+    if (!res.ok) throw new Error('Nahrání fotky selhalo: ' + res.status);
+    return KP_SB_URL + '/storage/v1/object/public/avatars/' + path;
+  }
   function kpVisitorId() {
     try {
       let id = localStorage.getItem('kp_visitor_id');
@@ -1554,6 +1593,117 @@
     return escaped.replace(/(https?:\/\/[^\s<]+[^\s<.,;:!?)\]'"])/gi, function (url) {
       return '<a href="' + url + '" target="_blank" rel="noopener noreferrer nofollow" class="underline text-brand-accent hover:text-white break-all">' + url + '</a>';
     });
+  }
+
+  /* ================= Přihlášení (účty): sdílená relace napříč stránkami ================= */
+  const kpAuth = (function () {
+    const SKEY = 'kp_auth_session';
+    function readRaw(storage) { try { const v = storage.getItem(SKEY); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+    function find() {
+      const loc = readRaw(localStorage);
+      if (loc) return { session: loc, storage: localStorage };
+      const sess = readRaw(sessionStorage);
+      if (sess) return { session: sess, storage: sessionStorage };
+      return null;
+    }
+    function save(session, remember) {
+      const target = remember ? localStorage : sessionStorage;
+      const other = remember ? sessionStorage : localStorage;
+      try { other.removeItem(SKEY); } catch (e) {}
+      try { target.setItem(SKEY, JSON.stringify(session)); } catch (e) {}
+    }
+    function clear() {
+      try { localStorage.removeItem(SKEY); } catch (e) {}
+      try { sessionStorage.removeItem(SKEY); } catch (e) {}
+    }
+    async function refresh(found) {
+      try {
+        const res = await fetch(KP_SB_URL + '/auth/v1/token?grant_type=refresh_token', {
+          method: 'POST',
+          headers: { 'apikey': KP_SB_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: found.session.refresh_token }),
+        });
+        if (!res.ok) { clear(); return null; }
+        const data = await res.json();
+        const remember = found.storage === localStorage;
+        const session = { access_token: data.access_token, refresh_token: data.refresh_token, expires_at: Date.now() + (data.expires_in || 3600) * 1000, user: data.user };
+        save(session, remember);
+        return session;
+      } catch (e) { return null; }
+    }
+    async function ensureFresh() {
+      const found = find();
+      if (!found) return null;
+      if (found.session.expires_at && found.session.expires_at - Date.now() > 60000) return found.session;
+      return refresh(found);
+    }
+    async function authHeaders(extra) {
+      const session = await ensureFresh();
+      return Object.assign({
+        'apikey': KP_SB_KEY,
+        'Authorization': 'Bearer ' + (session ? session.access_token : KP_SB_KEY),
+        'Content-Type': 'application/json',
+      }, extra || {});
+    }
+    function currentUserSync() {
+      const found = find();
+      return found && found.session.user ? found.session.user : null;
+    }
+    async function signUp(email, password) {
+      const res = await fetch(KP_SB_URL + '/auth/v1/signup', {
+        method: 'POST',
+        headers: { 'apikey': KP_SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data && data.msg) || (data && data.error_description) || 'signup failed');
+      if (data.access_token) {
+        save({ access_token: data.access_token, refresh_token: data.refresh_token, expires_at: Date.now() + (data.expires_in || 3600) * 1000, user: data.user }, false);
+        return { confirmed: true, user: data.user };
+      }
+      return { confirmed: false, user: data };
+    }
+    async function signIn(email, password, remember) {
+      const res = await fetch(KP_SB_URL + '/auth/v1/token?grant_type=password', {
+        method: 'POST',
+        headers: { 'apikey': KP_SB_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((data && data.msg) || (data && data.error_description) || 'login failed');
+      save({ access_token: data.access_token, refresh_token: data.refresh_token, expires_at: Date.now() + (data.expires_in || 3600) * 1000, user: data.user }, !!remember);
+      return data.user;
+    }
+    async function signOut() {
+      const session = await ensureFresh();
+      if (session) {
+        try {
+          await fetch(KP_SB_URL + '/auth/v1/logout', { method: 'POST', headers: { 'apikey': KP_SB_KEY, 'Authorization': 'Bearer ' + session.access_token } });
+        } catch (e) {}
+      }
+      clear();
+    }
+    async function getMyProfile() {
+      const user = currentUserSync();
+      if (!user) return null;
+      try {
+        const rows = await kpSbSelect('profiles', 'id=eq.' + user.id + '&select=id,username,bio,avatar_url,created_at,last_seen_at');
+        return rows[0] || null;
+      } catch (e) { return null; }
+    }
+    async function touchLastSeen() {
+      const session = await ensureFresh();
+      if (!session) return;
+      try {
+        await fetch(KP_SB_URL + '/rest/v1/rpc/kp_touch_last_seen', { method: 'POST', headers: await authHeaders() });
+      } catch (e) {}
+    }
+    return { signUp, signIn, signOut, authHeaders, currentUser: currentUserSync, getMyProfile, touchLastSeen, ensureFresh };
+  })();
+  window.kpAuth = kpAuth;
+  if (kpAuth.currentUser()) {
+    kpAuth.touchLastSeen();
+    setInterval(function () { kpAuth.touchLastSeen(); }, 120000);
   }
 
   /* ================= Shared: draw a QR code onto any 2D canvas context ================= */
@@ -2905,6 +3055,11 @@
       } catch (e) { return ''; }
     }
 
+    const editLabel = isEn ? 'Edit' : 'Upravit';
+    const deleteLabel = isEn ? 'Delete' : 'Smazat';
+    const editPrompt = isEn ? 'Edit your comment:' : 'Uprav svůj komentář:';
+    const confirmDelete = isEn ? 'Really delete this comment?' : 'Opravdu smazat tento komentář?';
+
     function renderComments(listEl, countWrap, rows) {
       if (countWrap) countWrap.textContent = rows.length ? ' (' + rows.length + ')' : '';
       if (!rows.length) {
@@ -2912,13 +3067,20 @@
         listEl.innerHTML = '<div class="text-xs text-slate-500 italic">' + kpEscapeHtml(emptyText) + '</div>';
         return;
       }
+      const me = window.kpAuth ? window.kpAuth.currentUser() : null;
       listEl.innerHTML = rows.map(c => (
-        '<div class="rounded-xl bg-slate-900 border border-brand-border px-3 py-2">' +
-        '<div class="flex items-center justify-between mb-1">' +
+        '<div class="rounded-xl bg-slate-900 border border-brand-border px-3 py-2" data-comment-id="' + c.id + '">' +
+        '<div class="flex items-center justify-between mb-1 gap-2">' +
         '<span class="text-xs font-bold text-slate-200">' + kpEscapeHtml(c.name) + '</span>' +
-        '<span class="text-[10px] text-slate-500">' + fmtTime(c.created_at) + '</span>' +
+        '<span class="text-[10px] text-slate-500 shrink-0">' + fmtTime(c.created_at) + '</span>' +
         '</div>' +
-        '<div class="text-sm text-slate-300 whitespace-pre-wrap">' + kpEscapeHtml(c.body) + '</div>' +
+        '<div class="text-sm text-slate-300 whitespace-pre-wrap kp-comment-body-text">' + kpLinkify(c.body) + '</div>' +
+        (me && c.user_id === me.id
+          ? ('<div class="flex gap-3 mt-1.5">' +
+             '<button type="button" class="kp-comment-edit text-[11px] font-bold text-slate-500 hover:text-brand-accent transition">' + editLabel + '</button>' +
+             '<button type="button" class="kp-comment-del text-[11px] font-bold text-slate-500 hover:text-rose-400 transition">' + deleteLabel + '</button>' +
+             '</div>')
+          : '') +
         '</div>'
       )).join('');
     }
@@ -2929,11 +3091,12 @@
       const countWrap = box.querySelector('.kp-comments-count');
       const form = box.querySelector('.kp-comments-form');
       const statusEl = box.querySelector('.kp-comment-status');
+      const loginPrompt = box.querySelector('.kp-comment-login-prompt');
       if (!listEl) return;
 
       async function refresh() {
         try {
-          const rows = await kpSbSelect('comments', 'module_id=eq.' + encodeURIComponent(mid) + '&approved=eq.true&select=name,body,created_at&order=created_at.asc');
+          const rows = await kpSbSelect('comments', 'module_id=eq.' + encodeURIComponent(mid) + '&approved=eq.true&select=id,user_id,name,body,created_at&order=created_at.asc');
           renderComments(listEl, countWrap, rows);
         } catch (e) {
           listEl.innerHTML = '<div class="text-xs text-slate-500 italic">' + (isEn ? 'Comments could not be loaded.' : 'Komentáře se nepodařilo načíst.') + '</div>';
@@ -2941,17 +3104,28 @@
       }
       refresh();
 
+      const me = window.kpAuth ? window.kpAuth.currentUser() : null;
+      if (me) {
+        if (form) form.classList.remove('hidden');
+        if (loginPrompt) loginPrompt.classList.add('hidden');
+      } else {
+        if (form) form.classList.add('hidden');
+        if (loginPrompt) loginPrompt.classList.remove('hidden');
+      }
+
       if (form) {
         form.addEventListener('submit', function (ev) {
           ev.preventDefault();
-          const nameEl = form.querySelector('.kp-comment-name');
           const bodyEl = form.querySelector('.kp-comment-body');
-          const name = (nameEl.value || '').trim();
           const body = (bodyEl.value || '').trim();
-          if (!name || !body) return;
+          const user = window.kpAuth && window.kpAuth.currentUser();
+          if (!body || !user) return;
           const btn = form.querySelector('button[type="submit"]');
           if (btn) btn.disabled = true;
-          kpSbInsert('comments', { module_id: mid, name: name.slice(0, 50), body: body.slice(0, 1000) }, true).then(function () {
+          window.kpAuth.getMyProfile().then(function (profile) {
+            const name = (profile && profile.username) || (isEn ? 'User' : 'Uživatel');
+            return kpSbInsertAuth('comments', { module_id: mid, user_id: user.id, name: name, body: body.slice(0, 1000) }, true);
+          }).then(function () {
             bodyEl.value = '';
             if (statusEl) {
               statusEl.textContent = isEn ? 'Thanks! Your comment is awaiting moderator approval.' : 'Díky! Komentář čeká na schválení moderátorem.';
@@ -2967,6 +3141,23 @@
           });
         });
       }
+
+      listEl.addEventListener('click', function (ev) {
+        const row = ev.target.closest('[data-comment-id]');
+        if (!row) return;
+        const id = row.getAttribute('data-comment-id');
+        if (ev.target.closest('.kp-comment-del')) {
+          if (!window.confirm(confirmDelete)) return;
+          kpSbDeleteAuth('comments', 'id=eq.' + id).then(function (ok) { if (ok) refresh(); });
+        } else if (ev.target.closest('.kp-comment-edit')) {
+          const current = row.querySelector('.kp-comment-body-text');
+          const next = window.prompt(editPrompt, current ? current.textContent : '');
+          if (next == null) return;
+          const trimmed = next.trim();
+          if (!trimmed) return;
+          kpSbPatchAuth('comments', 'id=eq.' + id, { body: trimmed.slice(0, 1000) }).then(function (ok) { if (ok) refresh(); });
+        }
+      });
     });
   })();
 
@@ -2976,15 +3167,22 @@
     const form = document.getElementById('chatForm');
     if (!wrap || !form) return;
     const isEn = document.documentElement.lang === 'en';
-    const nameInput = document.getElementById('chatName');
     const bodyInput = document.getElementById('chatBody');
+    const loginPrompt = document.querySelector('.kp-chat-login-prompt');
+    const formWrap = document.querySelector('.kp-chat-form-wrap');
     let lastSeenId = null;
     let polling = null;
 
-    try {
-      const savedName = localStorage.getItem('kp_chat_name');
-      if (savedName && nameInput) nameInput.value = savedName;
-    } catch (e) {}
+    const me = window.kpAuth ? window.kpAuth.currentUser() : null;
+    if (me) {
+      if (formWrap) formWrap.classList.remove('hidden');
+      if (loginPrompt) loginPrompt.classList.add('hidden');
+    } else {
+      if (formWrap) formWrap.classList.add('hidden');
+      if (loginPrompt) loginPrompt.classList.remove('hidden');
+    }
+    const deleteLabel = isEn ? 'delete' : 'smazat';
+    const confirmDelete = isEn ? 'Really delete this message?' : 'Opravdu smazat tuto zprávu?';
 
     function fmtTime(iso) {
       try {
@@ -3000,18 +3198,23 @@
         return;
       }
       const atBottom = wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 20;
+      const user = window.kpAuth ? window.kpAuth.currentUser() : null;
       /* IRC/shoutbox style: "[HH:MM] <jméno> zpráva" on one compact line, wraps if too long */
       wrap.innerHTML = rows.map(m => (
-        '<div class="leading-snug break-words"><span class="text-slate-600">[' + fmtTime(m.created_at) + ']</span> ' +
+        '<div class="leading-snug break-words group" data-msg-id="' + m.id + '"><span class="text-slate-600">[' + fmtTime(m.created_at) + ']</span> ' +
         '<span class="font-bold text-brand-accent">&lt;' + kpEscapeHtml(m.name) + '&gt;</span> ' +
-        '<span class="text-slate-300 whitespace-pre-wrap">' + kpLinkify(m.body) + '</span></div>'
+        '<span class="text-slate-300 whitespace-pre-wrap">' + kpLinkify(m.body) + '</span>' +
+        (user && m.user_id === user.id
+          ? ' <button type="button" class="kp-chat-del text-[10px] text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition">[' + deleteLabel + ']</button>'
+          : '') +
+        '</div>'
       )).join('');
       if (atBottom) wrap.scrollTop = wrap.scrollHeight;
     }
 
     async function loadMessages() {
       try {
-        const rows = await kpSbSelect('chat_messages', 'select=id,name,body,created_at&order=created_at.desc&limit=50');
+        const rows = await kpSbSelect('chat_messages', 'select=id,user_id,name,body,created_at&order=created_at.desc&limit=50');
         rows.reverse();
         renderMessages(rows);
         if (rows.length) lastSeenId = rows[rows.length - 1].id;
@@ -3023,7 +3226,7 @@
 
     async function pollNew() {
       try {
-        const rows = await kpSbSelect('chat_messages', 'select=id,name,body,created_at&order=created_at.desc&limit=50');
+        const rows = await kpSbSelect('chat_messages', 'select=id,user_id,name,body,created_at&order=created_at.desc&limit=50');
         rows.reverse();
         if (rows.length && rows[rows.length - 1].id !== lastSeenId) {
           renderMessages(rows);
@@ -3035,6 +3238,15 @@
     loadMessages();
     polling = setInterval(pollNew, 5000);
     window.addEventListener('beforeunload', () => { if (polling) clearInterval(polling); });
+
+    wrap.addEventListener('click', function (ev) {
+      const btn = ev.target.closest('.kp-chat-del');
+      if (!btn) return;
+      const row = ev.target.closest('[data-msg-id]');
+      if (!row) return;
+      if (!window.confirm(confirmDelete)) return;
+      kpSbDeleteAuth('chat_messages', 'id=eq.' + row.getAttribute('data-msg-id')).then(function (ok) { if (ok) loadMessages(); });
+    });
 
     const emojiBar = document.getElementById('chatEmojiBar');
     if (emojiBar && bodyInput) {
@@ -3053,18 +3265,187 @@
 
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
-      const name = (nameInput.value || '').trim();
       const body = (bodyInput.value || '').trim();
-      if (!name || !body) return;
+      const user = window.kpAuth && window.kpAuth.currentUser();
+      if (!body || !user) return;
       const btn = form.querySelector('button[type="submit"]');
       if (btn) btn.disabled = true;
-      try { localStorage.setItem('kp_chat_name', name.slice(0, 40)); } catch (e) {}
-      kpSbInsert('chat_messages', { name: name.slice(0, 40), body: body.slice(0, 500) }).then(function () {
+      window.kpAuth.getMyProfile().then(function (profile) {
+        const name = (profile && profile.username) || (isEn ? 'User' : 'Uživatel');
+        return kpSbInsertAuth('chat_messages', { user_id: user.id, name: name.slice(0, 40), body: body.slice(0, 500) }, true);
+      }).then(function () {
         bodyInput.value = '';
         loadMessages();
       }).finally(function () {
         if (btn) btn.disabled = false;
       });
+    });
+  })();
+
+  /* ================= Můj účet (registrace, přihlášení, profil) ================= */
+  (function accountPage() {
+    const root = document.getElementById('ucet');
+    if (!root) return;
+    const isEn = document.documentElement.lang === 'en';
+    const authBox = document.getElementById('authBox');
+    const dash = document.getElementById('accountDash');
+    const tabs = document.querySelectorAll('.auth-tab');
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+    const profileForm = document.getElementById('profileForm');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('bg-brand-accent', 'text-white'));
+        tabs.forEach(t => t.classList.add('bg-slate-900', 'text-slate-300'));
+        tab.classList.remove('bg-slate-900', 'text-slate-300');
+        tab.classList.add('bg-brand-accent', 'text-white');
+        const isLogin = tab.dataset.tab === 'login';
+        loginForm.classList.toggle('hidden', !isLogin);
+        registerForm.classList.toggle('hidden', isLogin);
+      });
+    });
+
+    function fmtDate(iso) {
+      try { return new Date(iso).toLocaleDateString(isEn ? 'en-GB' : 'cs-CZ'); } catch (e) { return ''; }
+    }
+    function daysSince(iso) {
+      try { return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)); } catch (e) { return 0; }
+    }
+
+    async function renderDash() {
+      const user = window.kpAuth.currentUser();
+      if (!user) { authBox.classList.remove('hidden'); dash.classList.add('hidden'); return; }
+      authBox.classList.add('hidden');
+      dash.classList.remove('hidden');
+      const profile = await window.kpAuth.getMyProfile();
+      if (!profile) return;
+      document.getElementById('accUsername').value = profile.username || '';
+      document.getElementById('accBio').value = profile.bio || '';
+      document.getElementById('accUsernameLabel').textContent = profile.username || '—';
+      const sinceLabel = isEn ? 'Member since ' : 'S námi od ';
+      const daysLabel = isEn ? ' (' + daysSince(profile.created_at) + ' days)' : ' (' + daysSince(profile.created_at) + ' dní)';
+      document.getElementById('accMemberSince').textContent = sinceLabel + fmtDate(profile.created_at) + daysLabel;
+      const img = document.getElementById('accAvatarPreview');
+      const ph = document.getElementById('accAvatarPlaceholder');
+      if (profile.avatar_url) {
+        img.src = profile.avatar_url; img.classList.remove('hidden'); ph.classList.add('hidden');
+      } else {
+        img.classList.add('hidden'); ph.classList.remove('hidden');
+      }
+    }
+
+    loginForm.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const remember = document.getElementById('loginRemember').checked;
+      const errBox = document.getElementById('loginError');
+      errBox.classList.add('hidden');
+      const btn = loginForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      window.kpAuth.signIn(email, password, remember).then(renderDash).catch(function (e) {
+        errBox.textContent = isEn ? 'Login failed. Check your e-mail and password (and that you confirmed your e-mail).' : 'Přihlášení se nepovedlo. Zkontroluj e-mail a heslo (a že máš potvrzený e-mail).';
+        errBox.classList.remove('hidden');
+      }).finally(function () { btn.disabled = false; });
+    });
+
+    registerForm.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      const email = document.getElementById('regEmail').value.trim();
+      const password = document.getElementById('regPassword').value;
+      const errBox = document.getElementById('regError');
+      const okBox = document.getElementById('regSuccess');
+      errBox.classList.add('hidden'); okBox.classList.add('hidden');
+      const btn = registerForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      window.kpAuth.signUp(email, password).then(function (result) {
+        if (result.confirmed) { renderDash(); return; }
+        okBox.textContent = isEn ? 'Account created! Check your e-mail and click the confirmation link before logging in.' : 'Účet vytvořen! Zkontroluj e-mail a klikni na potvrzovací odkaz, než se přihlásíš.';
+        okBox.classList.remove('hidden');
+        registerForm.reset();
+      }).catch(function (e) {
+        errBox.textContent = isEn ? 'Sign-up failed: ' : 'Registrace se nepovedla: ' + (e && e.message ? e.message : '');
+        errBox.classList.remove('hidden');
+      }).finally(function () { btn.disabled = false; });
+    });
+
+    profileForm.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      const user = window.kpAuth.currentUser();
+      if (!user) return;
+      const username = document.getElementById('accUsername').value.trim();
+      const bio = document.getElementById('accBio').value.trim();
+      const fileInput = document.getElementById('accAvatarFile');
+      const statusBox = document.getElementById('profileStatus');
+      statusBox.classList.add('hidden');
+      const btn = profileForm.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      const file = fileInput.files && fileInput.files[0];
+      (file ? kpUploadAvatar(file) : Promise.resolve(null)).then(function (avatarUrl) {
+        const data = { username: username, bio: bio };
+        if (avatarUrl) data.avatar_url = avatarUrl;
+        return kpSbPatchAuth('profiles', 'id=eq.' + user.id, data);
+      }).then(function () {
+        fileInput.value = '';
+        statusBox.textContent = isEn ? 'Profile saved.' : 'Profil uložen.';
+        statusBox.classList.remove('hidden');
+        return renderDash();
+      }).catch(function (e) {
+        statusBox.textContent = isEn ? 'Could not save profile (username taken?).' : 'Profil se nepodařilo uložit (přezdívka už je zabraná?).';
+        statusBox.classList.remove('hidden', 'text-emerald-400'); statusBox.classList.add('text-rose-400');
+      }).finally(function () { btn.disabled = false; });
+    });
+
+    document.getElementById('accLogout').addEventListener('click', function () {
+      window.kpAuth.signOut().then(renderDash);
+    });
+
+    renderDash();
+  })();
+
+  /* ================= Členové (seznam, online, žebříček podle délky členství) ================= */
+  (function membersPage() {
+    const root = document.getElementById('clenove');
+    if (!root) return;
+    const isEn = document.documentElement.lang === 'en';
+    const onlineBox = document.getElementById('membersOnline');
+    const boardBox = document.getElementById('membersLeaderboard');
+    const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+
+    function avatarHtml(p) {
+      if (p.avatar_url) return '<img src="' + kpEscapeHtml(p.avatar_url) + '" class="w-8 h-8 rounded-lg object-cover bg-slate-800 border border-brand-border" alt="">';
+      return '<span class="w-8 h-8 rounded-lg bg-slate-800 border border-brand-border flex items-center justify-center text-slate-500 text-xs"><i class="fa-solid fa-user"></i></span>';
+    }
+    function daysSince(iso) {
+      try { return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)); } catch (e) { return 0; }
+    }
+    function fmtDate(iso) {
+      try { return new Date(iso).toLocaleDateString(isEn ? 'en-GB' : 'cs-CZ'); } catch (e) { return ''; }
+    }
+
+    kpSbSelect('profiles', 'select=id,username,avatar_url,created_at,last_seen_at&order=created_at.asc&limit=200').then(function (rows) {
+      const now = Date.now();
+      const online = rows.filter(p => p.last_seen_at && (now - new Date(p.last_seen_at).getTime()) < ONLINE_WINDOW_MS);
+      onlineBox.innerHTML = online.length
+        ? online.map(p => '<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-card border border-emerald-500/30 text-xs font-bold text-white">' +
+            avatarHtml(p) + '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>' + kpEscapeHtml(p.username) + '</span>').join('')
+        : '<p class="text-xs text-slate-500 italic">' + (isEn ? 'No one online right now.' : 'Teď není nikdo online.') + '</p>';
+
+      boardBox.innerHTML = rows.map(function (p, i) {
+        const since = isEn ? ('Member since ' + fmtDate(p.created_at)) : ('S námi od ' + fmtDate(p.created_at));
+        const days = daysSince(p.created_at);
+        const daysLabel = isEn ? (days + ' days') : (days + ' dní');
+        return '<div class="flex items-center gap-3 p-3 rounded-2xl bg-brand-card border border-brand-border">' +
+          '<span class="w-6 text-center text-xs font-mono text-slate-500">#' + (i + 1) + '</span>' +
+          avatarHtml(p) +
+          '<div class="min-w-0 flex-1"><div class="font-bold text-white text-sm truncate">' + kpEscapeHtml(p.username) + '</div>' +
+          '<div class="text-[11px] text-slate-500">' + since + '</div></div>' +
+          '<span class="text-xs font-bold text-brand-accent shrink-0">' + daysLabel + '</span>' +
+          '</div>';
+      }).join('') || '<p class="text-xs text-slate-500 italic">' + (isEn ? 'No members yet.' : 'Zatím žádní členové.') + '</p>';
+    }).catch(function () {
+      boardBox.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'Could not load members.' : 'Členy se nepodařilo načíst.') + '</p>';
     });
   })();
 
