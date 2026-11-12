@@ -1692,8 +1692,16 @@
       const user = currentUserSync();
       if (!user) return null;
       try {
-        const rows = await kpSbSelect('profiles', 'id=eq.' + user.id + '&select=id,username,bio,avatar_url,created_at,last_seen_at');
-        return rows[0] || null;
+        const rows = await kpSbSelect('profiles', 'id=eq.' + user.id + '&select=id,username,bio,avatar_url,created_at,last_seen_at,is_admin');
+        if (rows[0]) return rows[0];
+        // Starší účet bez řádku v profiles (založený dřív, než vznikla tahle tabulka
+        // -- typicky admin účet) -- necháme si ho bezpečně doplnit přes RPC, která
+        // běží s právy přihlášeného uživatele (auth.uid()), takže si nikdo nemůže
+        // vyrobit profil za někoho jiného.
+        const res = await fetch(KP_SB_URL + '/rest/v1/rpc/kp_ensure_profile', { method: 'POST', headers: await authHeaders() });
+        if (!res.ok) return null;
+        const created = await res.json();
+        return created || null;
       } catch (e) { return null; }
     }
     async function touchLastSeen() {
@@ -1703,9 +1711,34 @@
         await fetch(KP_SB_URL + '/rest/v1/rpc/kp_touch_last_seen', { method: 'POST', headers: await authHeaders() });
       } catch (e) {}
     }
-    return { signUp, signIn, signOut, authHeaders, currentUser: currentUserSync, getMyProfile, touchLastSeen, ensureFresh };
+    // Po kliknutí na potvrzovací/magic-link e-mail Supabase přesměruje zpátky na web
+    // s tokeny v URL fragmentu (#access_token=...&refresh_token=...&...). Bez tohohle
+    // by se taková session nikdy neuložila a uživatel by vypadal pořád odhlášený.
+    function consumeUrlHash() {
+      try {
+        if (!location.hash || location.hash.indexOf('access_token=') === -1) return false;
+        const params = new URLSearchParams(location.hash.slice(1));
+        const access_token = params.get('access_token');
+        const refresh_token = params.get('refresh_token');
+        const expires_in = parseInt(params.get('expires_in'), 10) || 3600;
+        if (!access_token) return false;
+        let userPayload = null;
+        try {
+          const b64 = access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+          const json = decodeURIComponent(atob(b64).split('').map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join(''));
+          const claims = JSON.parse(json);
+          userPayload = { id: claims.sub, email: claims.email };
+        } catch (e) {}
+        save({ access_token: access_token, refresh_token: refresh_token, expires_at: Date.now() + expires_in * 1000, user: userPayload }, true);
+        const cleanUrl = location.pathname + location.search;
+        history.replaceState(null, '', cleanUrl);
+        return true;
+      } catch (e) { return false; }
+    }
+    return { signUp, signIn, signOut, authHeaders, currentUser: currentUserSync, getMyProfile, touchLastSeen, ensureFresh, consumeUrlHash };
   })();
   window.kpAuth = kpAuth;
+  kpAuth.consumeUrlHash();
   if (kpAuth.currentUser()) {
     kpAuth.touchLastSeen();
     setInterval(function () { kpAuth.touchLastSeen(); }, 120000);
@@ -1737,26 +1770,57 @@
     const box = document.getElementById('headerAuthWidget');
     if (!box) return;
     const isEn = document.documentElement.lang === 'en';
-    const user = kpAuth.currentUser();
-    if (!user) {
-      box.innerHTML = '<a href="' + (document.documentElement.getAttribute('data-page') === 'ucet' ? '#' : 'ucet.html') +
-        '" class="px-3 py-1.5 rounded-lg bg-brand-accent text-white text-xs font-bold hover:opacity-90 transition whitespace-nowrap">' +
-        '<i class="fa-solid fa-user-plus mr-1"></i>' + (isEn ? 'Sign up / Log in' : 'Registrace / přihlášení') + '</a>';
-      return;
+    const onAccountPage = document.documentElement.getAttribute('data-page') === 'ucet';
+
+    function renderLoggedOut() {
+      box.innerHTML = '<a href="' + (onAccountPage ? '#' : 'ucet.html') +
+        '" class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-brand-accent text-white text-xs font-bold hover:opacity-90 transition whitespace-nowrap">' +
+        '<i class="fa-solid fa-user-plus"></i><span class="hidden min-[480px]:inline ml-1.5">' + (isEn ? 'Sign up / Log in' : 'Registrace / přihlášení') + '</span></a>';
     }
-    kpAuth.getMyProfile().then(function (profile) {
-      if (!profile) { box.innerHTML = ''; return; }
-      const isAdmin = !!profile.is_admin;
-      const avatarHtml = profile.avatar_url
+
+    // vykresli hned (nejprve co nejlepší odhad), ať políčko není nikdy prázdné, i kdyby
+    // načtení profilu selhalo nebo trvalo -- jinak po návratu na stránku není vidět nic.
+    function renderLoggedIn(user, profile) {
+      const isAdmin = !!(profile && profile.is_admin);
+      const label = (profile && profile.username) || (user.email ? user.email.split('@')[0] : (isEn ? 'Account' : 'Účet'));
+      const avatarHtml = (profile && profile.avatar_url)
         ? '<img src="' + kpEscapeHtml(profile.avatar_url) + '" class="w-6 h-6 rounded-full object-cover bg-slate-800">'
         : '<span class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 text-[10px]"><i class="fa-solid fa-user"></i></span>';
-      box.innerHTML = '<a href="ucet.html" class="flex items-center gap-1.5 pl-1 pr-3 py-1 rounded-full bg-brand-card border ' +
+      box.innerHTML = '<div class="relative">' +
+        '<button type="button" id="headerAuthBtn" aria-haspopup="true" aria-expanded="false" class="flex items-center gap-1.5 pl-1 pr-2 sm:pr-3 py-1 rounded-full bg-brand-card border ' +
         (isAdmin ? 'border-amber-400 ring-2 ring-amber-400' : 'border-brand-border') +
         ' hover:border-brand-accent transition whitespace-nowrap">' + avatarHtml +
-        '<span class="text-xs font-bold text-white">' + kpEscapeHtml(profile.username || '') + '</span>' +
-        (isAdmin ? '<span class="text-[9px] font-black text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded">ADMIN</span>' : '') +
-        '</a>';
-    });
+        '<span class="hidden min-[480px]:inline text-xs font-bold text-white max-w-[9rem] truncate">' + kpEscapeHtml(label) + '</span>' +
+        (isAdmin ? '<span class="hidden sm:inline text-[9px] font-black text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded">ADMIN</span>' : '') +
+        '<i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i></button>' +
+        '<div id="headerAuthMenu" class="hidden absolute right-0 mt-2 w-48 rounded-xl bg-brand-card border border-brand-border shadow-xl overflow-hidden z-[60]">' +
+        '<a href="ucet.html" class="block px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-user mr-2 w-4"></i>' + (isEn ? 'My profile' : 'Můj profil') + '</a>' +
+        '<a href="ucet.html#pm" class="block px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-envelope mr-2 w-4"></i>' + (isEn ? 'Messages' : 'Zprávy') + '</a>' +
+        (isAdmin ? '<a href="moderace.html" class="block px-4 py-2.5 text-xs font-semibold text-amber-300 hover:bg-slate-800 transition"><i class="fa-solid fa-shield-halved mr-2 w-4"></i>' + (isEn ? 'Moderation' : 'Moderace') + '</a>' : '') +
+        '<button type="button" id="headerAuthLogout" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-rose-400 hover:bg-slate-800 transition border-t border-brand-border"><i class="fa-solid fa-right-from-bracket mr-2 w-4"></i>' + (isEn ? 'Log out' : 'Odhlásit se') + '</button>' +
+        '</div></div>';
+      const btn = document.getElementById('headerAuthBtn');
+      const menu = document.getElementById('headerAuthMenu');
+      btn.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        const open = !menu.classList.contains('hidden');
+        menu.classList.toggle('hidden', open);
+        btn.setAttribute('aria-expanded', String(!open));
+      });
+      document.addEventListener('click', function () { menu.classList.add('hidden'); btn.setAttribute('aria-expanded', 'false'); });
+      document.getElementById('headerAuthLogout').addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        kpAuth.signOut().then(function () { location.href = onAccountPage ? location.pathname : 'index.html'; location.reload(); });
+      });
+    }
+
+    const user = kpAuth.currentUser();
+    if (!user) { renderLoggedOut(); return; }
+    // hned zobraz odhad (jméno z e-mailu), aby políčko nikdy nebylo prázdné, pak doplň profil
+    renderLoggedIn(user, null);
+    kpAuth.getMyProfile().then(function (profile) {
+      if (profile) renderLoggedIn(user, profile);
+    }).catch(function () { /* necháme viditelný odhad z e-mailu */ });
   })();
 
   /* ================= Shared: draw a QR code onto any 2D canvas context ================= */
@@ -3240,17 +3304,45 @@
     const confirmBan = isEn ? 'Ban this user from commenting and chatting?' : 'Zabanovat tohoto uživatele (nebude moct psát komentáře ani chatovat)?';
     let adminIds = new Set();
     let myIsAdmin = false;
-    kpSbSelect('profiles', 'select=id&is_admin=eq.true').then(function (rows) {
-      adminIds = new Set(rows.map(r => r.id));
+    let avatarById = {};
+    /* Konzistentní barva jména podle id uživatele (ne náhodná při každém vykreslení). */
+    const NAME_COLORS = ['text-brand-accent', 'text-sky-400', 'text-fuchsia-400', 'text-lime-400', 'text-orange-400', 'text-cyan-400', 'text-pink-400', 'text-violet-400'];
+    function kpUserColor(userId) {
+      let h = 0;
+      const s = String(userId || '');
+      for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+      return NAME_COLORS[h % NAME_COLORS.length];
+    }
+    kpSbSelect('profiles', 'select=id,is_admin,avatar_url').then(function (rows) {
+      adminIds = new Set(rows.filter(r => r.is_admin).map(r => r.id));
+      avatarById = {};
+      rows.forEach(r => { if (r.avatar_url) avatarById[r.id] = r.avatar_url; });
       myIsAdmin = !!(me && adminIds.has(me.id));
       renderMessages.lastRows && renderMessages(renderMessages.lastRows);
     }).catch(function () {});
+
+    function refreshOnlineCount() {
+      const el = document.getElementById('chatOnlineCount');
+      if (!el || typeof kpRpc !== 'function') return;
+      kpRpc('kp_stats').then(function (stats) {
+        el.textContent = (stats && typeof stats.online === 'number') ? stats.online : '—';
+      }).catch(function () {});
+    }
+    refreshOnlineCount();
+    setInterval(refreshOnlineCount, 30000);
 
     function fmtTime(iso) {
       try {
         const d = new Date(iso);
         return d.toLocaleTimeString(isEn ? 'en-GB' : 'cs-CZ', { hour: '2-digit', minute: '2-digit' });
       } catch (e) { return ''; }
+    }
+
+    function avatarHtml(userId, name) {
+      const url = avatarById[userId];
+      if (url) return '<img src="' + kpEscapeHtml(url) + '" class="w-6 h-6 rounded-full object-cover bg-slate-800 shrink-0" alt="">';
+      const initial = (name || '?').trim().charAt(0).toUpperCase() || '?';
+      return '<span class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 shrink-0">' + kpEscapeHtml(initial) + '</span>';
     }
 
     function renderMessages(rows) {
@@ -3262,22 +3354,25 @@
       }
       const atBottom = wrap.scrollTop + wrap.clientHeight >= wrap.scrollHeight - 20;
       const user = window.kpAuth ? window.kpAuth.currentUser() : null;
-      /* IRC/shoutbox style: "[HH:MM] <jméno> zpráva" on one compact line, wraps if too long */
+      /* IRC/shoutbox styl s avatarem: [avatar] <jméno> zpráva [HH:MM] */
       wrap.innerHTML = rows.map(m => {
         const isAdminMsg = adminIds.has(m.user_id);
-        const nameHtml = (isAdminMsg
-          ? '<span class="font-bold text-amber-300">&lt;' + kpEscapeHtml(m.name) + '&gt;</span> <span class="text-[9px] font-black text-amber-300 bg-amber-400/10 px-1 py-0.5 rounded align-middle">ADMIN</span>'
-          : '<span class="font-bold text-brand-accent">&lt;' + kpEscapeHtml(m.name) + '&gt;</span>');
+        const nameColor = isAdminMsg ? 'text-amber-300' : kpUserColor(m.user_id);
+        const nameHtml = '<span class="font-bold ' + nameColor + '">' + kpEscapeHtml(m.name) + '</span>' +
+          (isAdminMsg ? ' <span class="text-[9px] font-black text-amber-300 bg-amber-400/10 px-1 py-0.5 rounded align-middle">ADMIN</span>' : '');
         const mine = user && m.user_id === user.id;
         const actions =
           (mine ? ' <button type="button" class="kp-chat-del text-[10px] text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition" data-msg-id="' + m.id + '">[' + deleteLabel + ']</button>' : '') +
           (myIsAdmin && !mine ? ' <button type="button" class="kp-chat-ban text-[10px] text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition" data-user-id="' + m.user_id + '">[' + banLabel + ']</button>' : '') +
           (myIsAdmin && !mine ? ' <button type="button" class="kp-chat-admin-del text-[10px] text-slate-600 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition" data-msg-id="' + m.id + '">[' + deleteLabel + ']</button>' : '');
-        return '<div class="leading-snug break-words group" data-msg-id="' + m.id + '"><span class="text-slate-600">[' + fmtTime(m.created_at) + ']</span> ' +
+        return '<div class="flex items-start gap-2 group" data-msg-id="' + m.id + '">' +
+          avatarHtml(m.user_id, m.name) +
+          '<div class="leading-snug break-words min-w-0 flex-1">' +
+          '<span class="text-slate-600 float-right text-[10px] ml-2">' + fmtTime(m.created_at) + '</span>' +
           nameHtml + ' ' +
           '<span class="text-slate-300 whitespace-pre-wrap">' + kpLinkify(m.body) + '</span>' +
           actions +
-          '</div>';
+          '</div></div>';
       }).join('');
       if (atBottom) wrap.scrollTop = wrap.scrollHeight;
     }
@@ -3422,13 +3517,28 @@
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
+    let dashReqId = 0;
     async function renderDash() {
+      const myReqId = ++dashReqId;
       const user = window.kpAuth.currentUser();
       if (!user) { authBox.classList.remove('hidden'); dash.classList.add('hidden'); return; }
       authBox.classList.add('hidden');
       dash.classList.remove('hidden');
+      // Okamžitě vyprázdni staré hodnoty -- jinak by se při přepnutí účtu (odhlásit
+      // -> přihlásit jiným uživatelem) krátce/trvale zobrazovala data PŘEDCHOZÍHO
+      // uživatele, dokud nedorazí čerstvý profil (nebo navždy, kdyby načtení selhalo).
+      document.getElementById('accUsername').value = '';
+      document.getElementById('accBio').value = '';
+      document.getElementById('accUsernameLabel').textContent = isEn ? 'Loading…' : 'Načítám…';
+      document.getElementById('accMemberSince').textContent = '';
+      document.getElementById('accAvatarPreview').classList.add('hidden');
+      document.getElementById('accAvatarPlaceholder').classList.remove('hidden');
       const profile = await window.kpAuth.getMyProfile();
-      if (!profile) return;
+      if (myReqId !== dashReqId) return; // mezitím proběhl novější render (např. další přepnutí účtu), tahle odpověď je zastaralá
+      if (!profile) {
+        document.getElementById('accUsernameLabel').textContent = isEn ? 'Profile could not be loaded.' : 'Profil se nepodařilo načíst.';
+        return;
+      }
       document.getElementById('accUsername').value = profile.username || '';
       document.getElementById('accBio').value = profile.bio || '';
       const adminBadge = profile.is_admin ? ' <span class="text-[9px] font-black text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded">ADMIN</span>' : '';
@@ -3443,12 +3553,12 @@
       } else {
         img.classList.add('hidden'); ph.classList.remove('hidden');
       }
-      // ?to=username z odkazu "Napsat zprávu" na stránce Členové
+      // ?to=username z odkazu "Napsat zprávu" na stránce Členové, nebo #pm z menu v hlavičce
       const params = new URLSearchParams(location.search);
       const to = params.get('to');
-      if (to) {
+      if (to || location.hash === '#pm') {
         dashTabs.forEach(t => { if (t.dataset.dashtab === 'messages') t.click(); });
-        document.getElementById('pmTo').value = to;
+        if (to) document.getElementById('pmTo').value = to;
       }
     }
 
@@ -3560,6 +3670,12 @@
     async function allProfiles() {
       if (pmProfilesCache) return pmProfilesCache;
       pmProfilesCache = await kpSbSelect('profiles', 'select=id,username,avatar_url');
+      const list = document.getElementById('pmUserList');
+      if (list) {
+        const me = window.kpAuth.currentUser();
+        list.innerHTML = pmProfilesCache.filter(p => !me || p.id !== me.id)
+          .map(p => '<option value="' + kpEscapeHtml(p.username) + '">').join('');
+      }
       return pmProfilesCache;
     }
     function fmtTime(iso) {
