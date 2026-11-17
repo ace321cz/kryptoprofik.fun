@@ -92,7 +92,125 @@
 </header>
 <div class="sticky top-16 z-40 bg-[#07090e]/90 backdrop-blur-md border-y border-brand-border no-print"><nav aria-label="Stránky webu" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex gap-2 overflow-x-auto no-scrollbar"><a href="zaklady.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n="kmp95dab9f">1 Základy</a><a href="penezenky.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n="kmp14a990">2 Peněženky</a><a href="burzy.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n="kmpfc50775">3 Burzy & DEX</a><a href="anti-scam.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n="kmpc75558b">4 Anti-scam</a><a href="analyza.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n="kmp929e924">5 Analýza</a><a href="strategie.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n="kmp6086374">6 Strategie</a><a href="dane.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n="kmpb026d0d">7 Daně v ČR</a><a href="nastroje.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n="kmp6bfd7bb">Nástroje</a><a href="glosar.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n="kmp44af7d6">Slovník & FAQ</a><a href="postup.html" class="page-chip shrink-0 px-3 py-1.5 rounded-full bg-brand-card border border-brand-border text-slate-300 hover:border-brand-accent hover:text-brand-accent transition whitespace-nowrap text-xs font-bold" data-i18n="kmp138f0c9">Můj postup</a></nav></div><div id="globalResults" class="hidden bg-[#07090e]/95 border-b border-brand-border no-print"></div>
 <main id="main">
-<section class="max-w-md mx-auto px-4 sm:px-6 lg:px-8 py-14" id="ucet" data-account-page><h1 class="text-3xl font-black text-white mb-2" data-i18n="kmpa1e4aee">Můj účet</h1><p class="text-slate-400 text-sm mb-8" data-i18n="kmp8789f7b">Přihlas se nebo si vytvoř účet, abys mohl(a) psát komentáře, chatovat a mít svůj profil.</p><div id="authBox" class="p-6 rounded-3xl bg-brand-card border border-brand-border"><div class="flex gap-2 mb-5" id="authTabs"><button type="button" class="auth-tab flex-1 px-4 py-2 rounded-xl bg-brand-accent text-white text-sm font-bold transition" data-tab="login" data-i18n="kmpb09bb17">Přihlásit se</button><button type="button" class="auth-tab flex-1 px-4 py-2 rounded-xl bg-slate-900 border border-brand-border text-slate-300 text-sm font-bold hover:text-white transition" data-tab="register" data-i18n="kmp4bdf581">Registrovat</button></div><form id="loginForm" class="space-y-3"><input id="loginEmail" type="email" autocomplete="username" placeholder="E-mail" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none" required><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Heslo" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none" required><label class="flex items-center gap-2 text-xs text-slate-400 select-none"><input id="loginRemember" type="checkbox" class="accent-emerald-500" checked> <span data-i18n="kmpe454a59">Zůstat přihlášen(a)</span></label><button type="submit" class="w-full px-4 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition" data-i18n="kmpb09bb17">Přihlásit se</button><div id="loginError" class="hidden text-xs text-rose-400"></div></form><form id="registerForm" class="space-y-3 hidden"><input id="regEmail" type="email" autocomplete="username" placeholder="E-mail" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none" required><input id="regPassword" type="password" autocomplete="new-password" placeholder="Heslo (min. 6 znaků)" minlength="6" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none" required><div class="flex items-center gap-2"><label for="captchaAnswer" class="text-xs text-slate-400 shrink-0" id="captchaLabel">Kolik je ...?</label><input id="captchaAnswer" type="number" inputmode="numeric" class="w-20 bg-slate-900 border border-brand-border rounded-xl px-2 py-1.5 text-white text-sm focus:border-brand-accent outline-none" required></div><div id="captchaError" class="hidden text-xs text-rose-400"></div><button type="submit" class="w-full px-4 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition" data-i18n="kmpe9ee544">Vytvořit účet</button><p class="text-[11px] text-slate-500" data-i18n="kmpc7227be">Po registraci ti pošleme potvrzovací e-mail — bez potvrzení se nepřihlásíš.</p><div id="regError" class="hidden text-xs text-rose-400"></div><div id="regSuccess" class="hidden text-xs text-emerald-400"></div></form></div><div id="accountDash" class="hidden p-6 rounded-3xl bg-brand-card border border-brand-border"><div class="flex items-center gap-4 mb-5"><img id="accAvatarPreview" src="" class="w-16 h-16 rounded-2xl object-cover bg-slate-800 border border-brand-border hidden"><div id="accAvatarPlaceholder" class="w-16 h-16 rounded-2xl bg-slate-800 border border-brand-border flex items-center justify-center text-slate-500"><i class="fa-solid fa-user text-xl"></i></div><div><div class="font-bold text-white flex items-center gap-2" id="accUsernameLabel">—</div><div class="text-[11px] text-slate-500" id="accMemberSince" data-i18n="kmp6b7b8c0">S námi od</div></div></div><div class="flex gap-2 mb-5" id="accDashTabs"><button type="button" class="acc-dash-tab flex-1 px-3 py-2 rounded-xl bg-brand-accent text-white text-xs font-bold transition" data-dashtab="profile">Profil</button><button type="button" class="acc-dash-tab flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition" data-dashtab="messages"><i class="fa-solid fa-envelope mr-1"></i>Zprávy</button></div><form id="profileForm" class="space-y-3" data-dashpane="profile"><label class="block text-xs font-bold text-slate-400 mb-1" data-i18n="kmp9dd256c">Přezdívka (bez diakritiky, mezer)</label><input id="accUsername" type="text" pattern="[a-zA-Z0-9_]{2,24}" maxlength="24" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none" required><label class="block text-xs font-bold text-slate-400 mb-1" data-i18n="kmpbfbb450">O mně</label><textarea id="accBio" maxlength="300" class="w-full min-h-[4rem] bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none"></textarea><label class="block text-xs font-bold text-slate-400 mb-1" data-i18n="kmp358ce0">Profilová fotka</label><input id="accAvatarFile" type="file" accept="image/*" class="w-full text-xs text-slate-400"><button type="submit" class="w-full px-4 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition" data-i18n="kmp1240664">Uložit profil</button><div id="profileStatus" class="hidden text-sm font-bold rounded-xl px-3 py-2.5 border"></div></form><div id="pmPane" class="hidden space-y-4" data-dashpane="messages"><div id="pmThreads" class="space-y-1.5 max-h-48 overflow-y-auto"></div><div class="flex gap-2"><input id="pmTo" type="text" list="pmUserList" autocomplete="off" placeholder="Komu? (začni psát přezdívku)" class="flex-1 bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-white text-sm focus:border-brand-accent outline-none"><datalist id="pmUserList"></datalist></div><p class="text-[11px] text-slate-500">Vyber uživatele z nabídky, co se objeví při psaní -- přezdívky jsou v databázi jedinečné, takže si nikdo nemůže "půjčit" cizí jméno.</p><div id="pmMessages" class="space-y-2 max-h-64 overflow-y-auto p-3 rounded-2xl bg-slate-950 border border-brand-border"></div><form id="pmForm" class="flex gap-2"><input id="pmBody" type="text" placeholder="Napiš zprávu…" maxlength="2000" class="flex-1 bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none" required><button type="submit" class="px-4 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition"><i class="fa-solid fa-paper-plane"></i></button></form><div id="pmStatus" class="hidden text-xs text-rose-400"></div></div><button type="button" id="accLogout" class="w-full mt-4 px-4 py-2.5 rounded-xl bg-slate-900 border border-brand-border text-slate-300 text-sm font-bold hover:text-white transition" data-i18n="kmp22baf46">Odhlásit se</button></div></section>
+<section class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-14" id="ucet" data-account-page>
+
+<h1 class="text-3xl font-black text-white mb-2" id="ucetTitle" data-i18n="kmpa1e4aee">Můj účet</h1>
+<p class="text-slate-400 text-sm mb-8" id="ucetIntro" data-i18n="kmp8789f7b">Přihlas se nebo si vytvoř účet, abys mohl(a) psát komentáře, chatovat a mít svůj profil.</p>
+
+<div id="authBox" class="p-6 rounded-3xl bg-brand-card border border-brand-border">
+<div class="flex gap-2 mb-5" id="authTabs">
+<button type="button" class="auth-tab flex-1 px-4 py-2 rounded-xl bg-brand-accent text-white text-sm font-bold transition" data-tab="login" data-i18n="kmpb09bb17">Přihlásit se</button>
+<button type="button" class="auth-tab flex-1 px-4 py-2 rounded-xl bg-slate-900 border border-brand-border text-slate-300 text-sm font-bold hover:text-white transition" data-tab="register" data-i18n="kmp4bdf581">Registrovat</button>
+</div>
+<form id="loginForm" class="space-y-3">
+<input id="loginEmail" type="email" autocomplete="username" placeholder="E-mail" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none" required>
+<input id="loginPassword" type="password" autocomplete="current-password" placeholder="Heslo" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none" required>
+<label class="flex items-center gap-2 text-xs text-slate-400 select-none"><input id="loginRemember" type="checkbox" class="accent-emerald-500" checked> <span data-i18n="kmpe454a59">Zůstat přihlášen(a)</span></label>
+<button type="submit" class="w-full px-4 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition" data-i18n="kmpb09bb17">Přihlásit se</button>
+<div id="loginError" class="hidden text-xs text-rose-400"></div>
+</form>
+<form id="registerForm" class="space-y-3 hidden">
+<label class="block text-xs font-bold text-slate-400 mb-1" data-i18n="kmp9dd256c">Přezdívka (bez diakritiky, mezer)</label>
+<input id="regUsername" type="text" pattern="[a-zA-Z0-9_]{2,24}" maxlength="24" autocomplete="off" placeholder="Např. KryptoJirka" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none" required>
+<p class="text-[10px] text-slate-500 -mt-2" id="regUsernameHint">Zvol si rozmyšleně — jde nastavit jen teď, později ji nepůjde změnit.</p>
+<input id="regEmail" type="email" autocomplete="username" placeholder="E-mail" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none" required>
+<input id="regPassword" type="password" autocomplete="new-password" placeholder="Heslo (min. 6 znaků)" minlength="6" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none" required>
+<div class="flex items-center gap-2"><label for="captchaAnswer" class="text-xs text-slate-400 shrink-0" id="captchaLabel">Kolik je ...?</label><input id="captchaAnswer" type="number" inputmode="numeric" class="w-20 bg-slate-900 border border-brand-border rounded-xl px-2 py-1.5 text-white text-sm focus:border-brand-accent outline-none" required></div>
+<div id="captchaError" class="hidden text-xs text-rose-400"></div>
+<button type="submit" class="w-full px-4 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition" data-i18n="kmpe9ee544">Vytvořit účet</button>
+<p class="text-[11px] text-slate-500" data-i18n="kmpc7227be">Po registraci ti pošleme potvrzovací e-mail — bez potvrzení se nepřihlásíš.</p>
+<div id="regError" class="hidden text-xs text-rose-400"></div>
+<div id="regSuccess" class="hidden text-xs text-emerald-400"></div>
+</form>
+</div>
+
+<div id="publicProfileBox" class="hidden p-6 rounded-3xl bg-brand-card border border-brand-border"></div>
+
+<div id="accountDash" class="hidden p-6 rounded-3xl bg-brand-card border border-brand-border">
+
+<div class="flex items-center gap-4 mb-5">
+<img id="accAvatarPreview" src="" class="w-16 h-16 rounded-2xl object-cover bg-slate-800 border border-brand-border hidden">
+<div id="accAvatarPlaceholder" class="w-16 h-16 rounded-2xl bg-slate-800 border border-brand-border flex items-center justify-center text-slate-500"><i class="fa-solid fa-user text-xl"></i></div>
+<div class="min-w-0 flex-1">
+<div class="font-bold text-white flex items-center gap-2 flex-wrap" id="accUsernameLabel">—</div>
+<div class="text-[11px] text-slate-500" id="accMemberSince" data-i18n="kmp6b7b8c0">S námi od</div>
+</div>
+<button type="button" id="accEditBtn" class="shrink-0 px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition"><i class="fa-solid fa-pen mr-1.5"></i><span id="accEditBtnLabel">Upravit</span></button>
+</div>
+
+<div class="flex gap-2 mb-5" id="accDashTabs">
+<button type="button" class="acc-dash-tab flex-1 px-3 py-2 rounded-xl bg-brand-accent text-white text-xs font-bold transition" data-dashtab="profile" id="accDashTabProfile">Profil</button>
+<button type="button" class="acc-dash-tab relative flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition" data-dashtab="messages" id="accDashTabMessages"><i class="fa-solid fa-envelope mr-1"></i><span id="accDashTabMessagesLabel">Zprávy</span><span id="accDashUnreadDot" class="hidden absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center">0</span></button>
+</div>
+
+<div data-dashpane="profile">
+<div id="profileView" class="space-y-3">
+<p id="profileViewBio" class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed"></p>
+<div id="profileViewEmpty" class="hidden text-sm text-slate-500 italic"></div>
+</div>
+<form id="profileForm" class="hidden space-y-3">
+<div>
+<label class="block text-xs font-bold text-slate-400 mb-1" id="accUsernameFixedLabel">Přezdívka</label>
+<div class="flex items-center gap-2 flex-wrap">
+<span id="accUsernameFixed" class="px-3 py-2 rounded-xl bg-slate-900 border border-brand-border text-slate-300 text-sm font-mono">—</span>
+<span class="text-[10px] text-slate-500" id="accUsernameFixedHint">(nejde po registraci změnit)</span>
+</div>
+</div>
+<label class="block text-xs font-bold text-slate-400 mb-1" data-i18n="kmpbfbb450">O mně</label>
+<textarea id="accBio" maxlength="300" class="w-full min-h-[4rem] bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none"></textarea>
+<label class="block text-xs font-bold text-slate-400 mb-1" data-i18n="kmp358ce0">Profilová fotka</label>
+<input id="accAvatarFile" type="file" accept="image/*" class="w-full text-xs text-slate-400">
+<div class="flex gap-2">
+<button type="submit" class="flex-1 px-4 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition" data-i18n="kmp1240664">Uložit profil</button>
+<button type="button" id="accEditCancel" class="px-4 py-2.5 rounded-xl bg-slate-900 border border-brand-border text-slate-300 text-sm font-bold hover:text-white transition"><span id="accEditCancelLabel">Zrušit</span></button>
+</div>
+<div id="profileStatus" class="hidden text-sm font-bold rounded-xl px-3 py-2.5 border"></div>
+</form>
+</div>
+
+<div id="pmPane" class="hidden" data-dashpane="messages">
+
+<div id="pmListView">
+<div class="flex items-center justify-between mb-3">
+<h2 class="text-sm font-bold text-slate-400 uppercase tracking-wide" id="pmListTitle">Zprávy</h2>
+<button type="button" id="pmNewBtn" class="px-3 py-1.5 rounded-lg bg-brand-accent text-white text-xs font-bold hover:opacity-90 transition"><i class="fa-solid fa-plus mr-1"></i><span id="pmNewBtnLabel">Nová zpráva</span></button>
+</div>
+<div id="pmThreads" class="space-y-1.5"></div>
+</div>
+
+<div id="pmNewView" class="hidden">
+<button type="button" id="pmNewBackBtn" class="text-xs text-slate-400 hover:text-white mb-3 transition"><i class="fa-solid fa-arrow-left mr-1.5"></i><span id="pmBackLabel1">Zpět</span></button>
+<label class="block text-xs font-bold text-slate-400 mb-1" id="pmToLabel">Komu? (začni psát přezdívku)</label>
+<input id="pmTo" type="text" list="pmUserList" autocomplete="off" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-white text-sm focus:border-brand-accent outline-none mb-2">
+<datalist id="pmUserList"></datalist>
+<button type="button" id="pmToConfirm" class="w-full px-4 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition"><span id="pmToConfirmLabel">Pokračovat</span></button>
+<div id="pmToError" class="hidden text-xs text-rose-400 mt-2"></div>
+</div>
+
+<div id="pmThreadView" class="hidden">
+<button type="button" id="pmBackBtn" class="text-xs text-slate-400 hover:text-white mb-2 transition"><i class="fa-solid fa-arrow-left mr-1.5"></i><span id="pmBackLabel2">Zpět</span></button>
+<a id="pmThreadHeaderLink" href="#" class="flex items-center gap-2 mb-3 group">
+<img id="pmThreadAvatar" src="" class="hidden w-9 h-9 rounded-full object-cover bg-slate-800">
+<span id="pmThreadAvatarPh" class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 text-xs"><i class="fa-solid fa-user"></i></span>
+<span id="pmThreadName" class="font-bold text-white group-hover:underline"></span>
+</a>
+<div id="pmMessages" class="space-y-3 max-h-96 overflow-y-auto p-3 rounded-2xl bg-slate-950 border border-brand-border"></div>
+<div class="flex flex-wrap gap-0.5 my-2" id="pmEmojiBar" aria-label="Vybrat smajlíka"><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="😀">😀</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="😂">😂</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="😉">😉</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="😎">😎</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="🤔">🤔</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="👍">👍</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="🚀">🚀</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="🔥">🔥</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="💎">💎</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="📈">📈</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="📉">📉</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="💰">💰</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="🙏">🙏</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="❤️">❤️</button></div>
+<div id="pmAttachPreview" class="hidden text-xs text-slate-300 mb-1 flex items-center gap-2 bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5"></div>
+<form id="pmForm" class="flex items-center gap-2">
+<label for="pmFile" class="shrink-0 w-10 h-10 rounded-xl bg-slate-900 border border-brand-border text-slate-400 hover:text-white flex items-center justify-center cursor-pointer transition"><i class="fa-solid fa-paperclip"></i></label>
+<input id="pmFile" type="file" accept="image/*,.pdf,.doc,.docx,.zip,.txt" class="hidden">
+<input id="pmBody" type="text" placeholder="Napiš zprávu…" maxlength="2000" class="flex-1 bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none">
+<button type="submit" class="shrink-0 w-10 h-10 rounded-xl bg-brand-accent text-white hover:opacity-90 transition flex items-center justify-center"><i class="fa-solid fa-paper-plane"></i></button>
+</form>
+<div id="pmStatus" class="hidden text-xs text-rose-400 mt-2"></div>
+</div>
+
+</div>
+
+<button type="button" id="accLogout" class="w-full mt-4 px-4 py-2.5 rounded-xl bg-slate-900 border border-brand-border text-slate-300 text-sm font-bold hover:text-white transition" data-i18n="kmp22baf46">Odhlásit se</button>
+</div>
+</section>
 </main>
 <button aria-label="Nahoru" class="hidden fixed bottom-5 right-5 z-40 w-11 h-11 rounded-full bg-brand-accent text-white shadow-lg hover:bg-emerald-400 transition" data-i18n-attr='{"aria-label":"k3559ade5"}' id="toTop"><i class="fa-solid fa-arrow-up"></i></button>
 <footer class="border-t border-brand-border bg-brand-card mt-auto">
