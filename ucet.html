@@ -128,15 +128,19 @@
 
 <div id="accountDash" class="hidden p-6 rounded-3xl bg-brand-card border border-brand-border">
 
-<div class="flex items-center gap-4 mb-5">
-<img id="accAvatarPreview" src="" class="w-16 h-16 rounded-2xl object-cover bg-slate-800 border border-brand-border hidden">
-<div id="accAvatarPlaceholder" class="w-16 h-16 rounded-2xl bg-slate-800 border border-brand-border flex items-center justify-center text-slate-500"><i class="fa-solid fa-user text-xl"></i></div>
-<div class="min-w-0 flex-1">
+<div class="flex items-start gap-4 mb-5 flex-wrap">
+<div class="flex items-center gap-4 min-w-0" style="flex:1 1 12rem">
+<img id="accAvatarPreview" src="" class="w-16 h-16 rounded-2xl object-cover bg-slate-800 border border-brand-border hidden shrink-0">
+<div id="accAvatarPlaceholder" class="w-16 h-16 rounded-2xl bg-slate-800 border border-brand-border flex items-center justify-center text-slate-500 shrink-0"><i class="fa-solid fa-user text-xl"></i></div>
+<div class="min-w-0">
 <div class="font-bold text-white flex items-center gap-2 flex-wrap" id="accUsernameLabel">—</div>
 <div class="text-[11px] text-slate-500" id="accMemberSince" data-i18n="kmp6b7b8c0">S námi od</div>
 </div>
+</div>
+<div class="flex items-center gap-2 flex-wrap ml-auto">
 <a href="zpravy.html" id="accMessagesBtn" class="relative shrink-0 px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition"><i class="fa-solid fa-envelope mr-1.5"></i><span id="accMessagesBtnLabel">Zprávy</span><span id="accDashUnreadDot" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center">0</span></a>
 <button type="button" id="accEditBtn" class="shrink-0 px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition"><i class="fa-solid fa-pen mr-1.5"></i><span id="accEditBtnLabel">Upravit</span></button>
+</div>
 </div>
 
 <div data-dashpane="profile">

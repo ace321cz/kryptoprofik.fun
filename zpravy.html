@@ -121,13 +121,30 @@
 <div id="pmToError" class="hidden text-xs text-rose-400 mt-2"></div>
 </div>
 
+<div id="pmSubjectView" class="hidden">
+<button type="button" id="pmSubjectBackBtn" class="text-xs text-slate-400 hover:text-white mb-3 transition"><i class="fa-solid fa-arrow-left mr-1.5"></i><span id="pmBackLabel3">Zpět</span></button>
+<p class="text-xs text-slate-400 mb-3"><span id="pmSubjectToLabel">Komu:</span> <span id="pmSubjectTo" class="font-bold text-white"></span></p>
+<form id="pmSubjectForm">
+<label class="block text-xs font-bold text-slate-400 mb-1" id="pmSubjectLabel">Předmět (o čem to je?)</label>
+<input id="pmSubjectInput" type="text" maxlength="120" placeholder="Např. Dotaz k peněžence…" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none mb-3">
+<button type="submit" class="w-full px-4 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition"><span id="pmSubjectContinue">Pokračovat</span></button>
+</form>
+</div>
+
 <div id="pmThreadView" class="hidden">
-<button type="button" id="pmBackBtn" class="text-xs text-slate-400 hover:text-white mb-2 transition"><i class="fa-solid fa-arrow-left mr-1.5"></i><span id="pmBackLabel2">Zpět</span></button>
-<a id="pmThreadHeaderLink" href="#" class="flex items-center gap-2 mb-3 group">
+<div class="flex items-center justify-between gap-2 mb-1">
+<button type="button" id="pmBackBtn" class="text-xs text-slate-400 hover:text-white transition"><i class="fa-solid fa-arrow-left mr-1.5"></i><span id="pmBackLabel2">Zpět</span></button>
+<div class="flex items-center gap-1">
+<button type="button" id="pmNewTopicBtn" title="Nové téma" class="w-8 h-8 rounded-lg bg-slate-900 border border-brand-border text-slate-400 hover:text-white flex items-center justify-center transition"><i class="fa-solid fa-plus text-xs"></i></button>
+<button type="button" id="pmDeleteThreadBtn" title="Smazat konverzaci" class="w-8 h-8 rounded-lg bg-slate-900 border border-brand-border text-slate-400 hover:text-rose-400 flex items-center justify-center transition"><i class="fa-solid fa-trash-can text-xs"></i></button>
+</div>
+</div>
+<a id="pmThreadHeaderLink" href="#" class="flex items-center gap-2 mb-1 group">
 <img id="pmThreadAvatar" src="" class="hidden w-9 h-9 rounded-full object-cover bg-slate-800">
 <span id="pmThreadAvatarPh" class="w-9 h-9 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 text-xs"><i class="fa-solid fa-user"></i></span>
 <span id="pmThreadName" class="font-bold text-white group-hover:underline"></span>
 </a>
+<p id="pmThreadSubject" class="text-xs text-slate-500 mb-3 truncate"></p>
 <div id="pmMessages" class="space-y-3 max-h-[28rem] overflow-y-auto p-3 rounded-2xl bg-slate-950 border border-brand-border"></div>
 <div class="flex flex-wrap gap-0.5 my-2" id="pmEmojiBar" aria-label="Vybrat smajlíka"><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="😀">😀</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="😂">😂</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="😉">😉</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="😎">😎</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="🤔">🤔</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="👍">👍</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="🚀">🚀</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="🔥">🔥</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="💎">💎</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="📈">📈</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="📉">📉</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="💰">💰</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="🙏">🙏</button><button type="button" class="kp-pm-emoji-btn text-lg px-1.5 py-0.5 rounded-lg hover:bg-slate-800 transition" data-emoji="❤️">❤️</button></div>
 <div id="pmAttachPreview" class="hidden text-xs text-slate-300 mb-1 flex items-center gap-2 bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5"></div>

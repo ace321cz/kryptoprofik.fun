@@ -1860,6 +1860,29 @@
     // Pokud SQL na tyhle RPC funkce ještě neběžel, tiše to selže a tečky se jen neukážou.
     // Samostatná funkce (ne jen inline v renderLoggedIn), ať ji jde zavolat znovu zvenku
     // (ze stránky Zprávy po přečtení/odeslání), aby se tečky aktualizovaly bez reloadu.
+    function czMessageWord(n) {
+      if (n === 1) return 'novou zprávu';
+      if (n >= 2 && n <= 4) return 'nové zprávy';
+      return 'nových zpráv';
+    }
+    function updateUnreadBanner(count) {
+      let bar = document.getElementById('kpUnreadBanner');
+      if (count > 0) {
+        if (!bar) {
+          const header = document.querySelector('header');
+          if (!header) return;
+          bar = document.createElement('div');
+          bar.id = 'kpUnreadBanner';
+          bar.className = 'bg-brand-accent';
+          header.appendChild(bar);
+        }
+        bar.innerHTML = '<a href="zpravy.html" class="flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-bold text-white hover:bg-black/10 transition"><i class="fa-solid fa-envelope"></i>' +
+          (isEn ? ('You have ' + count + ' new message' + (count > 1 ? 's' : '')) : ('Máš ' + count + ' ' + czMessageWord(count))) +
+          ' <i class="fa-solid fa-arrow-right text-[10px]"></i></a>';
+      } else if (bar) {
+        bar.remove();
+      }
+    }
     function applyUnreadCount(count) {
       const dot = document.getElementById('headerDotBadge');
       const badge = document.getElementById('headerUnreadBadge');
@@ -1867,6 +1890,7 @@
       if (count) { if (badge) badge.textContent = count > 9 ? '9+' : String(count); if (dot) dot.classList.remove('hidden'); }
       const dashDot = document.getElementById('accDashUnreadDot');
       if (dashDot) { dashDot.classList.toggle('hidden', !count); dashDot.textContent = count > 9 ? '9+' : String(count); }
+      updateUnreadBanner(count);
     }
     function refreshBadges(isAdmin) {
       const dot = document.getElementById('headerDotBadge');
@@ -3925,9 +3949,24 @@
     setLabel('pmNewBtnLabel', 'Nová zpráva', 'New message');
     setLabel('pmBackLabel1', 'Zpět', 'Back');
     setLabel('pmBackLabel2', 'Zpět', 'Back');
-    setLabel('pmToLabel', isEn ? 'To whom?' : 'Komu?', isEn ? 'To whom?' : 'Komu?');
-    setLabel('pmToSearchPh', '', '');
+    setLabel('pmToLabel', 'Komu?', 'To whom?');
+    setLabel('pmSubjectLabel', 'Předmět (o čem to je?)', 'Subject (what is it about?)');
+    setLabel('pmSubjectContinue', 'Pokračovat', 'Continue');
+    setLabel('pmSubjectToLabel', 'Komu:', 'To:');
+    setLabel('pmBackLabel3', 'Zpět', 'Back');
+    const newTopicBtn = document.getElementById('pmNewTopicBtn');
+    if (newTopicBtn) newTopicBtn.title = isEn ? 'New topic' : 'Nové téma';
+    const delThreadBtn = document.getElementById('pmDeleteThreadBtn');
+    if (delThreadBtn) delThreadBtn.title = isEn ? 'Delete conversation' : 'Smazat konverzaci';
+    const pmSearchInputEl2 = document.getElementById('pmSearch');
+    if (pmSearchInputEl2) pmSearchInputEl2.placeholder = isEn ? 'Search by username…' : 'Hledat podle přezdívky…';
+    const pmBodyInputEl = document.getElementById('pmBody');
+    if (pmBodyInputEl) pmBodyInputEl.placeholder = isEn ? 'Type a message…' : 'Napiš zprávu…';
+    const pmSubjectInputEl = document.getElementById('pmSubjectInput');
+    if (pmSubjectInputEl) pmSubjectInputEl.placeholder = isEn ? 'E.g. Question about a wallet…' : 'Např. Dotaz k peněžence…';
     setLabel('zpravyLoginHint', 'Pro zprávy se musíš nejdřív přihlásit.', 'You need to log in first to use messages.');
+    const LEGACY_SUBJECT = isEn ? 'Earlier conversation' : 'Dřívější konverzace';
+    const NO_SUBJECT = isEn ? '(no subject)' : '(bez předmětu)';
 
     const authGate = document.getElementById('zpravyAuthGate');
     const app = document.getElementById('zpravyApp');
@@ -3951,6 +3990,7 @@
 
     const pmListView = document.getElementById('pmListView');
     const pmNewView = document.getElementById('pmNewView');
+    const pmSubjectView = document.getElementById('pmSubjectView');
     const pmThreadView = document.getElementById('pmThreadView');
     const pmThreadsBox = document.getElementById('pmThreads');
     const pmMessagesBox = document.getElementById('pmMessages');
@@ -3962,31 +4002,52 @@
     const pmInboxCounter = document.getElementById('pmInboxCounter');
     let pmProfilesCache = null;
     let pmPendingFile = null;
-    let pmCurrentOther = null; // { id, username, avatar_url }
+    let pmCurrentOther = null;   // { id, username, avatar_url }
+    let pmCurrentThreadId = null; // null = legacy (bez předmětu) bucket
+    let pmCurrentSubject = '';
+    let pmPickedForSubject = null; // user vybraný v kroku 1, čeká se na předmět
 
     function showPmList() {
       pmListView.classList.remove('hidden');
       pmNewView.classList.add('hidden');
+      pmSubjectView.classList.add('hidden');
       pmThreadView.classList.add('hidden');
     }
     function showPmNew() {
       pmListView.classList.add('hidden');
       pmNewView.classList.remove('hidden');
+      pmSubjectView.classList.add('hidden');
       pmThreadView.classList.add('hidden');
       document.getElementById('pmToError').classList.add('hidden');
       if (pmSearchInput) pmSearchInput.value = '';
       allProfiles().then(renderUserPicker);
       if (pmSearchInput) pmSearchInput.focus();
     }
+    function showPmSubject(other) {
+      pmPickedForSubject = other;
+      pmListView.classList.add('hidden');
+      pmNewView.classList.add('hidden');
+      pmSubjectView.classList.remove('hidden');
+      pmThreadView.classList.add('hidden');
+      document.getElementById('pmSubjectTo').textContent = other.username;
+      const input = document.getElementById('pmSubjectInput');
+      input.value = '';
+      setTimeout(function () { input.focus(); }, 50);
+    }
     function showPmThread() {
       pmListView.classList.add('hidden');
       pmNewView.classList.add('hidden');
+      pmSubjectView.classList.add('hidden');
       pmThreadView.classList.remove('hidden');
     }
 
     document.getElementById('pmNewBtn').addEventListener('click', showPmNew);
     document.getElementById('pmNewBackBtn').addEventListener('click', showPmList);
+    document.getElementById('pmSubjectBackBtn').addEventListener('click', showPmNew);
     document.getElementById('pmBackBtn').addEventListener('click', function () { showPmList(); loadThreads(); });
+    document.getElementById('pmNewTopicBtn').addEventListener('click', function () {
+      if (pmCurrentOther) showPmSubject(pmCurrentOther);
+    });
 
     async function allProfiles() {
       if (pmProfilesCache) return pmProfilesCache;
@@ -4013,41 +4074,74 @@
       pmUserResults.querySelectorAll('.pm-pick-user').forEach(function (btn) {
         btn.addEventListener('click', function () {
           const p = list.find(x => x.id === btn.getAttribute('data-id'));
-          if (p) openThread(p);
+          if (p) showPmSubject(p);
         });
       });
     }
     if (pmSearchInput) pmSearchInput.addEventListener('input', renderUserPicker);
 
+    document.getElementById('pmSubjectForm').addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      if (!pmPickedForSubject) return;
+      const subject = document.getElementById('pmSubjectInput').value.trim().slice(0, 120) || NO_SUBJECT;
+      createThreadAndOpen(pmPickedForSubject, subject);
+    });
+
+    async function createThreadAndOpen(other, subject) {
+      const btn = document.querySelector('#pmSubjectForm button[type="submit"]');
+      if (btn) btn.disabled = true;
+      try {
+        const rows = await kpSbInsertAuth('message_threads', { user_a: user.id, user_b: other.id, subject: subject, created_by: user.id }, false);
+        const thread = rows && rows[0];
+        openThread(other, thread ? thread.id : null, subject);
+      } catch (e) {
+        // SQL pro vlákna ještě nemusí být spuštěné -- pokračuj aspoň v "bez předmětu" režimu, ať zpráva jde poslat.
+        openThread(other, null, NO_SUBJECT);
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
     async function loadThreads() {
       pmThreadsBox.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'Loading…' : 'Načítám…') + '</p>';
       try {
-        const [rows, profiles] = await Promise.all([
-          kpSbSelectAuth('private_messages', 'or=(sender_id.eq.' + user.id + ',recipient_id.eq.' + user.id + ')&select=id,sender_id,recipient_id,body,created_at,read_at,attachment_url,attachment_type&order=created_at.desc&limit=400'),
+        const [allMsgs, threadMeta, profiles] = await Promise.all([
+          kpSbSelectAuth('private_messages', 'or=(sender_id.eq.' + user.id + ',recipient_id.eq.' + user.id + ')&select=id,sender_id,recipient_id,thread_id,body,created_at,read_at,attachment_url,attachment_type&order=created_at.desc&limit=600'),
+          kpSbSelectAuth('message_threads', 'or=(user_a.eq.' + user.id + ',user_b.eq.' + user.id + ')&select=id,user_a,user_b,subject,last_message_at').catch(function () { return []; }),
           allProfiles(),
         ]);
         const byId = {}; profiles.forEach(p => { byId[p.id] = p; });
-        const seen = {}; const threads = [];
+        const subjById = {}; threadMeta.forEach(t => { subjById[t.id] = t.subject; });
+        const groups = {}; const order = [];
         let receivedTotal = 0;
-        rows.forEach(m => {
+        allMsgs.forEach(m => {
           if (m.recipient_id === user.id) receivedTotal++;
           const otherId = m.sender_id === user.id ? m.recipient_id : m.sender_id;
-          if (!seen[otherId]) {
-            seen[otherId] = { otherId: otherId, profile: byId[otherId], last: m, unread: 0 };
-            threads.push(seen[otherId]);
+          const key = m.thread_id ? ('t:' + m.thread_id) : ('l:' + otherId);
+          if (!groups[key]) {
+            groups[key] = {
+              threadId: m.thread_id || null,
+              otherId: otherId,
+              profile: byId[otherId],
+              subject: m.thread_id ? (subjById[m.thread_id] || NO_SUBJECT) : LEGACY_SUBJECT,
+              last: m,
+              unread: 0,
+            };
+            order.push(key);
           }
-          if (m.recipient_id === user.id && !m.read_at) seen[otherId].unread++;
+          if (m.recipient_id === user.id && !m.read_at) groups[key].unread++;
         });
+        const threads = order.map(k => groups[k]);
         if (pmInboxCounter) pmInboxCounter.textContent = receivedTotal + '/' + MAX_INBOX + (isEn ? ' received' : ' přijatých');
         pmThreadsBox.innerHTML = threads.length
           ? threads.map(t => {
               const p = t.profile || { username: '???' };
               const lastText = t.last.attachment_url ? (t.last.attachment_type === 'image' ? (isEn ? '📎 Photo' : '📎 Fotka') : (isEn ? '📎 File' : '📎 Soubor')) : (t.last.body || '');
               const isMine = t.last.sender_id === user.id;
-              return '<button type="button" class="pm-thread-btn w-full flex items-center gap-3 text-left px-3 py-2.5 rounded-xl bg-slate-900 border ' + (t.unread ? 'border-brand-accent/50' : 'border-brand-border') + ' hover:border-brand-accent transition" data-other-id="' + t.otherId + '">' +
+              return '<button type="button" class="pm-thread-btn w-full flex items-center gap-3 text-left px-3 py-2.5 rounded-xl bg-slate-900 border ' + (t.unread ? 'border-brand-accent/50' : 'border-brand-border') + ' hover:border-brand-accent transition" data-key="' + kpEscapeHtml(t.threadId ? ('t:' + t.threadId) : ('l:' + t.otherId)) + '">' +
                 avatarChipHtml(p) +
-                '<span class="min-w-0 flex-1"><span class="block font-bold text-white text-sm truncate">' + kpEscapeHtml(p.username || '???') + '</span>' +
-                '<span class="block text-xs text-slate-500 truncate">' + (isMine ? (isEn ? 'You: ' : 'Ty: ') : '') + kpEscapeHtml(lastText) + '</span></span>' +
+                '<span class="min-w-0 flex-1"><span class="flex items-center gap-1.5"><span class="font-bold text-white text-sm truncate">' + kpEscapeHtml(t.subject) + '</span></span>' +
+                '<span class="block text-[11px] text-slate-500 truncate">' + kpEscapeHtml(p.username || '???') + ' · ' + (isMine ? (isEn ? 'you: ' : 'ty: ') : '') + kpEscapeHtml(lastText) + '</span></span>' +
                 '<span class="shrink-0 text-[10px] text-slate-600">' + fmtTime(t.last.created_at) + '</span>' +
                 (t.unread ? '<span class="shrink-0 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">' + (t.unread > 9 ? '9+' : t.unread) + '</span>' : '') +
                 '</button>';
@@ -4055,8 +4149,8 @@
           : '<p class="text-xs text-slate-500 italic">' + (isEn ? 'No conversations yet. Start one!' : 'Zatím žádné konverzace. Napiš první!') + '</p>';
         pmThreadsBox.querySelectorAll('.pm-thread-btn').forEach(function (btn) {
           btn.addEventListener('click', function () {
-            const t = threads.find(x => String(x.otherId) === btn.getAttribute('data-other-id'));
-            if (t && t.profile) openThread(t.profile);
+            const t = groups[btn.getAttribute('data-key')];
+            if (t && t.profile) openThread(t.profile, t.threadId, t.subject);
           });
         });
       } catch (e) {
@@ -4064,39 +4158,16 @@
       }
     }
 
-    async function startNewThreadWith(username) {
-      const errBox = document.getElementById('pmToError');
-      errBox.classList.add('hidden');
-      if (!username) return;
-      let rows;
-      try {
-        rows = await kpSbSelect('profiles', 'username=eq.' + encodeURIComponent(username) + '&select=id,username,avatar_url');
-      } catch (e) {
-        errBox.textContent = isEn ? 'Could not look up that user.' : 'Uživatele se nepodařilo dohledat.';
-        errBox.classList.remove('hidden');
-        return;
-      }
-      const other = rows && rows[0];
-      if (!other) {
-        errBox.textContent = isEn ? 'No such user.' : 'Takový uživatel neexistuje.';
-        errBox.classList.remove('hidden');
-        return;
-      }
-      if (other.id === user.id) {
-        errBox.textContent = isEn ? 'You can’t message yourself.' : 'Sám sobě psát nejde.';
-        errBox.classList.remove('hidden');
-        return;
-      }
-      openThread(other);
-    }
-
-    function openThread(other) {
+    function openThread(other, threadId, subject) {
       pmCurrentOther = other;
+      pmCurrentThreadId = threadId || null;
+      pmCurrentSubject = subject || NO_SUBJECT;
       pmForm.dataset.recipientId = other.id;
       document.getElementById('pmThreadAvatar').classList.toggle('hidden', !other.avatar_url);
       document.getElementById('pmThreadAvatarPh').classList.toggle('hidden', !!other.avatar_url);
       if (other.avatar_url) document.getElementById('pmThreadAvatar').src = other.avatar_url;
       document.getElementById('pmThreadName').textContent = other.username;
+      document.getElementById('pmThreadSubject').textContent = pmCurrentSubject;
       document.getElementById('pmThreadHeaderLink').href = 'ucet.html?u=' + encodeURIComponent(other.username);
       showPmThread();
       loadConversation();
@@ -4106,8 +4177,10 @@
       if (!pmCurrentOther) return;
       pmMessagesBox.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'Loading…' : 'Načítám…') + '</p>';
       try {
-        const rows = await kpSbSelectAuth('private_messages',
-          'or=(and(sender_id.eq.' + user.id + ',recipient_id.eq.' + pmCurrentOther.id + '),and(sender_id.eq.' + pmCurrentOther.id + ',recipient_id.eq.' + user.id + '))&select=id,sender_id,recipient_id,body,created_at,read_at,attachment_url,attachment_type,attachment_name&order=created_at.asc&limit=300');
+        const filter = pmCurrentThreadId
+          ? ('thread_id=eq.' + pmCurrentThreadId)
+          : ('thread_id=is.null&or=(and(sender_id.eq.' + user.id + ',recipient_id.eq.' + pmCurrentOther.id + '),and(sender_id.eq.' + pmCurrentOther.id + ',recipient_id.eq.' + user.id + '))');
+        const rows = await kpSbSelectAuth('private_messages', filter + '&select=id,sender_id,recipient_id,body,created_at,read_at,attachment_url,attachment_type,attachment_name&order=created_at.asc&limit=300');
         pmMessagesBox.innerHTML = rows.length
           ? rows.map(m => renderBubble(m, user.id)).join('')
           : '<p class="text-xs text-slate-500 italic">' + (isEn ? 'No messages yet -- say hi!' : 'Zatím žádné zprávy -- napiš první!') + '</p>';
@@ -4121,11 +4194,12 @@
           });
         });
         pmMessagesBox.scrollTop = pmMessagesBox.scrollHeight;
-        // Označ jako přečtené vše, co mi tenhle člověk poslal, a ještě jsem to neviděl(a).
         const unreadIds = rows.filter(m => m.recipient_id === user.id && !m.read_at);
         if (unreadIds.length) {
-          kpSbPatchAuth('private_messages', 'recipient_id=eq.' + user.id + '&sender_id=eq.' + pmCurrentOther.id + '&read_at=is.null', { read_at: new Date().toISOString() })
-            .then(function () { refreshHeaderBadges(); });
+          const patchFilter = pmCurrentThreadId
+            ? ('thread_id=eq.' + pmCurrentThreadId + '&recipient_id=eq.' + user.id + '&read_at=is.null')
+            : ('thread_id=is.null&recipient_id=eq.' + user.id + '&sender_id=eq.' + pmCurrentOther.id + '&read_at=is.null');
+          kpSbPatchAuth('private_messages', patchFilter, { read_at: new Date().toISOString() }).then(function () { refreshHeaderBadges(); });
         }
       } catch (e) {
         pmMessagesBox.innerHTML = '<p class="text-xs text-rose-400">' + (isEn ? 'Could not load the conversation (run the private-messages SQL yet?).' : 'Konverzaci se nepodařilo načíst (je spuštěný SQL pro soukromé zprávy?).') + '</p>';
@@ -4149,6 +4223,20 @@
         '<div class="flex items-center gap-2 mt-0.5 ' + (mine ? 'justify-end' : 'justify-start') + '"><span class="text-[10px] text-slate-600">' + fmtTime(m.created_at) + '</span>' +
         '<span class="opacity-0 group-hover:opacity-100 transition">' + delBtn + '</span></div></div>';
     }
+
+    document.getElementById('pmDeleteThreadBtn').addEventListener('click', function () {
+      if (!pmCurrentOther) return;
+      if (!window.confirm(isEn ? 'Delete this whole conversation? This cannot be undone.' : 'Opravdu smazat celou tuhle konverzaci? Nejde to vzít zpět.')) return;
+      const btn = this;
+      btn.disabled = true;
+      const task = pmCurrentThreadId
+        ? kpSbDeleteAuth('message_threads', 'id=eq.' + pmCurrentThreadId)
+        : kpSbDeleteAuth('private_messages', 'thread_id=is.null&or=(and(sender_id.eq.' + user.id + ',recipient_id.eq.' + pmCurrentOther.id + '),and(sender_id.eq.' + pmCurrentOther.id + ',recipient_id.eq.' + user.id + '))');
+      task.then(function (ok) {
+        btn.disabled = false;
+        if (ok) { showPmList(); loadThreads(); refreshHeaderBadges(); }
+      });
+    });
 
     const pmEmojiBar = document.getElementById('pmEmojiBar');
     const pmBodyInput = document.getElementById('pmBody');
@@ -4191,6 +4279,7 @@
       const file = pmPendingFile;
       (file ? kpUploadAttachment(file) : Promise.resolve(null)).then(function (att) {
         const row = { sender_id: user.id, recipient_id: pmCurrentOther.id, body: body };
+        if (pmCurrentThreadId) row.thread_id = pmCurrentThreadId;
         if (att) { row.attachment_url = att.url; row.attachment_type = att.type; row.attachment_name = att.name; }
         return kpSbInsertAuth('private_messages', row, true);
       }).then(function () {
@@ -4208,7 +4297,12 @@
     loadThreads();
     const params = new URLSearchParams(location.search);
     const to = params.get('to');
-    if (to) startNewThreadWith(to);
+    if (to) {
+      allProfiles().then(function (profiles) {
+        const other = profiles.find(p => p.username === to);
+        if (other) showPmSubject(other);
+      });
+    }
   })();
 
   /* ================= Členové (seznam, online, žebříček podle délky členství) ================= */
