@@ -1524,6 +1524,15 @@
     if (!res.ok) throw new Error('Supabase rpc failed: ' + res.status);
     return res.json();
   }
+  /* Stejné jako kpRpc, ale s přihlášením (bearer token uživatele) -- nutné pro
+     funkce jako kp_unread_count/kp_pending_count, které uvnitř používají
+     auth.uid()/auth.jwt() a s anonymním klíčem by vždy vrátily 0. */
+  async function kpRpcAuth(fn, args) {
+    const headers = await window.kpAuth.authHeaders();
+    const res = await fetch(KP_SB_URL + '/rest/v1/rpc/' + fn, { method: 'POST', headers: headers, body: JSON.stringify(args || {}) });
+    if (!res.ok) throw new Error('Supabase rpc failed: ' + res.status);
+    return res.json();
+  }
   async function kpSbInsert(table, row, minimal) {
     const res = await fetch(KP_SB_URL + '/rest/v1/' + table, {
       method: 'POST',
@@ -1896,7 +1905,7 @@
       const dot = document.getElementById('headerDotBadge');
       if (dot) dot.classList.add('hidden');
       const user = window.kpAuth.currentUser();
-      kpRpc('kp_unread_count').then(function (n) {
+      kpRpcAuth('kp_unread_count').then(function (n) {
         applyUnreadCount(parseInt(n, 10) || 0);
       }).catch(function () {
         // RPC funkce ještě nemusí existovat (starý SQL) -- zkus to spočítat přímo dotazem.
@@ -1906,7 +1915,7 @@
         }).catch(function () {});
       });
       if (isAdmin) {
-        kpRpc('kp_pending_count').then(function (n) {
+        kpRpcAuth('kp_pending_count').then(function (n) {
           const count = parseInt(n, 10) || 0;
           const badge = document.getElementById('headerPendingBadge');
           if (badge) badge.classList.toggle('hidden', !count);
@@ -3946,6 +3955,7 @@
     function setLabel(id, cs, en) { const el = document.getElementById(id); if (el) el.textContent = isEn ? en : cs; }
     setLabel('zpravyTitle', 'Zprávy', 'Messages');
     setLabel('zpravyIntro', 'Soukromé zprávy mezi tebou a ostatními členy komunity.', 'Private messages between you and other community members.');
+    setLabel('pmThreadsTitle', 'Konverzace', 'Conversations');
     setLabel('pmNewBtnLabel', 'Nová zpráva', 'New message');
     setLabel('pmBackLabel1', 'Zpět', 'Back');
     setLabel('pmBackLabel2', 'Zpět', 'Back');
