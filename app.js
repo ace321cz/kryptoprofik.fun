@@ -1833,7 +1833,7 @@
         '</button>' +
         '<div id="headerAuthMenu" class="hidden absolute right-0 mt-2 w-52 rounded-xl bg-brand-card border border-brand-border shadow-xl overflow-hidden z-[60]">' +
         '<a href="ucet.html" class="block px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-user mr-2 w-4"></i>' + (isEn ? 'My profile' : 'Můj profil') + '</a>' +
-        '<a href="ucet.html#pm" class="flex items-center px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-envelope mr-2 w-4"></i>' + (isEn ? 'Messages' : 'Zprávy') + '<span id="headerUnreadBadge" class="hidden ml-auto min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">0</span></a>' +
+        '<a href="zpravy.html" class="flex items-center px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-envelope mr-2 w-4"></i>' + (isEn ? 'Messages' : 'Zprávy') + '<span id="headerUnreadBadge" class="hidden ml-auto min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">0</span></a>' +
         '<a href="clenove.html" class="block px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-users mr-2 w-4"></i>' + (isEn ? 'Members' : 'Členové') + '</a>' +
         (isAdmin ? '<a href="moderace.html" class="flex items-center px-4 py-2.5 text-xs font-semibold text-amber-300 hover:bg-slate-800 transition border-t border-brand-border"><i class="fa-solid fa-shield-halved mr-2 w-4"></i>' + (isEn ? 'Moderation' : 'Moderace') + '<span id="headerPendingBadge" class="hidden ml-auto min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">0</span></a>' : '') +
         '<button type="button" id="headerAuthLogout" class="w-full text-left px-4 py-2.5 text-xs font-semibold text-rose-400 hover:bg-slate-800 transition border-t border-brand-border"><i class="fa-solid fa-right-from-bracket mr-2 w-4"></i>' + (isEn ? 'Log out' : 'Odhlásit se') + '</button>' +
@@ -1860,17 +1860,27 @@
     // Pokud SQL na tyhle RPC funkce ještě neběžel, tiše to selže a tečky se jen neukážou.
     // Samostatná funkce (ne jen inline v renderLoggedIn), ať ji jde zavolat znovu zvenku
     // (ze stránky Zprávy po přečtení/odeslání), aby se tečky aktualizovaly bez reloadu.
+    function applyUnreadCount(count) {
+      const dot = document.getElementById('headerDotBadge');
+      const badge = document.getElementById('headerUnreadBadge');
+      if (badge) badge.classList.toggle('hidden', !count);
+      if (count) { if (badge) badge.textContent = count > 9 ? '9+' : String(count); if (dot) dot.classList.remove('hidden'); }
+      const dashDot = document.getElementById('accDashUnreadDot');
+      if (dashDot) { dashDot.classList.toggle('hidden', !count); dashDot.textContent = count > 9 ? '9+' : String(count); }
+    }
     function refreshBadges(isAdmin) {
       const dot = document.getElementById('headerDotBadge');
       if (dot) dot.classList.add('hidden');
+      const user = window.kpAuth.currentUser();
       kpRpc('kp_unread_count').then(function (n) {
-        const count = parseInt(n, 10) || 0;
-        const badge = document.getElementById('headerUnreadBadge');
-        if (badge) badge.classList.toggle('hidden', !count);
-        if (count) { if (badge) badge.textContent = count > 9 ? '9+' : String(count); if (dot) dot.classList.remove('hidden'); }
-        const dashDot = document.getElementById('accDashUnreadDot');
-        if (dashDot) { dashDot.classList.toggle('hidden', !count); dashDot.textContent = count > 9 ? '9+' : String(count); }
-      }).catch(function () {});
+        applyUnreadCount(parseInt(n, 10) || 0);
+      }).catch(function () {
+        // RPC funkce ještě nemusí existovat (starý SQL) -- zkus to spočítat přímo dotazem.
+        if (!user) return;
+        kpSbSelectAuth('private_messages', 'recipient_id=eq.' + user.id + '&read_at=is.null&select=id').then(function (rows) {
+          applyUnreadCount((rows && rows.length) || 0);
+        }).catch(function () {});
+      });
       if (isAdmin) {
         kpRpc('kp_pending_count').then(function (n) {
           const count = parseInt(n, 10) || 0;
@@ -3553,20 +3563,12 @@
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
     const profileForm = document.getElementById('profileForm');
-    const pmForm = document.getElementById('pmForm');
 
     function fmtDate(iso) {
       try { return new Date(iso).toLocaleDateString(isEn ? 'en-GB' : 'cs-CZ'); } catch (e) { return ''; }
     }
     function daysSince(iso) {
       try { return Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 86400000)); } catch (e) { return 0; }
-    }
-    function fmtSize(bytes) {
-      if (bytes > 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-      return Math.max(1, Math.round(bytes / 1024)) + ' KB';
-    }
-    function fmtTime(iso) {
-      try { return new Date(iso).toLocaleString(isEn ? 'en-GB' : 'cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; }
     }
     function showStatus(el, msg, ok) {
       el.textContent = msg;
@@ -3575,6 +3577,40 @@
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
     function refreshHeaderBadges() { if (window.kpRefreshHeaderBadges) window.kpRefreshHeaderBadges(); }
+
+    // ============== Texty, které zatím nebyly napojené na EN/CZ přepínač ==============
+    function setLabel(id, cs, en) { const el = document.getElementById(id); if (el) el.textContent = isEn ? en : cs; }
+    setLabel('accMessagesBtnLabel', 'Zprávy', 'Messages');
+    setLabel('accEditBtnLabel', 'Upravit', 'Edit');
+    setLabel('accEditCancelLabel', 'Zrušit', 'Cancel');
+    setLabel('accUsernameFixedLabel', 'Přezdívka', 'Username');
+    setLabel('accUsernameFixedHint', '(nejde po registraci změnit)', "(can't be changed after sign-up)");
+    setLabel('accSocialLabel', 'Sociální sítě (nepovinné)', 'Social media (optional)');
+    setLabel('regUsernameHint', 'Zvol si rozmyšleně — jde nastavit jen teď, později ji nepůjde změnit.', "Choose carefully — this can only be set now, you won't be able to change it later.");
+
+    // ============== Pomocné: odkazy na sociální sítě z textu/handle do plné URL ==============
+    function socialUrl(kind, val) {
+      if (!val) return '';
+      val = val.trim();
+      if (/^https?:\/\//i.test(val)) return val;
+      val = val.replace(/^@/, '');
+      if (kind === 'instagram') return 'https://instagram.com/' + val.replace(/^instagram\.com\//i, '');
+      if (kind === 'facebook') return 'https://facebook.com/' + val.replace(/^facebook\.com\//i, '');
+      if (kind === 'twitter') return 'https://x.com/' + val.replace(/^(x|twitter)\.com\//i, '');
+      if (kind === 'website') return 'https://' + val.replace(/^https?:\/\//i, '');
+      return val;
+    }
+    function socialChipsHtml(p) {
+      const defs = [
+        ['instagram', p.instagram, 'fa-brands fa-instagram'],
+        ['facebook', p.facebook, 'fa-brands fa-facebook'],
+        ['twitter', p.twitter, 'fa-brands fa-x-twitter'],
+        ['website', p.website, 'fa-solid fa-globe'],
+      ];
+      return defs.filter(d => d[1]).map(d =>
+        '<a href="' + kpEscapeHtml(socialUrl(d[0], d[1])) + '" target="_blank" rel="noopener noreferrer" class="w-8 h-8 rounded-lg bg-slate-900 border border-brand-border text-slate-300 hover:text-white hover:border-brand-accent flex items-center justify-center transition"><i class="' + d[2] + '"></i></a>'
+      ).join('');
+    }
 
     // ============== Veřejný profil (?u=přezdívka) -- vidí ho kdokoliv, i bez přihlášení ==============
     const urlParams = new URLSearchParams(location.search);
@@ -3587,7 +3623,7 @@
       publicBox.innerHTML = '<p class="text-sm text-slate-500 italic">' + (isEn ? 'Loading…' : 'Načítám…') + '</p>';
       let rows;
       try {
-        rows = await kpSbSelect('profiles', 'username=eq.' + encodeURIComponent(username) + '&select=id,username,bio,avatar_url,created_at,is_admin,banned');
+        rows = await kpSbSelect('profiles', 'username=eq.' + encodeURIComponent(username) + '&select=id,username,bio,avatar_url,created_at,is_admin,banned,instagram,facebook,twitter,website');
       } catch (e) {
         publicBox.innerHTML = '<p class="text-sm text-rose-400">' + (isEn ? 'Could not load this profile.' : 'Tenhle profil se nepodařilo načíst.') + '</p>';
         return;
@@ -3612,13 +3648,14 @@
       const bioHtml = p.bio
         ? '<p class="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed mt-4">' + kpEscapeHtml(p.bio) + '</p>'
         : '<p class="text-sm text-slate-500 italic mt-4">' + (isEn ? 'No bio yet.' : 'Zatím o sobě nic nenapsal(a).') + '</p>';
+      const socialHtml = socialChipsHtml(p);
       let actionsHtml = '';
       if (isSelf) {
         actionsHtml = '<a href="ucet.html" class="inline-block mt-4 px-4 py-2 rounded-xl bg-brand-accent text-white text-xs font-bold hover:opacity-90 transition">' + (isEn ? 'This is you — go to your account' : 'To jsi ty — jít na svůj účet') + '</a>';
       } else {
         actionsHtml = '<div class="flex flex-wrap gap-2 mt-4">';
         if (me) {
-          actionsHtml += '<a href="ucet.html?to=' + encodeURIComponent(p.username) + '#pm" class="px-4 py-2 rounded-xl bg-brand-accent text-white text-xs font-bold hover:opacity-90 transition"><i class="fa-solid fa-envelope mr-1.5"></i>' + (isEn ? 'Send message' : 'Napsat zprávu') + '</a>';
+          actionsHtml += '<a href="zpravy.html?to=' + encodeURIComponent(p.username) + '" class="px-4 py-2 rounded-xl bg-brand-accent text-white text-xs font-bold hover:opacity-90 transition"><i class="fa-solid fa-envelope mr-1.5"></i>' + (isEn ? 'Send message' : 'Napsat zprávu') + '</a>';
         } else {
           actionsHtml += '<a href="ucet.html" class="px-4 py-2 rounded-xl bg-slate-900 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition">' + (isEn ? 'Log in to message' : 'Přihlas se pro zprávu') + '</a>';
         }
@@ -3631,7 +3668,7 @@
         '<div class="flex items-center gap-4"><div>' + avatarHtml + '</div><div class="min-w-0">' +
         '<div class="font-black text-white text-lg flex items-center gap-2 flex-wrap">' + kpEscapeHtml(p.username) + adminBadge + bannedBadge + '</div>' +
         '<div class="text-xs text-slate-500">' + sinceLabel + fmtDate(p.created_at) + daysLabel + '</div></div></div>' +
-        bioHtml + actionsHtml;
+        bioHtml + (socialHtml ? '<div class="flex flex-wrap gap-2 mt-3">' + socialHtml + '</div>' : '') + actionsHtml;
       const banBtn = document.getElementById('publicBanBtn');
       if (banBtn) banBtn.addEventListener('click', function () {
         const nowBanned = banBtn.getAttribute('data-banned') === '1';
@@ -3645,6 +3682,13 @@
     if (viewUsername) {
       renderPublicProfile(viewUsername);
       return; // ostatní (přihlášení/vlastní dashboard) na téhle podstránce neřešíme
+    }
+
+    // ?to=username z odkazu "Napsat zprávu" -- zprávy teď mají vlastní stránku
+    const toParam = urlParams.get('to');
+    if (toParam && window.kpAuth.currentUser()) {
+      location.href = 'zpravy.html?to=' + encodeURIComponent(toParam);
+      return;
     }
 
     // ============== Přihlášení / registrace ==============
@@ -3673,25 +3717,12 @@
     }
     newCaptcha();
 
-    // ============== Dashboard taby (Profil / Zprávy) ==============
-    const dashTabs = document.querySelectorAll('.acc-dash-tab');
-    dashTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        dashTabs.forEach(t => t.classList.remove('bg-brand-accent', 'text-white'));
-        dashTabs.forEach(t => t.classList.add('bg-slate-900', 'text-slate-300'));
-        tab.classList.remove('bg-slate-900', 'text-slate-300');
-        tab.classList.add('bg-brand-accent', 'text-white');
-        const target = tab.dataset.dashtab;
-        document.querySelectorAll('[data-dashpane]').forEach(p => p.classList.toggle('hidden', p.dataset.dashpane !== target));
-        if (target === 'messages') { showPmList(); loadThreads(); }
-      });
-    });
-
     // ============== Profil: zobrazení vs. úprava ==============
     let currentProfile = null;
     const profileView = document.getElementById('profileView');
     const profileViewBio = document.getElementById('profileViewBio');
     const profileViewEmpty = document.getElementById('profileViewEmpty');
+    const profileViewSocial = document.getElementById('profileViewSocial');
     const accEditBtn = document.getElementById('accEditBtn');
     const accEditCancel = document.getElementById('accEditCancel');
 
@@ -3704,6 +3735,10 @@
       if (currentProfile) {
         document.getElementById('accUsernameFixed').textContent = currentProfile.username || '';
         document.getElementById('accBio').value = currentProfile.bio || '';
+        document.getElementById('accInstagram').value = currentProfile.instagram || '';
+        document.getElementById('accFacebook').value = currentProfile.facebook || '';
+        document.getElementById('accTwitter').value = currentProfile.twitter || '';
+        document.getElementById('accWebsite').value = currentProfile.website || '';
       }
       profileView.classList.add('hidden');
       profileForm.classList.remove('hidden');
@@ -3742,6 +3777,7 @@
       renderAvatar(null);
       profileViewBio.textContent = '';
       profileViewEmpty.classList.add('hidden');
+      profileViewSocial.innerHTML = '';
       const profile = await window.kpAuth.getMyProfile();
       if (myReqId !== dashReqId) return; // mezitím proběhl novější render (např. další přepnutí účtu), tahle odpověď je zastaralá
       if (!profile) {
@@ -3757,16 +3793,9 @@
       renderAvatar(profile);
       if (profile.bio) { profileViewBio.textContent = profile.bio; profileViewEmpty.classList.add('hidden'); }
       else { profileViewBio.textContent = ''; profileViewEmpty.textContent = isEn ? 'You haven’t written anything about yourself yet.' : 'Zatím jsi o sobě nic nenapsal(a).'; profileViewEmpty.classList.remove('hidden'); }
+      profileViewSocial.innerHTML = socialChipsHtml(profile);
 
       refreshHeaderBadges();
-
-      // ?to=username z odkazu "Napsat zprávu" na stránce Členové/profilu, nebo #pm z menu v hlavičce
-      const params = new URLSearchParams(location.search);
-      const to = params.get('to');
-      if (to || location.hash === '#pm') {
-        dashTabs.forEach(t => { if (t.dataset.dashtab === 'messages') t.click(); });
-        if (to) startNewThreadWith(to);
-      }
     }
 
     // Okamžitý náhled fotky hned po výběru souboru -- nečeká se na upload/uložení.
@@ -3855,7 +3884,13 @@
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
       const file = fileInput.files && fileInput.files[0];
       (file ? kpUploadAvatar(file) : Promise.resolve(null)).then(function (avatarUrl) {
-        const data = { bio: bio };
+        const data = {
+          bio: bio,
+          instagram: document.getElementById('accInstagram').value.trim().slice(0, 60),
+          facebook: document.getElementById('accFacebook').value.trim().slice(0, 60),
+          twitter: document.getElementById('accTwitter').value.trim().slice(0, 60),
+          website: document.getElementById('accWebsite').value.trim().slice(0, 80),
+        };
         if (avatarUrl) data.avatar_url = avatarUrl;
         return kpSbPatchAuth('profiles', 'id=eq.' + user.id, data);
       }).then(function () {
@@ -3873,15 +3908,58 @@
       window.kpAuth.signOut().then(function () { location.reload(); });
     });
 
-    /* ================= Soukromé zprávy: seznam konverzací / nová zpráva / vlákno ================= */
+    renderDash();
+  })();
+
+
+  /* ================= Zprávy (vlastní stránka zpravy.html) ================= */
+  (function messagesPage() {
+    const root = document.getElementById('zpravy');
+    if (!root) return;
+    const isEn = document.documentElement.lang === 'en';
+    const MAX_INBOX = 200;
+
+    function setLabel(id, cs, en) { const el = document.getElementById(id); if (el) el.textContent = isEn ? en : cs; }
+    setLabel('zpravyTitle', 'Zprávy', 'Messages');
+    setLabel('zpravyIntro', 'Soukromé zprávy mezi tebou a ostatními členy komunity.', 'Private messages between you and other community members.');
+    setLabel('pmNewBtnLabel', 'Nová zpráva', 'New message');
+    setLabel('pmBackLabel1', 'Zpět', 'Back');
+    setLabel('pmBackLabel2', 'Zpět', 'Back');
+    setLabel('pmToLabel', isEn ? 'To whom?' : 'Komu?', isEn ? 'To whom?' : 'Komu?');
+    setLabel('pmToSearchPh', '', '');
+    setLabel('zpravyLoginHint', 'Pro zprávy se musíš nejdřív přihlásit.', 'You need to log in first to use messages.');
+
+    const authGate = document.getElementById('zpravyAuthGate');
+    const app = document.getElementById('zpravyApp');
+    const user = window.kpAuth.currentUser();
+    if (!user) {
+      if (authGate) authGate.classList.remove('hidden');
+      if (app) app.classList.add('hidden');
+      return;
+    }
+    if (authGate) authGate.classList.add('hidden');
+    if (app) app.classList.remove('hidden');
+
+    function fmtSize(bytes) {
+      if (bytes > 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+    }
+    function fmtTime(iso) {
+      try { return new Date(iso).toLocaleString(isEn ? 'en-GB' : 'cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; }
+    }
+    function refreshHeaderBadges() { if (window.kpRefreshHeaderBadges) window.kpRefreshHeaderBadges(); }
+
     const pmListView = document.getElementById('pmListView');
     const pmNewView = document.getElementById('pmNewView');
     const pmThreadView = document.getElementById('pmThreadView');
     const pmThreadsBox = document.getElementById('pmThreads');
     const pmMessagesBox = document.getElementById('pmMessages');
-    const pmToInput = document.getElementById('pmTo');
     const pmFileInput = document.getElementById('pmFile');
     const pmAttachPreview = document.getElementById('pmAttachPreview');
+    const pmForm = document.getElementById('pmForm');
+    const pmSearchInput = document.getElementById('pmSearch');
+    const pmUserResults = document.getElementById('pmUserResults');
+    const pmInboxCounter = document.getElementById('pmInboxCounter');
     let pmProfilesCache = null;
     let pmPendingFile = null;
     let pmCurrentOther = null; // { id, username, avatar_url }
@@ -3896,8 +3974,9 @@
       pmNewView.classList.remove('hidden');
       pmThreadView.classList.add('hidden');
       document.getElementById('pmToError').classList.add('hidden');
-      pmToInput.value = '';
-      allProfiles().then(function () { pmToInput.focus(); });
+      if (pmSearchInput) pmSearchInput.value = '';
+      allProfiles().then(renderUserPicker);
+      if (pmSearchInput) pmSearchInput.focus();
     }
     function showPmThread() {
       pmListView.classList.add('hidden');
@@ -3911,13 +3990,7 @@
 
     async function allProfiles() {
       if (pmProfilesCache) return pmProfilesCache;
-      pmProfilesCache = await kpSbSelect('profiles', 'select=id,username,avatar_url');
-      const list = document.getElementById('pmUserList');
-      if (list) {
-        const me = window.kpAuth.currentUser();
-        list.innerHTML = pmProfilesCache.filter(p => !me || p.id !== me.id)
-          .map(p => '<option value="' + kpEscapeHtml(p.username) + '">').join('');
-      }
+      pmProfilesCache = await kpSbSelect('profiles', 'select=id,username,avatar_url&order=username.asc');
       return pmProfilesCache;
     }
 
@@ -3928,9 +4001,25 @@
       return '<span class="w-' + size + ' h-' + size + ' rounded-full bg-slate-800 flex items-center justify-center text-slate-500 text-xs shrink-0">' + (initial || '<i class="fa-solid fa-user"></i>') + '</span>';
     }
 
+    // ============== Výběr příjemce: hledací políčko + rovnou klikatelný seznam uživatelů ==============
+    function renderUserPicker() {
+      if (!pmProfilesCache || !pmUserResults) return;
+      const q = (pmSearchInput && pmSearchInput.value || '').trim().toLowerCase();
+      const list = pmProfilesCache.filter(p => p.id !== user.id && (!q || p.username.toLowerCase().indexOf(q) !== -1));
+      pmUserResults.innerHTML = list.length
+        ? list.map(p => '<button type="button" class="pm-pick-user w-full flex items-center gap-2.5 text-left px-3 py-2 rounded-xl bg-slate-900 border border-brand-border hover:border-brand-accent transition" data-id="' + p.id + '">' +
+            avatarChipHtml(p) + '<span class="font-bold text-white text-sm truncate">' + kpEscapeHtml(p.username) + '</span></button>').join('')
+        : '<p class="text-xs text-slate-500 italic px-1">' + (isEn ? 'No matching user.' : 'Žádný odpovídající uživatel.') + '</p>';
+      pmUserResults.querySelectorAll('.pm-pick-user').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const p = list.find(x => x.id === btn.getAttribute('data-id'));
+          if (p) openThread(p);
+        });
+      });
+    }
+    if (pmSearchInput) pmSearchInput.addEventListener('input', renderUserPicker);
+
     async function loadThreads() {
-      const user = window.kpAuth.currentUser();
-      if (!user) return;
       pmThreadsBox.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'Loading…' : 'Načítám…') + '</p>';
       try {
         const [rows, profiles] = await Promise.all([
@@ -3939,7 +4028,9 @@
         ]);
         const byId = {}; profiles.forEach(p => { byId[p.id] = p; });
         const seen = {}; const threads = [];
+        let receivedTotal = 0;
         rows.forEach(m => {
+          if (m.recipient_id === user.id) receivedTotal++;
           const otherId = m.sender_id === user.id ? m.recipient_id : m.sender_id;
           if (!seen[otherId]) {
             seen[otherId] = { otherId: otherId, profile: byId[otherId], last: m, unread: 0 };
@@ -3947,6 +4038,7 @@
           }
           if (m.recipient_id === user.id && !m.read_at) seen[otherId].unread++;
         });
+        if (pmInboxCounter) pmInboxCounter.textContent = receivedTotal + '/' + MAX_INBOX + (isEn ? ' received' : ' přijatých');
         pmThreadsBox.innerHTML = threads.length
           ? threads.map(t => {
               const p = t.profile || { username: '???' };
@@ -3972,13 +4064,6 @@
       }
     }
 
-    document.getElementById('pmToConfirm').addEventListener('click', function () {
-      startNewThreadWith(pmToInput.value.trim());
-    });
-    pmToInput.addEventListener('keydown', function (ev) {
-      if (ev.key === 'Enter') { ev.preventDefault(); startNewThreadWith(pmToInput.value.trim()); }
-    });
-
     async function startNewThreadWith(username) {
       const errBox = document.getElementById('pmToError');
       errBox.classList.add('hidden');
@@ -3997,8 +4082,7 @@
         errBox.classList.remove('hidden');
         return;
       }
-      const me = window.kpAuth.currentUser();
-      if (me && other.id === me.id) {
+      if (other.id === user.id) {
         errBox.textContent = isEn ? 'You can’t message yourself.' : 'Sám sobě psát nejde.';
         errBox.classList.remove('hidden');
         return;
@@ -4019,8 +4103,7 @@
     }
 
     async function loadConversation() {
-      const user = window.kpAuth.currentUser();
-      if (!user || !pmCurrentOther) return;
+      if (!pmCurrentOther) return;
       pmMessagesBox.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'Loading…' : 'Načítám…') + '</p>';
       try {
         const rows = await kpSbSelectAuth('private_messages',
@@ -4028,6 +4111,15 @@
         pmMessagesBox.innerHTML = rows.length
           ? rows.map(m => renderBubble(m, user.id)).join('')
           : '<p class="text-xs text-slate-500 italic">' + (isEn ? 'No messages yet -- say hi!' : 'Zatím žádné zprávy -- napiš první!') + '</p>';
+        pmMessagesBox.querySelectorAll('.pm-msg-delete').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            if (!window.confirm(isEn ? 'Delete this message?' : 'Opravdu smazat tuhle zprávu?')) return;
+            btn.disabled = true;
+            kpSbDeleteAuth('private_messages', 'id=eq.' + btn.getAttribute('data-id')).then(function (ok) {
+              if (ok) { loadConversation(); refreshHeaderBadges(); } else btn.disabled = false;
+            });
+          });
+        });
         pmMessagesBox.scrollTop = pmMessagesBox.scrollHeight;
         // Označ jako přečtené vše, co mi tenhle člověk poslal, a ještě jsem to neviděl(a).
         const unreadIds = rows.filter(m => m.recipient_id === user.id && !m.read_at);
@@ -4051,9 +4143,11 @@
         }
       }
       if (m.body) inner += '<span class="whitespace-pre-wrap">' + kpLinkify(m.body) + '</span>';
-      return '<div class="text-xs ' + (mine ? 'text-right' : 'text-left') + '">' +
+      const delBtn = '<button type="button" class="pm-msg-delete text-[10px] text-slate-600 hover:text-rose-400 transition" data-id="' + m.id + '" title="' + (isEn ? 'Delete' : 'Smazat') + '"><i class="fa-solid fa-trash-can"></i></button>';
+      return '<div class="group text-xs ' + (mine ? 'text-right' : 'text-left') + '">' +
         '<span class="inline-block px-3 py-2 rounded-xl ' + (mine ? 'bg-brand-accent text-white' : 'bg-slate-800 text-slate-200') + ' max-w-[85%] text-left">' + inner + '</span>' +
-        '<div class="text-[10px] text-slate-600 mt-0.5">' + fmtTime(m.created_at) + '</div></div>';
+        '<div class="flex items-center gap-2 mt-0.5 ' + (mine ? 'justify-end' : 'justify-start') + '"><span class="text-[10px] text-slate-600">' + fmtTime(m.created_at) + '</span>' +
+        '<span class="opacity-0 group-hover:opacity-100 transition">' + delBtn + '</span></div></div>';
     }
 
     const pmEmojiBar = document.getElementById('pmEmojiBar');
@@ -4096,7 +4190,7 @@
       sendBtn.disabled = true;
       const file = pmPendingFile;
       (file ? kpUploadAttachment(file) : Promise.resolve(null)).then(function (att) {
-        const row = { sender_id: window.kpAuth.currentUser().id, recipient_id: pmCurrentOther.id, body: body };
+        const row = { sender_id: user.id, recipient_id: pmCurrentOther.id, body: body };
         if (att) { row.attachment_url = att.url; row.attachment_type = att.type; row.attachment_name = att.name; }
         return kpSbInsertAuth('private_messages', row, true);
       }).then(function () {
@@ -4110,7 +4204,11 @@
       }).finally(function () { sendBtn.disabled = false; });
     });
 
-    renderDash();
+    showPmList();
+    loadThreads();
+    const params = new URLSearchParams(location.search);
+    const to = params.get('to');
+    if (to) startNewThreadWith(to);
   })();
 
   /* ================= Členové (seznam, online, žebříček podle délky členství) ================= */
@@ -4120,7 +4218,10 @@
     const isEn = document.documentElement.lang === 'en';
     const onlineBox = document.getElementById('membersOnline');
     const boardBox = document.getElementById('membersLeaderboard');
+    const lastSeenBox = document.getElementById('membersLastSeen');
     const ONLINE_WINDOW_MS = 5 * 60 * 1000;
+    const lastSeenTitleEl = document.getElementById('membersLastSeenTitle');
+    if (lastSeenTitleEl) lastSeenTitleEl.textContent = isEn ? 'Last seen online' : 'Naposledy online';
 
     function avatarHtml(p) {
       if (p.avatar_url) return '<img src="' + kpEscapeHtml(p.avatar_url) + '" class="w-8 h-8 rounded-lg object-cover bg-slate-800 border border-brand-border" alt="">';
@@ -4131,6 +4232,16 @@
     }
     function fmtDate(iso) {
       try { return new Date(iso).toLocaleDateString(isEn ? 'en-GB' : 'cs-CZ'); } catch (e) { return ''; }
+    }
+    function fmtAgo(iso) {
+      let mins;
+      try { mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000)); } catch (e) { return ''; }
+      if (mins < 1) return isEn ? 'just now' : 'právě teď';
+      if (mins < 60) return isEn ? (mins + ' min ago') : ('před ' + mins + ' min');
+      const hours = Math.floor(mins / 60);
+      if (hours < 24) return isEn ? (hours + (hours === 1 ? ' hour ago' : ' hours ago')) : ('před ' + hours + ' h');
+      const days = Math.floor(hours / 24);
+      return isEn ? (days + (days === 1 ? ' day ago' : ' days ago')) : ('před ' + days + ' dny');
     }
 
     kpSbSelect('profiles', 'select=id,username,avatar_url,created_at,last_seen_at,is_admin&order=created_at.asc&limit=200').then(function (rows) {
@@ -4146,6 +4257,24 @@
             avatarHtml(p) + '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>' + kpEscapeHtml(p.username) + '</a>').join('')
         : '<p class="text-xs text-slate-500 italic">' + (isEn ? 'No one online right now.' : 'Teď není nikdo online.') + '</p>';
 
+      if (lastSeenBox) {
+        const lastSeen = rows.filter(p => p.last_seen_at).slice().sort(function (a, b) {
+          return new Date(b.last_seen_at) - new Date(a.last_seen_at);
+        }).slice(0, 20);
+        lastSeenBox.innerHTML = lastSeen.length
+          ? lastSeen.map(function (p) {
+              const isOnlineNow = (now - new Date(p.last_seen_at).getTime()) < ONLINE_WINDOW_MS;
+              return '<a href="ucet.html?u=' + encodeURIComponent(p.username) + '" class="flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-900 border border-brand-border hover:border-brand-accent transition">' +
+                avatarHtml(p) +
+                '<span class="min-w-0 flex-1"><span class="block font-bold text-white text-xs truncate">' + kpEscapeHtml(p.username) + '</span></span>' +
+                (isOnlineNow
+                  ? '<span class="shrink-0 text-[10px] font-bold text-emerald-400 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>' + (isEn ? 'online' : 'online') + '</span>'
+                  : '<span class="shrink-0 text-[10px] text-slate-500">' + fmtAgo(p.last_seen_at) + '</span>') +
+                '</a>';
+            }).join('')
+          : '<p class="text-xs text-slate-500 italic">' + (isEn ? 'No data yet.' : 'Zatím žádná data.') + '</p>';
+      }
+
       boardBox.innerHTML = rows.map(function (p, i) {
         const since = isEn ? ('Member since ' + fmtDate(p.created_at)) : ('S námi od ' + fmtDate(p.created_at));
         const days = daysSince(p.created_at);
@@ -4159,7 +4288,7 @@
           '<div class="text-[11px] text-slate-500">' + since + '</div></div>' +
           '</a>' +
           '<span class="text-xs font-bold text-brand-accent shrink-0 mr-1">' + daysLabel + '</span>' +
-          '<a href="ucet.html?to=' + encodeURIComponent(p.username) + '#pm" class="shrink-0 w-8 h-8 rounded-lg bg-slate-900 border border-brand-border text-slate-400 hover:text-white flex items-center justify-center transition" title="Napsat zprávu"><i class="fa-solid fa-envelope text-xs"></i></a>' +
+          '<a href="zpravy.html?to=' + encodeURIComponent(p.username) + '" class="shrink-0 w-8 h-8 rounded-lg bg-slate-900 border border-brand-border text-slate-400 hover:text-white flex items-center justify-center transition" title="Napsat zprávu"><i class="fa-solid fa-envelope text-xs"></i></a>' +
           '</div>';
       }).join('') || '<p class="text-xs text-slate-500 italic">' + (isEn ? 'No members yet.' : 'Zatím žádní členové.') + '</p>';
     }).catch(function () {
