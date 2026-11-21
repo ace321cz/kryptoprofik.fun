@@ -5251,6 +5251,16 @@
       const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, { method: 'DELETE', headers: authHeaders() });
       return res.ok;
     }
+    async function authInsert(table, row) {
+      const res = await fetch(KP_SB_URL + '/rest/v1/' + table, {
+        method: 'POST',
+        headers: authHeaders({ 'Prefer': 'return=representation' }),
+        body: JSON.stringify(row),
+      });
+      if (!res.ok) return null;
+      const rows = await res.json();
+      return rows && rows[0] ? rows[0] : null;
+    }
 
     function showDash() { loginBox.classList.add('hidden'); dash.classList.remove('hidden'); }
     function showLogin() { loginBox.classList.remove('hidden'); dash.classList.add('hidden'); }
@@ -5327,6 +5337,72 @@
       } catch (e) {}
     }
 
+    // ---------------- Kategorie fóra (správa přímo na webu) ----------------
+    let catCache = {};
+    function parentOptionsHtml(cats, excludeId) {
+      const topLevel = cats.filter(c => !c.parent_id && c.id !== excludeId);
+      return '<option value="">— žádný (hlavní kategorie) —</option>' +
+        topLevel.map(c => '<option value="' + c.id + '">' + kpEscapeHtml(c.name_cs) + '</option>').join('');
+    }
+    function catFormHtml(mode, c, optionsHtml) {
+      c = c || {};
+      const selectedParent = c.parent_id || '';
+      const optsWithSelection = optionsHtml.replace(
+        'value="' + selectedParent + '"',
+        'value="' + selectedParent + '" selected'
+      );
+      return (
+        '<div class="grid sm:grid-cols-2 gap-3 text-xs">' +
+        '<div><label class="block text-slate-400 mb-1">Slug (bez diakritiky, pomlčky)</label><input type="text" class="cat-f-slug w-full bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5 text-white" placeholder="moje-kategorie" value="' + kpEscapeHtml(c.slug || '') + '"' + (mode !== 'new' ? ' disabled' : '') + '></div>' +
+        '<div><label class="block text-slate-400 mb-1">Ikona (Font Awesome třída)</label><input type="text" class="cat-f-icon w-full bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5 text-white" placeholder="fa-comments" value="' + kpEscapeHtml(c.icon || '') + '"></div>' +
+        '<div><label class="block text-slate-400 mb-1">Název (CZ)</label><input type="text" class="cat-f-name-cs w-full bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5 text-white" value="' + kpEscapeHtml(c.name_cs || '') + '"></div>' +
+        '<div><label class="block text-slate-400 mb-1">Name (EN)</label><input type="text" class="cat-f-name-en w-full bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5 text-white" value="' + kpEscapeHtml(c.name_en || '') + '"></div>' +
+        '<div><label class="block text-slate-400 mb-1">Popis (CZ)</label><input type="text" class="cat-f-desc-cs w-full bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5 text-white" value="' + kpEscapeHtml(c.desc_cs || '') + '"></div>' +
+        '<div><label class="block text-slate-400 mb-1">Description (EN)</label><input type="text" class="cat-f-desc-en w-full bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5 text-white" value="' + kpEscapeHtml(c.desc_en || '') + '"></div>' +
+        '<div><label class="block text-slate-400 mb-1">Pořadí (číslo, menší = výš)</label><input type="number" class="cat-f-sort w-full bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5 text-white" value="' + (c.sort_order != null ? c.sort_order : 0) + '"></div>' +
+        '<div><label class="block text-slate-400 mb-1">Rodičovská kategorie (subfórum pod…)</label><select class="cat-f-parent w-full bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5 text-white">' + optsWithSelection + '</select></div>' +
+        '</div>' +
+        '<div class="mt-3 flex items-center gap-2">' +
+        '<button type="button" class="cat-save-btn px-4 py-2 rounded-lg bg-brand-accent text-white text-xs font-bold hover:opacity-90 transition" data-mode="' + mode + '">' + (mode === 'new' ? 'Vytvořit kategorii' : 'Uložit změny') + '</button>' +
+        (mode !== 'new' ? '<button type="button" class="cat-cancel-edit-btn px-4 py-2 rounded-lg bg-slate-900 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition" data-id="' + mode + '">Zrušit</button>' : '') +
+        '<span class="cat-form-error text-rose-400 text-xs"></span>' +
+        '</div>'
+      );
+    }
+    function renderForumCategories(cats) {
+      catCache = {}; cats.forEach(function (c) { catCache[c.id] = c; });
+      const list = document.getElementById('modList');
+      const topLevel = cats.filter(function (c) { return !c.parent_id; });
+      const childrenByParent = {};
+      cats.forEach(function (c) {
+        if (c.parent_id) { (childrenByParent[c.parent_id] = childrenByParent[c.parent_id] || []).push(c); }
+      });
+      function rowHtml(c, isChild) {
+        return (
+          '<div class="p-4 rounded-2xl bg-brand-card border border-brand-border' + (isChild ? ' ml-6 sm:ml-10' : '') + '">' +
+          '<div class="flex items-center gap-3 flex-wrap">' +
+          '<span class="w-10 h-10 shrink-0 rounded-xl bg-slate-900 border border-brand-border flex items-center justify-center text-brand-accent"><i class="fa-solid ' + kpEscapeHtml(c.icon || 'fa-comments') + '"></i></span>' +
+          '<div class="min-w-0 flex-1">' +
+          '<div class="font-bold text-white">' + kpEscapeHtml(c.name_cs) + ' <span class="text-slate-500 font-normal">/ ' + kpEscapeHtml(c.name_en) + '</span></div>' +
+          '<div class="text-[11px] text-slate-500">slug: ' + kpEscapeHtml(c.slug) + ' · pořadí: ' + c.sort_order + (isChild ? ' · subfórum' : '') + '</div>' +
+          '</div>' +
+          '<button type="button" class="cat-edit-btn px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition" data-id="' + c.id + '">Upravit</button>' +
+          '<button type="button" class="cat-delete-btn px-3 py-1.5 rounded-lg bg-rose-500 text-white text-xs font-bold hover:opacity-90 transition" data-id="' + c.id + '">Smazat</button>' +
+          '</div>' +
+          '<div class="cat-edit-form hidden mt-3 pt-3 border-t border-brand-border" data-id="' + c.id + '"></div>' +
+          '</div>'
+        );
+      }
+      const addBlock = '<div class="p-4 rounded-2xl bg-brand-card border border-brand-accent/40 mb-4" data-id="new">' +
+        '<div class="font-bold text-white mb-3"><i class="fa-solid fa-plus mr-1"></i>Přidat kategorii / subfórum</div>' +
+        catFormHtml('new', {}, parentOptionsHtml(cats, null)) +
+        '</div>';
+      const rowsHtml = topLevel.map(function (c) {
+        return rowHtml(c, false) + (childrenByParent[c.id] || []).map(function (ch) { return rowHtml(ch, true); }).join('');
+      }).join('');
+      list.innerHTML = addBlock + (rowsHtml || '<div class="text-xs text-slate-500 italic">Žádné kategorie.</div>');
+    }
+
     function renderForumReports(reports, postMap, topicMap, profMap) {
       const list = document.getElementById('modList');
       if (!reports.length) { list.innerHTML = '<div class="text-xs text-slate-500 italic">Žádná nahlášení.</div>'; return; }
@@ -5388,6 +5464,9 @@
           const profMap = {}; profiles.forEach(p => { profMap[p.id] = p.username; });
           renderForumReports(reports, postMap, topicMap, profMap);
           refreshForumReportsCount();
+        } else if (tab === 'forum-cats') {
+          const cats = await authSelect('forum_categories', 'select=*&order=sort_order.asc');
+          renderForumCategories(cats);
         }
       } catch (e) {
         list.innerHTML = '<div class="text-xs text-rose-400">Nepodařilo se načíst data. Zkus se prosím znovu přihlásit.</div>';
@@ -5493,6 +5572,83 @@
           reportDeleteTopicBtn.disabled = true;
           authDelete('forum_topics', 'id=eq.' + reportDeleteTopicBtn.getAttribute('data-topic-id')).then(function (ok) {
             if (ok) loadTab(activeTab); else reportDeleteTopicBtn.disabled = false;
+          });
+        }
+
+        // ---- Kategorie fóra: otevřít/zavřít formulář úpravy ----
+        const catEditBtn = ev.target.closest('.cat-edit-btn');
+        if (catEditBtn) {
+          const id = catEditBtn.getAttribute('data-id');
+          const formEl = document.querySelector('.cat-edit-form[data-id="' + id + '"]');
+          if (formEl) {
+            const willOpen = formEl.classList.contains('hidden');
+            document.querySelectorAll('.cat-edit-form').forEach(function (f) { f.classList.add('hidden'); f.innerHTML = ''; });
+            if (willOpen) {
+              const allCats = Object.keys(catCache).map(function (k) { return catCache[k]; });
+              formEl.innerHTML = catFormHtml(id, catCache[id], parentOptionsHtml(allCats, id));
+              formEl.classList.remove('hidden');
+            }
+          }
+        }
+        const catCancelBtn = ev.target.closest('.cat-cancel-edit-btn');
+        if (catCancelBtn) {
+          const formEl = document.querySelector('.cat-edit-form[data-id="' + catCancelBtn.getAttribute('data-id') + '"]');
+          if (formEl) { formEl.classList.add('hidden'); formEl.innerHTML = ''; }
+        }
+
+        // ---- Kategorie fóra: uložit (nová i upravovaná) ----
+        const catSaveBtn = ev.target.closest('.cat-save-btn');
+        if (catSaveBtn) {
+          const mode = catSaveBtn.getAttribute('data-mode');
+          const wrap = (mode === 'new') ? document.querySelector('div[data-id="new"]') : document.querySelector('.cat-edit-form[data-id="' + mode + '"]');
+          if (!wrap) return;
+          const errEl = wrap.querySelector('.cat-form-error');
+          const get = function (cls) { const el = wrap.querySelector(cls); return el ? el.value.trim() : ''; };
+          const nameCs = get('.cat-f-name-cs');
+          const nameEn = get('.cat-f-name-en');
+          const descCs = get('.cat-f-desc-cs');
+          const descEn = get('.cat-f-desc-en');
+          const icon = get('.cat-f-icon') || 'fa-comments';
+          const sortOrder = parseInt(get('.cat-f-sort'), 10) || 0;
+          const parentId = get('.cat-f-parent') || null;
+          if (!nameCs || !nameEn) {
+            if (errEl) errEl.textContent = 'Vyplň aspoň název CZ a EN.';
+            return;
+          }
+          catSaveBtn.disabled = true;
+          if (mode === 'new') {
+            const slug = get('.cat-f-slug');
+            if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+              if (errEl) errEl.textContent = 'Slug vyplň jen malými písmeny, čísly a pomlčkami (bez diakritiky a mezer).';
+              catSaveBtn.disabled = false;
+              return;
+            }
+            authInsert('forum_categories', {
+              slug: slug, name_cs: nameCs, name_en: nameEn, desc_cs: descCs, desc_en: descEn,
+              icon: icon, sort_order: sortOrder, parent_id: parentId,
+            }).then(function (row) {
+              if (row) { loadTab('forum-cats'); }
+              else { if (errEl) errEl.textContent = 'Nepodařilo se vytvořit (slug už možná existuje).'; catSaveBtn.disabled = false; }
+            });
+          } else {
+            authPatch('forum_categories', 'id=eq.' + mode, {
+              name_cs: nameCs, name_en: nameEn, desc_cs: descCs, desc_en: descEn,
+              icon: icon, sort_order: sortOrder, parent_id: parentId,
+            }).then(function (ok) {
+              if (ok) { loadTab('forum-cats'); }
+              else { if (errEl) errEl.textContent = 'Uložení se nepodařilo.'; catSaveBtn.disabled = false; }
+            });
+          }
+        }
+
+        // ---- Kategorie fóra: smazat ----
+        const catDeleteBtn = ev.target.closest('.cat-delete-btn');
+        if (catDeleteBtn) {
+          const id = catDeleteBtn.getAttribute('data-id');
+          if (!window.confirm('Opravdu smazat tuto kategorii? Smažou se i všechna její témata a subfóra pod ní!')) return;
+          catDeleteBtn.disabled = true;
+          authDelete('forum_categories', 'id=eq.' + id).then(function (ok) {
+            if (ok) loadTab('forum-cats'); else catDeleteBtn.disabled = false;
           });
         }
       });
