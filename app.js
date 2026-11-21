@@ -4496,6 +4496,8 @@
     const topicsBox = document.getElementById('forumTopics');
     const topicsEmptyEl = document.getElementById('forumTopicsEmpty');
     const catPagerEl = document.getElementById('forumCatPager');
+    const catCountEl = document.getElementById('forumCatCount');
+    const breadcrumbEl = document.getElementById('forumBreadcrumb');
     const newCatNameEl = document.getElementById('forumNewCatName');
     const newTopicForm = document.getElementById('forumNewTopicForm');
     const newAuthGate = document.getElementById('forumNewAuthGate');
@@ -4526,6 +4528,29 @@
       categoryView.classList.add('hidden');
       newTopicView.classList.add('hidden');
       topicView.classList.add('hidden');
+    }
+
+    // Drobečková navigace nad obsahem (Fórum › Kategorie › Téma).
+    // parts: pole { label, go } -- poslední položka (bez "go", nebo rovnou
+    // na posledním indexu) je aktuální stránka a nerenderuje se jako odkaz.
+    function renderBreadcrumb(parts) {
+      if (!breadcrumbEl) return;
+      const items = [{ label: isEn ? 'Forum' : 'Fórum', go: (parts && parts.length) ? {} : null }].concat(parts || []);
+      breadcrumbEl.innerHTML = items.map(function (it, i) {
+        const sep = i > 0 ? '<i class="fa-solid fa-chevron-right text-[9px] text-slate-700"></i> ' : '';
+        const isCurrent = i === items.length - 1 || !it.go;
+        if (isCurrent) {
+          return sep + '<span class="text-slate-300 font-bold truncate max-w-[55vw] sm:max-w-xs inline-block align-bottom">' + kpEscapeHtml(it.label) + '</span>';
+        }
+        const sp = new URLSearchParams();
+        if (it.go.cat) sp.set('cat', it.go.cat);
+        if (it.go.topic) sp.set('topic', it.go.topic);
+        const href = 'forum.html' + (sp.toString() ? '?' + sp.toString() : '');
+        return sep + '<a href="' + href + '" data-kp-nav' +
+          (it.go.cat ? ' data-cat="' + kpEscapeHtml(it.go.cat) + '"' : '') +
+          (it.go.topic ? ' data-topic="' + kpEscapeHtml(it.go.topic) + '"' : '') +
+          ' class="hover:text-brand-accent transition truncate max-w-[35vw] sm:max-w-[10rem] inline-block align-bottom">' + kpEscapeHtml(it.label) + '</a>';
+      }).join('');
     }
 
     // ---------------- Routing (sdílené/záložkovatelné odkazy) ----------------
@@ -4611,6 +4636,7 @@
     function showListView() {
       hideAllViews();
       listView.classList.remove('hidden');
+      renderBreadcrumb([]);
       categoriesBox.innerHTML = '<p class="text-sm text-slate-500">' + (isEn ? 'Loading…' : 'Načítám…') + '</p>';
       loadCategoriesWithCounts().then(function (cats) {
         categoriesCache = {};
@@ -4658,22 +4684,40 @@
         '</div>' +
         '</div></a>';
     }
+    // Číslované stránkování ve stylu klasických fór (« 1 2 3 … 35 »), místo
+    // pouhého "strana X / Y" -- s elipsou pro hodně stránek.
     function pagerHtml(totalItems, page, pageSize, baseParams) {
       const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
       if (totalPages <= 1) return '';
-      let html = '';
-      const mk = function (p, label, disabled) {
-        if (disabled) return '<span class="px-3 py-1.5 rounded-lg bg-slate-900/50 text-slate-600">' + label + '</span>';
+      const mkHref = function (p) {
         const attrs = Object.assign({}, baseParams, { page: p });
         const sp = new URLSearchParams();
         if (attrs.cat) sp.set('cat', attrs.cat);
         if (attrs.topic) sp.set('topic', attrs.topic);
         if (attrs.page && attrs.page > 1) sp.set('page', attrs.page);
-        return '<a href="forum.html?' + sp.toString() + '" data-kp-nav' + (attrs.cat ? ' data-cat="' + kpEscapeHtml(attrs.cat) + '"' : '') + (attrs.topic ? ' data-topic="' + kpEscapeHtml(attrs.topic) + '"' : '') + ' data-page="' + p + '" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 hover:text-white transition">' + label + '</a>';
+        return 'forum.html' + (sp.toString() ? '?' + sp.toString() : '');
       };
-      html += mk(Math.max(1, page - 1), '«', page <= 1);
-      html += '<span class="px-2 text-slate-500">' + page + ' / ' + totalPages + '</span>';
-      html += mk(Math.min(totalPages, page + 1), '»', page >= totalPages);
+      const mk = function (p, label, opts) {
+        opts = opts || {};
+        if (opts.disabled) return '<span class="px-3 py-1.5 rounded-lg bg-slate-900/50 text-slate-600">' + label + '</span>';
+        return '<a href="' + mkHref(p) + '" data-kp-nav' +
+          (baseParams.cat ? ' data-cat="' + kpEscapeHtml(baseParams.cat) + '"' : '') +
+          (baseParams.topic ? ' data-topic="' + kpEscapeHtml(baseParams.topic) + '"' : '') +
+          ' data-page="' + p + '" class="px-3 py-1.5 rounded-lg transition ' +
+          (opts.active ? 'bg-brand-accent text-white font-bold' : 'bg-slate-900 border border-brand-border text-slate-300 hover:text-white') +
+          '">' + label + '</a>';
+      };
+      let html = mk(Math.max(1, page - 1), '«', { disabled: page <= 1 });
+      const pages = [1];
+      const lo = Math.max(2, page - 2), hi = Math.min(totalPages - 1, page + 2);
+      if (lo > 2) pages.push('…');
+      for (let p = lo; p <= hi; p++) pages.push(p);
+      if (hi < totalPages - 1) pages.push('…');
+      if (totalPages > 1) pages.push(totalPages);
+      pages.forEach(function (p) {
+        html += (p === '…') ? '<span class="px-1.5 text-slate-600">…</span>' : mk(p, String(p), { active: p === page });
+      });
+      html += mk(Math.min(totalPages, page + 1), '»', { disabled: page >= totalPages });
       return html;
     }
     function showCategoryView(slug, page) {
@@ -4693,6 +4737,7 @@
         catTitleEl.innerHTML = '<i class="fa-solid ' + kpEscapeHtml(cat.icon || 'fa-comments') + ' text-brand-accent text-xl"></i> ' + kpEscapeHtml(catName(cat));
         catDescEl.textContent = catDesc(cat);
         newCatNameEl.textContent = catName(cat);
+        renderBreadcrumb([{ label: catName(cat) }]);
         loadTopicsPage(cat.id, currentSort, page);
       }).catch(function () {
         topicsBox.innerHTML = '<p class="text-sm text-rose-400">' + (isEn ? 'Could not load the category.' : 'Kategorii se nepodařilo načíst.') + '</p>';
@@ -4716,6 +4761,7 @@
             topicsEmptyEl.classList.add('hidden');
             topicsBox.innerHTML = rows.map(topicRowHtml).join('');
           }
+          if (catCountEl) catCountEl.textContent = total ? (total + (isEn ? ' topics' : ' témat')) : '';
           catPagerEl.innerHTML = pagerHtml(total, page, PAGE_SIZE, { cat: currentCategory.slug });
         });
       }).catch(function () {
@@ -4746,6 +4792,7 @@
       getCategoryBySlug(slug).then(function (cat) {
         currentCategory = cat;
         newCatNameEl.textContent = cat ? catName(cat) : slug;
+        renderBreadcrumb(cat ? [{ label: catName(cat), go: { cat: cat.slug } }, { label: isEn ? 'New topic' : 'Nové téma' }] : []);
       });
       if (!user) {
         newAuthGate.classList.remove('hidden');
@@ -4911,6 +4958,7 @@
             topicTitleEl.innerHTML = (badges ? badges + ' ' : '') + '<span>' + kpEscapeHtml(topic.title) + '</span>';
             topicMetaEl.innerHTML = (cat ? '<a href="forum.html?cat=' + encodeURIComponent(cat.slug) + '" data-kp-nav data-cat="' + kpEscapeHtml(cat.slug) + '" class="hover:text-brand-accent transition">' + kpEscapeHtml(catName(cat)) + '</a> · ' : '') +
               kpEscapeHtml(prof(topic.author_id).username) + ' · ' + fmtDateTime(topic.created_at);
+            renderBreadcrumb((cat ? [{ label: catName(cat), go: { cat: cat.slug } }] : []).concat([{ label: topic.title }]));
             document.getElementById('forumTopicBackBtn').onclick = function () { go(cat ? { cat: cat.slug } : {}, true); };
             updateAdminBar();
             loadPostsPage(topic.id, page);
