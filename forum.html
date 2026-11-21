@@ -31,7 +31,7 @@
 <meta content="https://kryptoprofik.fun/og-image.png" name="twitter:image"/>
 <link href="manifest.json" rel="manifest"/>
 <link href="icon-192.png" rel="apple-touch-icon"/>
-<link href="style.css?v=v7" rel="stylesheet"/>
+<link href="style.css?v=v8" rel="stylesheet"/>
 </head>
 <body class="min-h-screen flex flex-col antialiased custom-scrollbar">
 <noscript><div class="bg-amber-500 text-black text-center text-sm font-semibold p-2" id="noscriptMsg">JavaScript is required / Tento web vyžaduje JavaScript.</div></noscript>
@@ -140,6 +140,13 @@
 <div>
 <label class="block text-xs font-bold text-slate-400 mb-1" id="forumTitleLabel">Název tématu</label>
 <input id="forumNewTitleInput" type="text" maxlength="140" placeholder="Stručně a výstižně shrň, o čem téma je…" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none">
+</div>
+<div>
+<label class="block text-xs font-bold text-slate-400 mb-1" id="forumTypeLabel">Typ tématu</label>
+<select id="forumNewTypeInput" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none">
+<option value="discussion" id="forumTypeOptDiscussion">Diskuze</option>
+<option value="guide" id="forumTypeOptGuide">Návod</option>
+</select>
 </div>
 <div>
 <label class="block text-xs font-bold text-slate-400 mb-1" id="forumBodyLabel">Text</label>
@@ -269,6 +276,6 @@
 </footer>
 <script src="i18n-data.js"></script>
 <script src="qrcode.min.js"></script>
-<script src="app.js?v=v7"></script>
+<script src="app.js?v=v8"></script>
 </body>
 </html>

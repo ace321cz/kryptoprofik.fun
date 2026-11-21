@@ -4427,6 +4427,9 @@
     setLabel('forumLoginHint', 'Pro založení tématu se musíš nejdřív přihlásit.', 'You need to log in first to start a topic.');
     setLabel('forumLoginBtn', 'Můj účet', 'My account');
     setLabel('forumTitleLabel', 'Název tématu', 'Topic title');
+    setLabel('forumTypeLabel', 'Typ tématu', 'Topic type');
+    setLabel('forumTypeOptDiscussion', 'Diskuze', 'Discussion');
+    setLabel('forumTypeOptGuide', 'Návod', 'Guide');
     setLabel('forumBodyLabel', 'Text', 'Text');
     setLabel('forumPublishLabel', 'Zveřejnit téma', 'Publish topic');
     setLabel('forumBackLabel3', 'Zpět na téma', 'Back to topic');
@@ -4473,6 +4476,34 @@
     }
     function catName(c) { return isEn ? c.name_en : c.name_cs; }
     function catDesc(c) { return isEn ? c.desc_en : c.desc_cs; }
+
+    // ---- Typ tématu (diskuze / návod / oznámení) -- ikona + barva ----
+    function topicTypeMeta(t) {
+      const type = (t && t.topic_type) || 'discussion';
+      if (type === 'announcement') return { icon: 'fa-bullhorn', cls: 'text-amber-400 bg-amber-400/10', label: isEn ? 'Announcement' : 'Oznámení' };
+      if (type === 'guide') return { icon: 'fa-book', cls: 'text-sky-400 bg-sky-400/10', label: isEn ? 'Guide' : 'Návod' };
+      return { icon: 'fa-comment', cls: 'text-slate-500 bg-slate-500/10', label: isEn ? 'Discussion' : 'Diskuze' };
+    }
+    function topicTypeBadge(t) {
+      const type = (t && t.topic_type) || 'discussion';
+      if (type === 'discussion') return '';
+      const m = topicTypeMeta(t);
+      return '<span class="text-[10px] font-black ' + m.cls + ' px-1.5 py-0.5 rounded"><i class="fa-solid ' + m.icon + '"></i> ' + kpEscapeHtml(m.label) + '</span>';
+    }
+
+    // ---- Naposledy navštívené téma (čistě lokální, pro ikonu přečteno/nepřečteno) ----
+    function forumVisitKey(topicId) { return 'kp_forum_visit_' + topicId; }
+    function getLastVisit(topicId) {
+      try { return localStorage.getItem(forumVisitKey(topicId)); } catch (e) { return null; }
+    }
+    function markVisited(topicId) {
+      try { localStorage.setItem(forumVisitKey(topicId), new Date().toISOString()); } catch (e) {}
+    }
+    function isTopicUnread(t) {
+      const lv = getLastVisit(t.id);
+      if (!lv) return true;
+      return new Date(t.last_post_at) > new Date(lv);
+    }
 
     // ---- Profilová mezipaměť (dotahuje jen chybějící uživatele) ----
     const profileCache = {};
@@ -4623,15 +4654,26 @@
         return Object.assign({}, c, { _topics: n.topics, _posts: n.posts });
       });
     }
-    function categoryRowHtml(c) {
-      return '<a href="forum.html?cat=' + encodeURIComponent(c.slug) + '" data-kp-nav data-cat="' + kpEscapeHtml(c.slug) + '" class="block p-4 rounded-2xl bg-brand-card border border-brand-border hover:border-brand-accent transition">' +
+    function categoryRowHtml(c, children) {
+      // Pozor: vnořené <a> v <a> je neplatné HTML, takže hlavní odkaz na
+      // kategorii a odkazy na subfóra musí být SOUROZENCI, ne jeden v druhém.
+      const subLine = (children && children.length)
+        ? '<div class="px-4 pb-3 -mt-1 pl-14 text-[11px] text-slate-500 truncate">' + (isEn ? 'Subforums: ' : 'Subfóra: ') +
+          children.map(function (ch) {
+            return '<a href="forum.html?cat=' + encodeURIComponent(ch.slug) + '" data-kp-nav data-cat="' + kpEscapeHtml(ch.slug) + '" class="text-slate-400 hover:text-brand-accent transition underline decoration-slate-700 underline-offset-2">' + kpEscapeHtml(catName(ch)) + '</a>';
+          }).join(', ') + '</div>'
+        : '';
+      return '<div class="rounded-2xl bg-brand-card border border-brand-border hover:border-brand-accent transition">' +
+        '<a href="forum.html?cat=' + encodeURIComponent(c.slug) + '" data-kp-nav data-cat="' + kpEscapeHtml(c.slug) + '" class="block p-4">' +
         '<div class="flex items-center gap-3">' +
         '<span class="w-11 h-11 shrink-0 rounded-xl bg-slate-900 border border-brand-border flex items-center justify-center text-brand-accent text-lg"><i class="fa-solid ' + kpEscapeHtml(c.icon || 'fa-comments') + '"></i></span>' +
         '<div class="min-w-0 flex-1"><div class="font-bold text-white">' + kpEscapeHtml(catName(c)) + '</div><p class="text-xs text-slate-500 truncate">' + kpEscapeHtml(catDesc(c)) + '</p></div>' +
         '<div class="shrink-0 text-right text-xs text-slate-500"><div class="font-bold text-slate-300">' + c._topics + '</div><div>' + (isEn ? 'topics' : 'témat') + '</div></div>' +
         '<div class="shrink-0 text-right text-xs text-slate-500 hidden sm:block w-16"><div class="font-bold text-slate-300">' + c._posts + '</div><div>' + (isEn ? 'posts' : 'příspěvků') + '</div></div>' +
         '<i class="fa-solid fa-chevron-right text-slate-600 text-xs hidden sm:block"></i>' +
-        '</div></a>';
+        '</div></a>' +
+        subLine +
+        '</div>';
     }
     function showListView() {
       hideAllViews();
@@ -4641,7 +4683,14 @@
       loadCategoriesWithCounts().then(function (cats) {
         categoriesCache = {};
         cats.forEach(function (c) { categoriesCache[c.slug] = c; });
-        categoriesBox.innerHTML = cats.map(categoryRowHtml).join('') || ('<p class="text-sm text-slate-500">' + (isEn ? 'No categories yet.' : 'Zatím žádné kategorie.') + '</p>');
+        const topLevel = cats.filter(function (c) { return !c.parent_id; });
+        const childrenByParent = {};
+        cats.forEach(function (c) {
+          if (c.parent_id) { (childrenByParent[c.parent_id] = childrenByParent[c.parent_id] || []).push(c); }
+        });
+        categoriesBox.innerHTML = topLevel.map(function (c) {
+          return categoryRowHtml(c, childrenByParent[c.id]);
+        }).join('') || ('<p class="text-sm text-slate-500">' + (isEn ? 'No categories yet.' : 'Zatím žádné kategorie.') + '</p>');
       }).catch(function () {
         categoriesBox.innerHTML = '<p class="text-sm text-rose-400">' + (isEn ? 'Could not load categories.' : 'Kategorie se nepodařilo načíst.') + '</p>';
       });
@@ -4667,13 +4716,17 @@
     function topicRowHtml(t) {
       const author = prof(t.author_id);
       const lastBy = t.last_post_by ? prof(t.last_post_by) : author;
-      const badges = (t.is_pinned ? '<span class="text-[10px] font-black text-brand-accent bg-brand-accent/10 px-1.5 py-0.5 rounded"><i class="fa-solid fa-thumbtack"></i> ' + (isEn ? 'Pinned' : 'Připnuto') + '</span>' : '') +
-        (t.is_locked ? '<span class="text-[10px] font-black text-slate-400 bg-slate-500/10 px-1.5 py-0.5 rounded ml-1"><i class="fa-solid fa-lock"></i> ' + (isEn ? 'Locked' : 'Uzamčeno') + '</span>' : '');
+      const unread = isTopicUnread(t);
+      const badges = topicTypeBadge(t) +
+        (t.is_pinned ? ' <span class="text-[10px] font-black text-brand-accent bg-brand-accent/10 px-1.5 py-0.5 rounded"><i class="fa-solid fa-thumbtack"></i> ' + (isEn ? 'Pinned' : 'Připnuto') + '</span>' : '') +
+        (t.is_locked ? ' <span class="text-[10px] font-black text-slate-400 bg-slate-500/10 px-1.5 py-0.5 rounded"><i class="fa-solid fa-lock"></i> ' + (isEn ? 'Locked' : 'Uzamčeno') + '</span>' : '');
       return '<a href="forum.html?topic=' + encodeURIComponent(t.id) + '" data-kp-nav data-topic="' + kpEscapeHtml(t.id) + '" class="block p-3.5 rounded-2xl bg-brand-card border border-brand-border hover:border-brand-accent transition">' +
         '<div class="flex items-start gap-3">' +
         avatarChip(author, 9) +
         '<div class="min-w-0 flex-1">' +
-        '<div class="flex items-center gap-1.5 flex-wrap">' + (badges ? badges + ' ' : '') + '<span class="font-bold text-white break-words">' + kpEscapeHtml(t.title) + '</span></div>' +
+        '<div class="flex items-center gap-1.5 flex-wrap">' +
+        '<span class="forum-unread-dot w-2 h-2 rounded-full shrink-0 ' + (unread ? 'bg-brand-accent' : 'bg-slate-700') + '" title="' + (unread ? (isEn ? 'New posts' : 'Nové příspěvky') : (isEn ? 'Read' : 'Přečteno')) + '"></span>' +
+        (badges ? badges + ' ' : '') + '<span class="font-bold text-white break-words">' + kpEscapeHtml(t.title) + '</span></div>' +
         '<p class="text-xs text-slate-500 mt-0.5">' + kpEscapeHtml(author.username) + ' · ' + fmtAgo(t.created_at) + '</p>' +
         '</div>' +
         '<div class="shrink-0 text-right text-xs text-slate-500 w-20 hidden sm:block">' +
@@ -4737,7 +4790,9 @@
         catTitleEl.innerHTML = '<i class="fa-solid ' + kpEscapeHtml(cat.icon || 'fa-comments') + ' text-brand-accent text-xl"></i> ' + kpEscapeHtml(catName(cat));
         catDescEl.textContent = catDesc(cat);
         newCatNameEl.textContent = catName(cat);
-        renderBreadcrumb([{ label: catName(cat) }]);
+        (cat.parent_id ? getCategoryBySlugById(cat.parent_id) : Promise.resolve(null)).then(function (parent) {
+          renderBreadcrumb((parent ? [{ label: catName(parent), go: { cat: parent.slug } }] : []).concat([{ label: catName(cat) }]));
+        });
         loadTopicsPage(cat.id, currentSort, page);
       }).catch(function () {
         topicsBox.innerHTML = '<p class="text-sm text-rose-400">' + (isEn ? 'Could not load the category.' : 'Kategorii se nepodařilo načíst.') + '</p>';
@@ -4794,6 +4849,16 @@
         newCatNameEl.textContent = cat ? catName(cat) : slug;
         renderBreadcrumb(cat ? [{ label: catName(cat), go: { cat: cat.slug } }, { label: isEn ? 'New topic' : 'Nové téma' }] : []);
       });
+      adminReady.then(function () {
+        const typeSelect = document.getElementById('forumNewTypeInput');
+        if (typeSelect && isAdmin && !typeSelect.querySelector('option[value="announcement"]')) {
+          const opt = document.createElement('option');
+          opt.value = 'announcement';
+          opt.id = 'forumTypeOptAnnouncement';
+          opt.textContent = isEn ? 'Announcement (admin)' : 'Oznámení (admin)';
+          typeSelect.appendChild(opt);
+        }
+      });
       if (!user) {
         newAuthGate.classList.remove('hidden');
         newTopicForm.classList.add('hidden');
@@ -4842,10 +4907,14 @@
       }
       const btn = newTopicForm.querySelector('button[type="submit"]');
       if (btn) btn.disabled = true;
+      const typeSelect = document.getElementById('forumNewTypeInput');
+      let topicType = (typeSelect && typeSelect.value) || 'discussion';
+      if (topicType === 'announcement' && !isAdmin) topicType = 'discussion';
       kpSbInsertAuth('forum_topics', {
         category_id: currentCategory.id,
         author_id: user.id,
         title: title,
+        topic_type: topicType,
       }, false).then(function (rows) {
         const topic = rows && rows[0];
         if (!topic) throw new Error('no-topic');
@@ -4953,12 +5022,15 @@
             return getCategoryBySlugById(topic.category_id);
           }).then(function (cat) {
             currentCategory = cat;
-            const badges = (topic.is_pinned ? '<i class="fa-solid fa-thumbtack text-brand-accent text-base"></i>' : '') +
+            const typeMeta = topicTypeMeta(topic);
+            const badges = '<span class="' + typeMeta.cls + ' rounded px-1 py-0.5 text-base"><i class="fa-solid ' + typeMeta.icon + '"></i></span>' +
+              (topic.is_pinned ? '<i class="fa-solid fa-thumbtack text-brand-accent text-base"></i>' : '') +
               (topic.is_locked ? '<i class="fa-solid fa-lock text-slate-400 text-base"></i>' : '');
             topicTitleEl.innerHTML = (badges ? badges + ' ' : '') + '<span>' + kpEscapeHtml(topic.title) + '</span>';
             topicMetaEl.innerHTML = (cat ? '<a href="forum.html?cat=' + encodeURIComponent(cat.slug) + '" data-kp-nav data-cat="' + kpEscapeHtml(cat.slug) + '" class="hover:text-brand-accent transition">' + kpEscapeHtml(catName(cat)) + '</a> · ' : '') +
               kpEscapeHtml(prof(topic.author_id).username) + ' · ' + fmtDateTime(topic.created_at);
             renderBreadcrumb((cat ? [{ label: catName(cat), go: { cat: cat.slug } }] : []).concat([{ label: topic.title }]));
+            markVisited(topic.id);
             document.getElementById('forumTopicBackBtn').onclick = function () { go(cat ? { cat: cat.slug } : {}, true); };
             updateAdminBar();
             loadPostsPage(topic.id, page);
