@@ -31,9 +31,9 @@
 <meta content="https://kryptoprofik.fun/og-image.png" name="twitter:image"/>
 <link href="manifest.json" rel="manifest"/>
 <link href="icon-192.png" rel="apple-touch-icon"/>
-<link href="style.css?v=v12" rel="stylesheet"/>
+<link href="style.css?v=v13" rel="stylesheet"/>
 </head>
-<body class="min-h-screen flex flex-col antialiased custom-scrollbar">
+<body class="min-h-screen flex flex-col antialiased custom-scrollbar overflow-x-hidden">
 <noscript><div class="bg-amber-500 text-black text-center text-sm font-semibold p-2" id="noscriptMsg">JavaScript is required / Tento web vyžaduje JavaScript.</div></noscript>
 <!-- Reading progress -->
 <div class="fixed top-0 left-0 h-0.5 z-[60] bg-gradient-to-r from-brand-accent via-brand-blue to-brand-purple" id="progressBar" style="width:0%"></div>
@@ -95,10 +95,10 @@
 
 <nav id="forumBreadcrumb" class="flex items-center gap-1.5 text-xs text-slate-500 mb-4 flex-wrap" aria-label="Drobečková navigace"></nav>
 
-<form id="forumSearchForm" class="flex items-center gap-2 mb-6">
-<input id="forumSearchInput" type="text" maxlength="140" placeholder="Hledat v tématech…" class="flex-1 bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none">
+<form id="forumSearchForm" class="flex items-center gap-2 mb-6 flex-wrap">
+<input id="forumSearchInput" type="text" maxlength="140" placeholder="Hledat v tématech…" class="flex-1 min-w-[6rem] bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none">
 <button type="submit" class="shrink-0 w-10 h-10 rounded-xl bg-brand-accent text-white flex items-center justify-center hover:opacity-90 transition"><i class="fa-solid fa-magnifying-glass"></i></button>
-<button type="button" id="forumFavBtn" class="shrink-0 px-3.5 h-10 rounded-xl bg-brand-card border border-brand-border text-slate-300 hover:text-amber-400 hover:border-amber-400/50 flex items-center gap-1.5 text-xs font-bold transition"><i class="fa-solid fa-star"></i><span id="forumFavBtnLabel">Oblíbená</span></button>
+<button type="button" id="forumFavBtn" class="shrink-0 px-3.5 h-10 rounded-xl bg-brand-card border border-brand-border text-slate-300 hover:text-amber-400 hover:border-amber-400/50 flex items-center gap-1.5 text-xs font-bold transition"><i class="fa-solid fa-star"></i><span id="forumFavBtnLabel" class="hidden sm:inline">Oblíbená</span></button>
 </form>
 
 <!-- ===== 1c) OBLÍBENÁ TÉMATA ===== -->
@@ -198,12 +198,12 @@
 <div class="flex items-start justify-between gap-3 mb-1 flex-wrap">
 <h1 id="forumTopicTitle" class="text-2xl font-black text-white flex items-center gap-2 flex-wrap"></h1>
 <button type="button" id="forumBookmarkBtn" class="hidden shrink-0 w-9 h-9 rounded-lg bg-slate-900 border border-brand-border text-slate-400 hover:text-amber-400 flex items-center justify-center transition"><i class="fa-regular fa-star" id="forumBookmarkIcon"></i></button>
-<div id="forumTopicAdminBar" class="hidden flex items-center gap-1.5 shrink-0">
-<select id="forumMoveTopicSelect" class="bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:border-brand-accent outline-none max-w-[9.5rem]"></select>
-<button type="button" id="forumMoveTopicBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 hover:text-white text-xs font-bold transition"><i class="fa-solid fa-arrows-turn-right"></i></button>
-<button type="button" id="forumPinBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 hover:text-white text-xs font-bold transition"><i class="fa-solid fa-thumbtack mr-1"></i><span id="forumPinLabel">Připnout</span></button>
-<button type="button" id="forumLockBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 hover:text-white text-xs font-bold transition"><i class="fa-solid fa-lock mr-1"></i><span id="forumLockLabel">Uzamknout</span></button>
-<button type="button" id="forumDeleteTopicBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-400 hover:text-rose-400 text-xs font-bold transition"><i class="fa-solid fa-trash-can"></i></button>
+<div id="forumTopicAdminBar" class="hidden flex items-center gap-1.5 flex-wrap w-full sm:w-auto">
+<select id="forumMoveTopicSelect" class="w-24 sm:w-28 truncate bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:border-brand-accent outline-none"></select>
+<button type="button" id="forumMoveTopicBtn" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 hover:text-white text-xs font-bold transition"><i class="fa-solid fa-arrows-turn-right"></i></button>
+<button type="button" id="forumPinBtn" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 hover:text-white text-xs font-bold transition"><i class="fa-solid fa-thumbtack sm:mr-1"></i><span id="forumPinLabel" class="hidden sm:inline">Připnout</span></button>
+<button type="button" id="forumLockBtn" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 hover:text-white text-xs font-bold transition"><i class="fa-solid fa-lock sm:mr-1"></i><span id="forumLockLabel" class="hidden sm:inline">Uzamknout</span></button>
+<button type="button" id="forumDeleteTopicBtn" class="shrink-0 px-2.5 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-400 hover:text-rose-400 text-xs font-bold transition"><i class="fa-solid fa-trash-can"></i></button>
 </div>
 </div>
 <p id="forumTopicMeta" class="text-xs text-slate-500 mb-5"></p>
@@ -309,6 +309,6 @@
 </footer>
 <script src="i18n-data.js"></script>
 <script src="qrcode.min.js"></script>
-<script src="app.js?v=v12"></script>
+<script src="app.js?v=v13"></script>
 </body>
 </html>
