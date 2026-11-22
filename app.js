@@ -4433,6 +4433,14 @@
     setLabel('forumBodyLabel', 'Text', 'Text');
     setLabel('forumPublishLabel', 'Zveřejnit téma', 'Publish topic');
     setLabel('forumBackLabel3', 'Zpět na téma', 'Back to topic');
+    setLabel('forumSearchBackLabel', 'Zpět na kategorie', 'Back to categories');
+    setLabel('forumSearchEmptyLabel', 'Nic jsme nenašli, zkus to jinak.', 'No results, try a different search.');
+    setLabel('forumFavBtnLabel', 'Oblíbená', 'Favorites');
+    setLabel('forumFavBackLabel', 'Zpět na kategorie', 'Back to categories');
+    setLabel('forumFavTitle', 'Oblíbená témata', 'Favorite topics');
+    setLabel('forumFavLoginHint', 'Pro oblíbená témata se musíš nejdřív přihlásit.', 'You need to log in first to use favorites.');
+    setLabel('forumFavLoginBtn', 'Můj účet', 'My account');
+    setLabel('forumFavEmptyLabel', 'Zatím nemáš žádná oblíbená témata. Klikni na hvězdičku u tématu, které tě zajímá.', 'You have no favorite topics yet. Click the star on a topic you care about.');
     setLabel('forumPinLabel', 'Připnout', 'Pin');
     setLabel('forumLockLabel', 'Uzamknout', 'Lock');
     setLabel('forumLockedNoticeText', 'Toto téma je uzamčené, nové odpovědi nejsou možné.', 'This topic is locked, new replies are not possible.');
@@ -4450,6 +4458,10 @@
     if (replyBodyEl) replyBodyEl.placeholder = isEn ? 'Write a reply…' : 'Napiš odpověď…';
     const reportReasonEl = document.getElementById('forumReportReason');
     if (reportReasonEl) reportReasonEl.placeholder = isEn ? 'Why are you reporting this post?' : 'Proč tento příspěvek nahlašuješ?';
+    const searchInputEl = document.getElementById('forumSearchInput');
+    if (searchInputEl) searchInputEl.placeholder = isEn ? 'Search topics…' : 'Hledat v tématech…';
+    const moveTopicBtnEl = document.getElementById('forumMoveTopicBtn');
+    if (moveTopicBtnEl) moveTopicBtnEl.title = isEn ? 'Move to another category' : 'Přesunout do jiné kategorie';
 
     function fmtAgo(iso) {
       let mins;
@@ -4517,6 +4529,8 @@
 
     // ---- Elementy ----
     const listView = document.getElementById('forumListView');
+    const searchView = document.getElementById('forumSearchView');
+    const favoritesView = document.getElementById('forumFavoritesView');
     const categoryView = document.getElementById('forumCategoryView');
     const newTopicView = document.getElementById('forumNewTopicView');
     const topicView = document.getElementById('forumTopicView');
@@ -4550,6 +4564,7 @@
     let currentCategory = null;
     let currentTopic = null;
     let currentPosts = []; // posty aktuálně zobrazeného tématu (pro úpravu vlastního příspěvku)
+    let currentBookmarkId = null; // id řádku v forum_bookmarks pro aktuální téma (null = není oblíbené)
     let currentSort = 'activity';
     let pendingNewAttachment = null;
     let pendingReplyAttachment = null;
@@ -4557,6 +4572,8 @@
 
     function hideAllViews() {
       listView.classList.add('hidden');
+      searchView.classList.add('hidden');
+      favoritesView.classList.add('hidden');
       categoryView.classList.add('hidden');
       newTopicView.classList.add('hidden');
       topicView.classList.add('hidden');
@@ -4592,6 +4609,8 @@
         cat: sp.get('cat') || null,
         topic: sp.get('topic') || null,
         isNew: sp.get('new') === '1',
+        q: sp.get('q') || null,
+        fav: sp.get('fav') === '1',
         page: Math.max(1, parseInt(sp.get('page') || '1', 10) || 1),
       };
     }
@@ -4600,6 +4619,8 @@
       if (params.cat) sp.set('cat', params.cat);
       if (params.topic) sp.set('topic', params.topic);
       if (params.isNew) sp.set('new', '1');
+      if (params.q) sp.set('q', params.q);
+      if (params.fav) sp.set('fav', '1');
       if (params.page && params.page > 1) sp.set('page', String(params.page));
       const url = 'forum.html' + (sp.toString() ? '?' + sp.toString() : '');
       if (push) history.pushState({ kpForum: params }, '', url);
@@ -4614,6 +4635,8 @@
       if (params.topic) { showTopicView(params.topic, params.page || 1); return; }
       if (params.cat && params.isNew) { showNewTopicView(params.cat); return; }
       if (params.cat) { showCategoryView(params.cat, params.page || 1); return; }
+      if (params.q) { showSearchView(params.q, params.page || 1); return; }
+      if (params.fav) { showFavoritesView(params.page || 1); return; }
       showListView();
     }
 
@@ -4626,6 +4649,8 @@
       if (a.dataset.cat) params.cat = a.dataset.cat;
       if (a.dataset.topic) params.topic = a.dataset.topic;
       if (a.dataset.new) params.isNew = true;
+      if (a.dataset.q) params.q = a.dataset.q;
+      if (a.dataset.fav) params.fav = true;
       if (a.dataset.page) params.page = parseInt(a.dataset.page, 10) || 1;
       go(params, true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -4703,6 +4728,159 @@
       }).catch(function () {});
     }
 
+    // ---------------- 1b) Hledání témat ----------------
+    function ensureCategoriesCache() {
+      if (categoriesCache) return Promise.resolve();
+      return kpSbSelect('forum_categories', 'select=*').then(function (cats) {
+        categoriesCache = {};
+        cats.forEach(function (c) { categoriesCache[c.slug] = c; });
+      });
+    }
+    // PostgREST ilike vzor: '*' v URL se nahrazuje za SQL '%'. Ořízneme
+    // znaky, které by jinak rozbily tvar dotazu (*, %, čárku a závorky).
+    function ilikeParam(column, term) {
+      const cleaned = term.replace(/[*%,()]/g, ' ').replace(/\s+/g, ' ').trim();
+      return column + '=ilike.*' + encodeURIComponent(cleaned) + '*';
+    }
+    function searchResultRowHtml(t) {
+      const author = prof(t.author_id);
+      const cat = categoriesCache ? Object.keys(categoriesCache).map(function (k) { return categoriesCache[k]; }).find(function (c) { return c.id === t.category_id; }) : null;
+      const badges = topicTypeBadge(t) +
+        (t.is_pinned ? ' <span class="text-[10px] font-black text-brand-accent bg-brand-accent/10 px-1.5 py-0.5 rounded"><i class="fa-solid fa-thumbtack"></i> ' + (isEn ? 'Pinned' : 'Připnuto') + '</span>' : '') +
+        (t.is_locked ? ' <span class="text-[10px] font-black text-slate-400 bg-slate-500/10 px-1.5 py-0.5 rounded"><i class="fa-solid fa-lock"></i> ' + (isEn ? 'Locked' : 'Uzamčeno') + '</span>' : '');
+      return '<a href="forum.html?topic=' + encodeURIComponent(t.id) + '" data-kp-nav data-topic="' + kpEscapeHtml(t.id) + '" class="block p-3.5 rounded-2xl bg-brand-card border border-brand-border hover:border-brand-accent transition">' +
+        '<div class="flex items-start gap-3">' +
+        avatarChip(author, 9) +
+        '<div class="min-w-0 flex-1">' +
+        '<div class="flex items-center gap-1.5 flex-wrap">' +
+        (badges ? badges + ' ' : '') + '<span class="font-bold text-white break-words">' + kpEscapeHtml(t.title) + '</span></div>' +
+        '<p class="text-xs text-slate-500 mt-0.5">' + (cat ? kpEscapeHtml(catName(cat)) + ' · ' : '') + kpEscapeHtml(author.username) + ' · ' + fmtAgo(t.created_at) + '</p>' +
+        '</div>' +
+        '<div class="shrink-0 text-right text-xs text-slate-500 w-20 hidden sm:block">' +
+        '<div class="font-bold text-slate-300">' + t.reply_count + '</div><div>' + (isEn ? 'replies' : 'odpovědí') + '</div>' +
+        '</div>' +
+        '</div></a>';
+    }
+    function showSearchView(q, page) {
+      hideAllViews();
+      searchView.classList.remove('hidden');
+      renderBreadcrumb([{ label: (isEn ? 'Search: ' : 'Hledání: ') + q }]);
+      const searchInput = document.getElementById('forumSearchInput');
+      if (searchInput) searchInput.value = q;
+      document.getElementById('forumSearchTitle').textContent = isEn ? ('Search results for "' + q + '"') : ('Výsledky hledání pro „' + q + '“');
+      const resultsBox = document.getElementById('forumSearchResults');
+      const emptyEl = document.getElementById('forumSearchEmpty');
+      const pagerEl = document.getElementById('forumSearchPager');
+      resultsBox.innerHTML = '<p class="text-sm text-slate-500">' + (isEn ? 'Loading…' : 'Načítám…') + '</p>';
+      emptyEl.classList.add('hidden');
+      pagerEl.innerHTML = '';
+      const offset = (page - 1) * PAGE_SIZE;
+      const pattern = ilikeParam('title', q);
+      ensureCategoriesCache().then(function () {
+        return Promise.all([
+          kpSbSelect('forum_topics', pattern + '&select=id'),
+          kpSbSelect('forum_topics', pattern + '&select=id,title,category_id,author_id,is_pinned,is_locked,topic_type,reply_count,last_post_at,created_at&order=last_post_at.desc&limit=' + PAGE_SIZE + '&offset=' + offset),
+        ]);
+      }).then(function (res) {
+        const total = res[0].length;
+        const rows = res[1];
+        return ensureProfiles(rows.map(function (t) { return t.author_id; })).then(function () {
+          if (!rows.length) {
+            resultsBox.innerHTML = '';
+            emptyEl.classList.remove('hidden');
+          } else {
+            resultsBox.innerHTML = rows.map(searchResultRowHtml).join('');
+          }
+          pagerEl.innerHTML = pagerHtml(total, page, PAGE_SIZE, { q: q });
+        });
+      }).catch(function () {
+        resultsBox.innerHTML = '<p class="text-sm text-rose-400">' + (isEn ? 'Search failed.' : 'Hledání se nepodařilo.') + '</p>';
+      });
+    }
+    const searchForm = document.getElementById('forumSearchForm');
+    if (searchForm) {
+      searchForm.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        const q = (document.getElementById('forumSearchInput').value || '').trim();
+        if (!q) return;
+        go({ q: q }, true);
+      });
+    }
+    const searchBackBtn = document.getElementById('forumSearchBackBtn');
+    if (searchBackBtn) searchBackBtn.addEventListener('click', function () { go({}, true); });
+
+    // ---------------- 1c) Oblíbená témata ----------------
+    function showFavoritesView(page) {
+      hideAllViews();
+      favoritesView.classList.remove('hidden');
+      renderBreadcrumb([{ label: isEn ? 'Favorite topics' : 'Oblíbená témata' }]);
+      const gateEl = document.getElementById('forumFavGate');
+      const bodyEl = document.getElementById('forumFavBody');
+      if (!user) {
+        gateEl.classList.remove('hidden');
+        bodyEl.classList.add('hidden');
+        return;
+      }
+      gateEl.classList.add('hidden');
+      bodyEl.classList.remove('hidden');
+      const resultsBox = document.getElementById('forumFavResults');
+      const emptyEl = document.getElementById('forumFavEmpty');
+      const pagerEl = document.getElementById('forumFavPager');
+      resultsBox.innerHTML = '<p class="text-sm text-slate-500">' + (isEn ? 'Loading…' : 'Načítám…') + '</p>';
+      emptyEl.classList.add('hidden');
+      pagerEl.innerHTML = '';
+      const offset = (page - 1) * PAGE_SIZE;
+      kpSbSelectAuth('forum_bookmarks', 'user_id=eq.' + user.id + '&select=topic_id&order=created_at.desc').then(function (bms) {
+        const total = bms.length;
+        const pageIds = bms.slice(offset, offset + PAGE_SIZE).map(function (b) { return b.topic_id; });
+        pagerEl.innerHTML = pagerHtml(total, page, PAGE_SIZE, { fav: true });
+        if (!pageIds.length) {
+          resultsBox.innerHTML = '';
+          emptyEl.classList.remove('hidden');
+          return;
+        }
+        return ensureCategoriesCache().then(function () {
+          return kpSbSelect('forum_topics', 'id=in.(' + pageIds.join(',') + ')&select=id,title,category_id,author_id,is_pinned,is_locked,topic_type,reply_count,last_post_at,created_at');
+        }).then(function (rows) {
+          const order = {}; pageIds.forEach(function (id, i) { order[id] = i; });
+          rows.sort(function (a, b) { return order[a.id] - order[b.id]; });
+          return ensureProfiles(rows.map(function (t) { return t.author_id; })).then(function () {
+            resultsBox.innerHTML = rows.map(searchResultRowHtml).join('');
+          });
+        });
+      }).catch(function () {
+        resultsBox.innerHTML = '<p class="text-sm text-rose-400">' + (isEn ? 'Could not load favorites.' : 'Oblíbená témata se nepodařilo načíst.') + '</p>';
+      });
+    }
+    const favBtn = document.getElementById('forumFavBtn');
+    if (favBtn) favBtn.addEventListener('click', function () { go({ fav: true }, true); });
+    const favBackBtn = document.getElementById('forumFavBackBtn');
+    if (favBackBtn) favBackBtn.addEventListener('click', function () { go({}, true); });
+    function setBookmarkIcon(active) {
+      const icon = document.getElementById('forumBookmarkIcon');
+      const btn = document.getElementById('forumBookmarkBtn');
+      if (!icon || !btn) return;
+      icon.className = active ? 'fa-solid fa-star' : 'fa-regular fa-star';
+      icon.classList.toggle('text-amber-400', active);
+      btn.title = active ? (isEn ? 'Remove from favorites' : 'Odebrat z oblíbených') : (isEn ? 'Add to favorites' : 'Přidat do oblíbených');
+    }
+    const bookmarkBtn = document.getElementById('forumBookmarkBtn');
+    if (bookmarkBtn) bookmarkBtn.addEventListener('click', function () {
+      if (!user || !currentTopic) return;
+      bookmarkBtn.disabled = true;
+      if (currentBookmarkId) {
+        kpSbDeleteAuth('forum_bookmarks', 'id=eq.' + currentBookmarkId).then(function (ok) {
+          bookmarkBtn.disabled = false;
+          if (ok) { currentBookmarkId = null; setBookmarkIcon(false); }
+        });
+      } else {
+        kpSbInsertAuth('forum_bookmarks', { topic_id: currentTopic.id, user_id: user.id }, false).then(function (row) {
+          bookmarkBtn.disabled = false;
+          if (row) { currentBookmarkId = row.id; setBookmarkIcon(true); }
+        });
+      }
+    });
+
     // ---------------- 2) Témata v kategorii ----------------
     async function getCategoryBySlug(slug) {
       if (categoriesCache && categoriesCache[slug]) return categoriesCache[slug];
@@ -4748,6 +4926,8 @@
         const sp = new URLSearchParams();
         if (attrs.cat) sp.set('cat', attrs.cat);
         if (attrs.topic) sp.set('topic', attrs.topic);
+        if (attrs.q) sp.set('q', attrs.q);
+        if (attrs.fav) sp.set('fav', '1');
         if (attrs.page && attrs.page > 1) sp.set('page', attrs.page);
         return 'forum.html' + (sp.toString() ? '?' + sp.toString() : '');
       };
@@ -4757,6 +4937,8 @@
         return '<a href="' + mkHref(p) + '" data-kp-nav' +
           (baseParams.cat ? ' data-cat="' + kpEscapeHtml(baseParams.cat) + '"' : '') +
           (baseParams.topic ? ' data-topic="' + kpEscapeHtml(baseParams.topic) + '"' : '') +
+          (baseParams.q ? ' data-q="' + kpEscapeHtml(baseParams.q) + '"' : '') +
+          (baseParams.fav ? ' data-fav="1"' : '') +
           ' data-page="' + p + '" class="px-3 py-1.5 rounded-lg transition ' +
           (opts.active ? 'bg-brand-accent text-white font-bold' : 'bg-slate-900 border border-brand-border text-slate-300 hover:text-white') +
           '">' + label + '</a>';
@@ -4974,6 +5156,7 @@
         '</div>' +
         '<div class="shrink-0 flex items-center gap-1">' +
         (canEdit ? '<button type="button" class="forum-edit-post-btn w-7 h-7 rounded-lg bg-slate-900 border border-brand-border text-slate-500 hover:text-brand-accent flex items-center justify-center transition" data-post="' + p.id + '" title="' + (isEn ? 'Edit' : 'Upravit') + '"><i class="fa-solid fa-pen text-[11px]"></i></button>' : '') +
+        (user ? '<button type="button" class="forum-quote-btn w-7 h-7 rounded-lg bg-slate-900 border border-brand-border text-slate-500 hover:text-brand-accent flex items-center justify-center transition" data-post="' + p.id + '" title="' + (isEn ? 'Quote' : 'Citovat') + '"><i class="fa-solid fa-quote-left text-[11px]"></i></button>' : '') +
         (user ? '<button type="button" class="forum-report-btn w-7 h-7 rounded-lg bg-slate-900 border border-brand-border text-slate-500 hover:text-amber-400 flex items-center justify-center transition" data-post="' + p.id + '" title="' + (isEn ? 'Report' : 'Nahlásit') + '"><i class="fa-solid fa-flag text-[11px]"></i></button>' : '') +
         (canEdit && !isOpening ? '<button type="button" class="forum-delete-post-btn w-7 h-7 rounded-lg bg-slate-900 border border-brand-border text-slate-500 hover:text-rose-400 flex items-center justify-center transition" data-post="' + p.id + '" title="' + (isEn ? 'Delete' : 'Smazat') + '"><i class="fa-solid fa-trash-can text-[11px]"></i></button>' : '') +
         '</div>' +
@@ -4997,11 +5180,32 @@
         });
       });
     }
+    function categoryOptionsFlatHtml(selectedId) {
+      if (!categoriesCache) return '';
+      const all = Object.keys(categoriesCache).map(function (k) { return categoriesCache[k]; });
+      const topLevel = all.filter(function (c) { return !c.parent_id; }).sort(function (a, b) { return a.sort_order - b.sort_order; });
+      const childrenByParent = {};
+      all.forEach(function (c) { if (c.parent_id) { (childrenByParent[c.parent_id] = childrenByParent[c.parent_id] || []).push(c); } });
+      let html = '';
+      topLevel.forEach(function (c) {
+        html += '<option value="' + c.id + '"' + (c.id === selectedId ? ' selected' : '') + '>' + kpEscapeHtml(catName(c)) + '</option>';
+        (childrenByParent[c.id] || []).forEach(function (ch) {
+          html += '<option value="' + ch.id + '"' + (ch.id === selectedId ? ' selected' : '') + '>— ' + kpEscapeHtml(catName(ch)) + '</option>';
+        });
+      });
+      return html;
+    }
     function updateAdminBar() {
       if (!currentTopic) return;
       topicAdminBar.classList.toggle('hidden', !isAdmin);
       setLabel('forumPinLabel', currentTopic.is_pinned ? 'Odepnout' : 'Připnout', currentTopic.is_pinned ? 'Unpin' : 'Pin');
       setLabel('forumLockLabel', currentTopic.is_locked ? 'Odemknout' : 'Uzamknout', currentTopic.is_locked ? 'Unlock' : 'Lock');
+      const moveSelect = document.getElementById('forumMoveTopicSelect');
+      if (moveSelect && isAdmin) {
+        ensureCategoriesCache().then(function () {
+          moveSelect.innerHTML = categoryOptionsFlatHtml(currentTopic.category_id);
+        });
+      }
     }
     function showTopicView(topicId, page) {
       hideAllViews();
@@ -5035,6 +5239,18 @@
             markVisited(topic.id);
             document.getElementById('forumTopicBackBtn').onclick = function () { go(cat ? { cat: cat.slug } : {}, true); };
             updateAdminBar();
+            const bookmarkBtnEl = document.getElementById('forumBookmarkBtn');
+            currentBookmarkId = null;
+            if (user && bookmarkBtnEl) {
+              bookmarkBtnEl.classList.remove('hidden');
+              setBookmarkIcon(false);
+              kpSbSelectAuth('forum_bookmarks', 'user_id=eq.' + user.id + '&topic_id=eq.' + topic.id + '&select=id').then(function (rows) {
+                currentBookmarkId = (rows && rows[0]) ? rows[0].id : null;
+                setBookmarkIcon(!!currentBookmarkId);
+              }).catch(function () {});
+            } else if (bookmarkBtnEl) {
+              bookmarkBtnEl.classList.add('hidden');
+            }
             loadPostsPage(topic.id, page);
             setupReplyArea(topic);
           });
@@ -5162,6 +5378,25 @@
         });
         return;
       }
+      const quoteBtn = ev.target.closest('.forum-quote-btn');
+      if (quoteBtn) {
+        if (!user) return;
+        const postId = quoteBtn.dataset.post;
+        const post = currentPosts.find(function (pp) { return pp.id === postId; });
+        if (!post) return;
+        const author = prof(post.author_id);
+        const raw = (post.body || '').trim();
+        const quoted = raw.length > 300 ? raw.slice(0, 300).trim() + '…' : raw;
+        const prefix = (isEn ? (author.username + ' wrote:') : (author.username + ' napsal(a):')) + '\n„' + quoted + '“\n\n';
+        const replyBox = document.getElementById('forumReplyBody');
+        if (replyBox) {
+          replyBox.value = prefix + replyBox.value;
+          replyBox.focus();
+          replyBox.setSelectionRange(replyBox.value.length, replyBox.value.length);
+          replyBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        return;
+      }
       const editBtn = ev.target.closest('.forum-edit-post-btn');
       if (editBtn) {
         const postId = editBtn.dataset.post;
@@ -5250,6 +5485,19 @@
       const cat = currentCategory;
       kpSbDeleteAuth('forum_topics', 'id=eq.' + currentTopic.id).then(function (ok) {
         if (ok) go(cat ? { cat: cat.slug } : {}, true);
+      });
+    });
+    const moveTopicBtn = document.getElementById('forumMoveTopicBtn');
+    if (moveTopicBtn) moveTopicBtn.addEventListener('click', function () {
+      if (!currentTopic || !isAdmin) return;
+      const sel = document.getElementById('forumMoveTopicSelect');
+      const newCatId = sel && sel.value;
+      if (!newCatId || newCatId === currentTopic.category_id) return;
+      if (!window.confirm(isEn ? 'Move this topic to the selected category?' : 'Opravdu přesunout toto téma do vybrané kategorie?')) return;
+      moveTopicBtn.disabled = true;
+      kpSbPatchAuth('forum_topics', 'id=eq.' + currentTopic.id, { category_id: newCatId }).then(function (ok) {
+        moveTopicBtn.disabled = false;
+        if (ok) showTopicView(currentTopic.id, paramsFromLocation().page || 1);
       });
     });
 

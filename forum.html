@@ -31,7 +31,7 @@
 <meta content="https://kryptoprofik.fun/og-image.png" name="twitter:image"/>
 <link href="manifest.json" rel="manifest"/>
 <link href="icon-192.png" rel="apple-touch-icon"/>
-<link href="style.css?v=v10" rel="stylesheet"/>
+<link href="style.css?v=v12" rel="stylesheet"/>
 </head>
 <body class="min-h-screen flex flex-col antialiased custom-scrollbar">
 <noscript><div class="bg-amber-500 text-black text-center text-sm font-semibold p-2" id="noscriptMsg">JavaScript is required / Tento web vyžaduje JavaScript.</div></noscript>
@@ -95,14 +95,44 @@
 
 <nav id="forumBreadcrumb" class="flex items-center gap-1.5 text-xs text-slate-500 mb-4 flex-wrap" aria-label="Drobečková navigace"></nav>
 
+<form id="forumSearchForm" class="flex items-center gap-2 mb-6">
+<input id="forumSearchInput" type="text" maxlength="140" placeholder="Hledat v tématech…" class="flex-1 bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none">
+<button type="submit" class="shrink-0 w-10 h-10 rounded-xl bg-brand-accent text-white flex items-center justify-center hover:opacity-90 transition"><i class="fa-solid fa-magnifying-glass"></i></button>
+<button type="button" id="forumFavBtn" class="shrink-0 px-3.5 h-10 rounded-xl bg-brand-card border border-brand-border text-slate-300 hover:text-amber-400 hover:border-amber-400/50 flex items-center gap-1.5 text-xs font-bold transition"><i class="fa-solid fa-star"></i><span id="forumFavBtnLabel">Oblíbená</span></button>
+</form>
+
+<!-- ===== 1c) OBLÍBENÁ TÉMATA ===== -->
+<div id="forumFavoritesView" class="hidden">
+<button type="button" id="forumFavBackBtn" class="text-xs text-slate-400 hover:text-white mb-3 transition"><i class="fa-solid fa-arrow-left mr-1.5"></i><span id="forumFavBackLabel">Zpět na kategorie</span></button>
+<h1 class="text-2xl font-black text-white mb-4" id="forumFavTitle">Oblíbená témata</h1>
+<div id="forumFavGate" class="hidden p-5 rounded-2xl bg-brand-card border border-brand-border text-center">
+<p class="text-slate-400 text-sm mb-3" id="forumFavLoginHint">Pro oblíbená témata se musíš nejdřív přihlásit.</p>
+<a href="ucet.html" class="inline-block px-5 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition"><i class="fa-solid fa-user mr-1.5"></i><span id="forumFavLoginBtn">Můj účet</span></a>
+</div>
+<div id="forumFavBody">
+<div id="forumFavResults" class="space-y-2"></div>
+<div id="forumFavEmpty" class="hidden text-sm text-slate-500 text-center py-8"><span id="forumFavEmptyLabel">Zatím nemáš žádná oblíbená témata. Klikni na hvězdičku u tématu, které tě zajímá.</span></div>
+<div id="forumFavPager" class="flex items-center justify-center gap-3 mt-5 text-xs"></div>
+</div>
+</div>
+
 <!-- ===== 1) PŘEHLED KATEGORIÍ ===== -->
 <div id="forumListView">
 <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
 <h1 class="text-3xl font-black text-white" id="forumTitle">Fórum</h1>
 <div id="forumStats" class="text-xs text-slate-500"></div>
 </div>
-<p class="text-slate-400 text-sm mb-8" id="forumIntro">Diskuze komunity KryptoProfík – ptej se, radí a sdílej zkušenosti s ostatními.</p>
+<p class="text-slate-400 text-sm mb-5" id="forumIntro">Diskuze komunity KryptoProfík – ptej se, radí a sdílej zkušenosti s ostatními.</p>
 <div id="forumCategories" class="space-y-2"></div>
+</div>
+
+<!-- ===== 1b) VÝSLEDKY HLEDÁNÍ ===== -->
+<div id="forumSearchView" class="hidden">
+<button type="button" id="forumSearchBackBtn" class="text-xs text-slate-400 hover:text-white mb-3 transition"><i class="fa-solid fa-arrow-left mr-1.5"></i><span id="forumSearchBackLabel">Zpět na kategorie</span></button>
+<h1 id="forumSearchTitle" class="text-2xl font-black text-white mb-4"></h1>
+<div id="forumSearchResults" class="space-y-2"></div>
+<div id="forumSearchEmpty" class="hidden text-sm text-slate-500 text-center py-8"><span id="forumSearchEmptyLabel">Nic jsme nenašli, zkus to jinak.</span></div>
+<div id="forumSearchPager" class="flex items-center justify-center gap-3 mt-5 text-xs"></div>
 </div>
 
 <!-- ===== 2) TÉMATA V KATEGORII ===== -->
@@ -167,7 +197,10 @@
 <button type="button" id="forumTopicBackBtn" class="text-xs text-slate-400 hover:text-white mb-3 transition"><i class="fa-solid fa-arrow-left mr-1.5"></i><span id="forumBackLabel3">Zpět na téma</span></button>
 <div class="flex items-start justify-between gap-3 mb-1 flex-wrap">
 <h1 id="forumTopicTitle" class="text-2xl font-black text-white flex items-center gap-2 flex-wrap"></h1>
+<button type="button" id="forumBookmarkBtn" class="hidden shrink-0 w-9 h-9 rounded-lg bg-slate-900 border border-brand-border text-slate-400 hover:text-amber-400 flex items-center justify-center transition"><i class="fa-regular fa-star" id="forumBookmarkIcon"></i></button>
 <div id="forumTopicAdminBar" class="hidden flex items-center gap-1.5 shrink-0">
+<select id="forumMoveTopicSelect" class="bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5 text-xs text-slate-300 focus:border-brand-accent outline-none max-w-[9.5rem]"></select>
+<button type="button" id="forumMoveTopicBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 hover:text-white text-xs font-bold transition"><i class="fa-solid fa-arrows-turn-right"></i></button>
 <button type="button" id="forumPinBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 hover:text-white text-xs font-bold transition"><i class="fa-solid fa-thumbtack mr-1"></i><span id="forumPinLabel">Připnout</span></button>
 <button type="button" id="forumLockBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 hover:text-white text-xs font-bold transition"><i class="fa-solid fa-lock mr-1"></i><span id="forumLockLabel">Uzamknout</span></button>
 <button type="button" id="forumDeleteTopicBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-400 hover:text-rose-400 text-xs font-bold transition"><i class="fa-solid fa-trash-can"></i></button>
@@ -276,6 +309,6 @@
 </footer>
 <script src="i18n-data.js"></script>
 <script src="qrcode.min.js"></script>
-<script src="app.js?v=v10"></script>
+<script src="app.js?v=v12"></script>
 </body>
 </html>
