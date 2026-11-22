@@ -4549,6 +4549,7 @@
     let categoriesCache = null; // slug -> category row (with _topics/_posts)
     let currentCategory = null;
     let currentTopic = null;
+    let currentPosts = []; // posty aktuálně zobrazeného tématu (pro úpravu vlastního příspěvku)
     let currentSort = 'activity';
     let pendingNewAttachment = null;
     let pendingReplyAttachment = null;
@@ -4967,11 +4968,12 @@
         '<span class="text-xs text-slate-500">' + fmtAgo(p.created_at) + '</span>' +
         (p.updated_at ? '<span class="text-[10px] text-slate-600 italic">(' + (isEn ? 'edited' : 'upraveno') + ')</span>' : '') +
         '</div>' +
-        '<div class="text-sm text-slate-200 mt-1.5 forum-post-body leading-relaxed">' + bodyHtml(p.body) + '</div>' +
+        '<div class="text-sm text-slate-200 mt-1.5 forum-post-body leading-relaxed" data-post-body="' + p.id + '">' + bodyHtml(p.body) + '</div>' +
         attachmentHtml(p) +
         reactionsHtml(p) +
         '</div>' +
         '<div class="shrink-0 flex items-center gap-1">' +
+        (canEdit ? '<button type="button" class="forum-edit-post-btn w-7 h-7 rounded-lg bg-slate-900 border border-brand-border text-slate-500 hover:text-brand-accent flex items-center justify-center transition" data-post="' + p.id + '" title="' + (isEn ? 'Edit' : 'Upravit') + '"><i class="fa-solid fa-pen text-[11px]"></i></button>' : '') +
         (user ? '<button type="button" class="forum-report-btn w-7 h-7 rounded-lg bg-slate-900 border border-brand-border text-slate-500 hover:text-amber-400 flex items-center justify-center transition" data-post="' + p.id + '" title="' + (isEn ? 'Report' : 'Nahlásit') + '"><i class="fa-solid fa-flag text-[11px]"></i></button>' : '') +
         (canEdit && !isOpening ? '<button type="button" class="forum-delete-post-btn w-7 h-7 rounded-lg bg-slate-900 border border-brand-border text-slate-500 hover:text-rose-400 flex items-center justify-center transition" data-post="' + p.id + '" title="' + (isEn ? 'Delete' : 'Smazat') + '"><i class="fa-solid fa-trash-can text-[11px]"></i></button>' : '') +
         '</div>' +
@@ -5054,6 +5056,7 @@
       ensureProfiles(ids).then(function () {
         return loadReactionsFor(rows);
       }).then(function () {
+        currentPosts = rows;
         postsBox.innerHTML = rows.map(function (p) { return postCardHtml(p, p.is_opening); }).join('');
         topicPagerEl.innerHTML = pagerHtml(total, page, POST_PAGE_SIZE, { topic: topicId });
       });
@@ -5159,6 +5162,51 @@
         });
         return;
       }
+      const editBtn = ev.target.closest('.forum-edit-post-btn');
+      if (editBtn) {
+        const postId = editBtn.dataset.post;
+        const bodyEl = document.querySelector('[data-post-body="' + postId + '"]');
+        const post = currentPosts.find(function (pp) { return pp.id === postId; });
+        if (!bodyEl || !post) return;
+        bodyEl.innerHTML =
+          '<textarea class="forum-edit-textarea w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-white text-sm focus:border-brand-accent outline-none" rows="4">' + kpEscapeHtml(post.body) + '</textarea>' +
+          '<div class="flex items-center gap-2 mt-2">' +
+          '<button type="button" class="forum-edit-save-btn px-3 py-1.5 rounded-lg bg-brand-accent text-white text-xs font-bold hover:opacity-90 transition" data-post="' + postId + '">' + (isEn ? 'Save' : 'Uložit') + '</button>' +
+          '<button type="button" class="forum-edit-cancel-btn px-3 py-1.5 rounded-lg bg-slate-800 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition" data-post="' + postId + '">' + (isEn ? 'Cancel' : 'Zrušit') + '</button>' +
+          '<span class="forum-edit-error text-xs text-rose-400 hidden"></span>' +
+          '</div>';
+        const ta = bodyEl.querySelector('.forum-edit-textarea');
+        if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
+        return;
+      }
+      const editCancelBtn = ev.target.closest('.forum-edit-cancel-btn');
+      if (editCancelBtn) {
+        if (currentTopic) loadPostsPage(currentTopic.id, (paramsFromLocation().page || 1));
+        return;
+      }
+      const editSaveBtn = ev.target.closest('.forum-edit-save-btn');
+      if (editSaveBtn) {
+        const postId = editSaveBtn.dataset.post;
+        const bodyEl = document.querySelector('[data-post-body="' + postId + '"]');
+        if (!bodyEl) return;
+        const ta = bodyEl.querySelector('.forum-edit-textarea');
+        const errEl = bodyEl.querySelector('.forum-edit-error');
+        const newBody = ta ? ta.value.trim() : '';
+        if (!newBody) {
+          if (errEl) { errEl.textContent = isEn ? 'Write something first.' : 'Napiš nejdřív nějaký text.'; errEl.classList.remove('hidden'); }
+          return;
+        }
+        editSaveBtn.disabled = true;
+        kpSbPatchAuth('forum_posts', 'id=eq.' + postId, { body: newBody, updated_at: new Date().toISOString() }).then(function (ok) {
+          if (ok && currentTopic) {
+            loadPostsPage(currentTopic.id, (paramsFromLocation().page || 1));
+          } else {
+            editSaveBtn.disabled = false;
+            if (errEl) { errEl.textContent = isEn ? 'Save failed.' : 'Uložení se nepovedlo.'; errEl.classList.remove('hidden'); }
+          }
+        });
+        return;
+      }
       const reportBtn = ev.target.closest('.forum-report-btn');
       if (reportBtn) {
         reportTargetPostId = reportBtn.dataset.post;
@@ -5226,35 +5274,49 @@
         else sessionStorage.removeItem('kp_admin_token');
       } catch (e) {}
     }
-    function authHeaders(extra) {
+    // Pokud se admin už přihlásil na hlavním webu (window.kpAuth), použijeme rovnou
+    // tu session -- nemá smysl ho nutit přihlašovat se do moderace ještě jednou.
+    // Ruční přihlášení (kp_admin_token) zůstává jako záloha, kdyby na webu
+    // přihlášený nebyl (např. otevře moderace.html rovnou v novém prohlížeči).
+    async function authHeaders(extra) {
       const token = getToken();
+      if (token) {
+        return Object.assign({
+          'apikey': KP_SB_KEY,
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json',
+        }, extra || {});
+      }
+      if (window.kpAuth && window.kpAuth.currentUser()) {
+        return window.kpAuth.authHeaders(extra);
+      }
       return Object.assign({
         'apikey': KP_SB_KEY,
-        'Authorization': 'Bearer ' + (token || KP_SB_KEY),
+        'Authorization': 'Bearer ' + KP_SB_KEY,
         'Content-Type': 'application/json',
       }, extra || {});
     }
     async function authSelect(table, query) {
-      const res = await fetch(KP_SB_URL + '/rest/v1/' + table + (query ? '?' + query : ''), { headers: authHeaders() });
+      const res = await fetch(KP_SB_URL + '/rest/v1/' + table + (query ? '?' + query : ''), { headers: await authHeaders() });
       if (!res.ok) throw new Error('select failed: ' + res.status);
       return res.json();
     }
     async function authPatch(table, query, data) {
       const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, {
         method: 'PATCH',
-        headers: authHeaders({ 'Prefer': 'return=minimal' }),
+        headers: await authHeaders({ 'Prefer': 'return=minimal' }),
         body: JSON.stringify(data),
       });
       return res.ok;
     }
     async function authDelete(table, query) {
-      const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, { method: 'DELETE', headers: authHeaders() });
+      const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, { method: 'DELETE', headers: await authHeaders() });
       return res.ok;
     }
     async function authInsert(table, row) {
       const res = await fetch(KP_SB_URL + '/rest/v1/' + table, {
         method: 'POST',
-        headers: authHeaders({ 'Prefer': 'return=representation' }),
+        headers: await authHeaders({ 'Prefer': 'return=representation' }),
         body: JSON.stringify(row),
       });
       if (!res.ok) return null;
@@ -5517,7 +5579,18 @@
     }
 
     const logoutBtn = document.getElementById('modLogout');
-    if (logoutBtn) logoutBtn.addEventListener('click', function () { setToken(null); showLogin(); });
+    if (logoutBtn) logoutBtn.addEventListener('click', function () {
+      const hadManualToken = !!getToken();
+      setToken(null);
+      // Pokud jsme byli přihlášení automaticky přes hlavní web (bez ručního tokenu),
+      // "Odhlásit" musí odhlásit i tu session -- jinak by nás po reloadu hned
+      // zase automaticky přihlásilo zpátky.
+      if (!hadManualToken && window.kpAuth && window.kpAuth.currentUser()) {
+        window.kpAuth.signOut().then(function () { location.reload(); });
+        return;
+      }
+      showLogin();
+    });
 
     const listWrap = document.getElementById('modList');
     if (listWrap) {
@@ -5654,7 +5727,20 @@
       });
     }
 
-    if (getToken()) { showDash(); loadTab('pending'); refreshForumReportsCount(); }
+    function enterDash() { showDash(); loadTab(activeTab); refreshForumReportsCount(); }
+
+    // Zkusíme se přihlásit automaticky: ručně uložený token (starší relace),
+    // nebo rovnou session z hlavního webu -- pokud ten účet je admin.
+    if (getToken()) {
+      enterDash();
+    } else if (window.kpAuth && window.kpAuth.currentUser()) {
+      window.kpAuth.getMyProfile().then(function (profile) {
+        if (profile && profile.is_admin) enterDash();
+        else showLogin();
+      }).catch(function () { showLogin(); });
+    } else {
+      showLogin();
+    }
   })();
 
   /* ================= "Můj postup" (progress) page ================= */
