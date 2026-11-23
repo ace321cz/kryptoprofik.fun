@@ -1841,7 +1841,7 @@
         '<i class="fa-solid fa-bell text-sm"></i>' +
         '<span id="headerNotifBadge" class="hidden absolute -top-1 -right-1 min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-rose-500 text-white text-[9px] font-black flex items-center justify-center">0</span>' +
         '</button>' +
-        '<div id="headerNotifMenu" class="hidden absolute right-0 mt-2 w-72 sm:w-80 max-h-96 overflow-y-auto rounded-xl bg-brand-card border border-brand-border shadow-xl z-[60]">' +
+        '<div id="headerNotifMenu" class="hidden fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 w-auto sm:w-80 max-w-full max-h-[70vh] sm:max-h-96 overflow-y-auto rounded-xl bg-brand-card border border-brand-border shadow-xl z-[60]">' +
         '<div class="px-4 py-2.5 border-b border-brand-border flex items-center justify-between">' +
         '<span class="text-xs font-black text-white">' + (isEn ? 'Notifications' : 'Upozornění') + '</span>' +
         '<button type="button" id="headerNotifMarkAll" class="text-[10px] font-bold text-brand-accent hover:underline">' + (isEn ? 'Mark all read' : 'Vše přečteno') + '</button>' +
@@ -1857,7 +1857,7 @@
         '<i class="fa-solid fa-chevron-down text-[9px] text-slate-400"></i>' +
         '<span id="headerDotBadge" class="hidden absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 border-2 border-[#07090e]"></span>' +
         '</button>' +
-        '<div id="headerAuthMenu" class="hidden absolute right-0 mt-2 w-52 rounded-xl bg-brand-card border border-brand-border shadow-xl overflow-hidden z-[60]">' +
+        '<div id="headerAuthMenu" class="hidden fixed inset-x-3 top-16 sm:absolute sm:inset-x-auto sm:top-auto sm:right-0 sm:mt-2 w-auto sm:w-52 max-w-full rounded-xl bg-brand-card border border-brand-border shadow-xl overflow-hidden z-[60]">' +
         '<a href="ucet.html" class="block px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-user mr-2 w-4"></i>' + (isEn ? 'My profile' : 'Můj profil') + '</a>' +
         '<a href="zpravy.html" class="flex items-center px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-envelope mr-2 w-4"></i>' + (isEn ? 'Messages' : 'Zprávy') + '<span id="headerUnreadBadge" class="hidden ml-auto min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center">0</span></a>' +
         '<a href="clenove.html" class="block px-4 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:text-white transition"><i class="fa-solid fa-users mr-2 w-4"></i>' + (isEn ? 'Members' : 'Členové') + '</a>' +
