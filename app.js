@@ -1826,17 +1826,16 @@
     const r = btn.getBoundingClientRect();
     menu.style.position = 'fixed';
     menu.style.maxHeight = (window.innerHeight - r.bottom - 16) + 'px';
-    if (vw < 640) {
-      menu.style.left = '12px';
-      menu.style.right = '12px';
-      menu.style.width = 'auto';
-      menu.style.top = Math.max(8, r.bottom + 8) + 'px';
-    } else {
-      menu.style.left = 'auto';
-      menu.style.width = desktopWidth + 'px';
-      menu.style.right = Math.max(8, vw - r.right) + 'px';
-      menu.style.top = Math.max(8, r.bottom + 8) + 'px';
-    }
+    // Na mobilu i na PC chceme kompaktní kartu zarovnanou k pravému okraji
+    // tlačítka (ne nataženou přes celou šířku obrazovky) - jen omezíme
+    // maximální šířku, ať se vždy vejde i na úzký displej.
+    menu.style.left = 'auto';
+    const maxW = vw - 16;
+    const width = Math.min(desktopWidth, maxW);
+    menu.style.width = width + 'px';
+    const right = Math.max(8, Math.min(vw - r.right, vw - width - 8));
+    menu.style.right = right + 'px';
+    menu.style.top = Math.max(8, r.bottom + 8) + 'px';
   }
   function kpMountDropdown(id) {
     // smaž případný starý přesunutý kus z předchozího vykreslení hlavičky, ať
@@ -1849,6 +1848,56 @@
     document.body.appendChild(el);
     return el;
   }
+
+  /* ================= Newsletter (přihlášení k odběru) ================= */
+  (function newsletterWidget() {
+    const form = document.getElementById('kpNewsletterForm');
+    if (!form) return;
+    const isEn = document.documentElement.lang === 'en';
+    const titleEl = document.getElementById('kpNewsletterTitle');
+    const descEl = document.getElementById('kpNewsletterDesc');
+    const labelEl = document.getElementById('kpNewsletterLabel');
+    const emailEl = document.getElementById('kpNewsletterEmail');
+    const submitEl = document.getElementById('kpNewsletterSubmit');
+    const msgEl = document.getElementById('kpNewsletterMsg');
+    if (titleEl) titleEl.textContent = isEn ? "Don't miss new lessons" : 'Nenech si ujít nové lekce';
+    if (descEl) descEl.textContent = isEn ? 'Occasional email, no spam. Unsubscribe with one click.' : 'Občasný e-mail, žádný spam. Odhlásíš se jedním klikem.';
+    if (labelEl) labelEl.textContent = isEn ? 'Email' : 'E-mail';
+    if (emailEl) emailEl.placeholder = isEn ? 'you@email.com' : 'tvuj@email.cz';
+    if (submitEl) submitEl.textContent = isEn ? 'Subscribe' : 'Odebírat';
+    function showMsg(text, ok) {
+      if (!msgEl) return;
+      msgEl.textContent = text;
+      msgEl.className = 'text-xs font-semibold w-full sm:w-auto text-center sm:text-left ' + (ok ? 'text-emerald-400' : 'text-rose-400');
+      msgEl.classList.remove('hidden');
+    }
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      const email = (emailEl.value || '').trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        showMsg(isEn ? 'Please enter a valid email.' : 'Zadej prosím platný e-mail.', false);
+        return;
+      }
+      submitEl.disabled = true;
+      kpSbInsert('newsletter_subscribers', { email: email, lang: isEn ? 'en' : 'cs' }, true)
+        .then(function () {
+          showMsg(isEn ? "Thanks! We'll be in touch." : 'Díky! Ozveme se.', true);
+          form.reset();
+        })
+        .catch(function (e) {
+          // 409 = duplicitní e-mail (unique constraint) -- bereme to jako úspěch,
+          // ať uživatel nevidí chybu jen proto, že se už jednou přihlásil.
+          const msg = String((e && e.message) || '');
+          if (msg.indexOf('409') !== -1) {
+            showMsg(isEn ? 'You are already subscribed.' : 'Tenhle e-mail už je přihlášený.', true);
+            form.reset();
+          } else {
+            showMsg(isEn ? 'Could not subscribe, try again later.' : 'Přihlášení se nepodařilo, zkus to prosím později.', false);
+          }
+        })
+        .finally(function () { submitEl.disabled = false; });
+    });
+  })();
 
   /* ================= Hlavička: vidět, jestli jsem přihlášen(a) ================= */
   (function headerAuthWidget() {
@@ -2132,7 +2181,41 @@
         kpHighlight(isEn ? e.en : e.cs, q) + ' <span class="text-slate-500">&middot; ' + kpEscapeHtml(e.chap) + '</span></a>').join('') + '</div></div>';
     box.classList.remove('hidden');
   }
-  window.__kpRenderGlobalResults = renderGlobalResults;
+  /* Fórum hledáme zvlášť (je to dotaz na server, ne lokální index), s malým
+     zpožděním (debounce), ať nepálíme dotaz při každém stisku klávesy. Na
+     samotné stránce fóra má smysl jen jeho vlastní vyhledávání v tématech,
+     tak tady globální fórový blok nezobrazujeme. */
+  let globalForumSearchTimer = null;
+  let globalForumSearchToken = 0;
+  function renderGlobalForumResults(q) {
+    const box = document.getElementById('globalForumResults');
+    if (!box) return;
+    if (CURRENT_PAGE === 'forum') { box.innerHTML = ''; box.classList.add('hidden'); return; }
+    clearTimeout(globalForumSearchTimer);
+    const myToken = ++globalForumSearchToken;
+    const cleaned = String(q || '').replace(/[*%,()]/g, ' ').replace(/\s+/g, ' ').trim();
+    if (cleaned.length < 2 || typeof kpSbSelect !== 'function') { box.innerHTML = ''; box.classList.add('hidden'); return; }
+    globalForumSearchTimer = setTimeout(function () {
+      const isEn = document.documentElement.lang === 'en';
+      kpSbSelect('forum_topics', 'title=ilike.*' + encodeURIComponent(cleaned) + '*&select=id,title,created_at&order=created_at.desc&limit=6')
+        .then(function (rows) {
+          if (myToken !== globalForumSearchToken) return;
+          if (!rows || !rows.length) { box.innerHTML = ''; box.classList.add('hidden'); return; }
+          const label = isEn ? 'Also found in the forum:' : 'Nalezeno i na fóru:';
+          box.innerHTML = '<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">' +
+            '<p class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2"><i class="fa-solid fa-comments mr-1"></i>' + label + '</p>' +
+            '<div class="flex flex-wrap gap-2">' + rows.map(function (t) {
+              return '<a href="forum.html?topic=' + encodeURIComponent(t.id) + '" class="px-3 py-1.5 rounded-full bg-brand-card border border-brand-border hover:border-brand-accent text-xs font-semibold text-slate-200 transition">' +
+                kpHighlight(t.title, q) + '</a>';
+            }).join('') + '</div></div>';
+          box.classList.remove('hidden');
+        }).catch(function () {
+          if (myToken !== globalForumSearchToken) return;
+          box.innerHTML = ''; box.classList.add('hidden');
+        });
+    }, 300);
+  }
+  window.__kpRenderGlobalResults = function (q) { renderGlobalResults(q); renderGlobalForumResults(q); };
   new MutationObserver(() => { const si2 = document.getElementById('searchInput'); if (si2 && si2.value) renderGlobalResults(si2.value.toLowerCase().trim()); })
     .observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 
@@ -4552,6 +4635,9 @@
     const isEn = document.documentElement.lang === 'en';
     const onlineBox = document.getElementById('membersOnline');
     const boardBox = document.getElementById('membersLeaderboard');
+    const activityBox = document.getElementById('membersActivityBoard');
+    const activityTitleEl = document.getElementById('membersActivityTitle');
+    if (activityTitleEl) activityTitleEl.innerHTML = '<i class="fa-solid fa-trophy mr-1.5"></i>' + (isEn ? 'Forum activity leaderboard' : 'Žebříček aktivity ve fóru');
     const lastSeenBox = document.getElementById('membersLastSeen');
     const ONLINE_WINDOW_MS = 5 * 60 * 1000;
     const lastSeenTitleEl = document.getElementById('membersLastSeenTitle');
@@ -4628,6 +4714,35 @@
     }).catch(function () {
       boardBox.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'Could not load members.' : 'Členy se nepodařilo načíst.') + '</p>';
     });
+
+    // ---------------- Žebříček aktivity ve fóru (kp_forum_leaderboard RPC) ----------------
+    if (activityBox) {
+      activityBox.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'Loading…' : 'Načítám…') + '</p>';
+      kpRpc('kp_forum_leaderboard').then(function (rows) {
+        if (!rows || !rows.length) {
+          activityBox.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'No forum activity yet.' : 'Zatím žádná aktivita ve fóru.') + '</p>';
+          return;
+        }
+        const medal = ['🥇', '🥈', '🥉'];
+        activityBox.innerHTML = rows.map(function (p, i) {
+          const adminBadge = p.is_admin ? ' <span class="text-[9px] font-black text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded">ADMIN</span>' : '';
+          const statsLabel = isEn
+            ? (p.topic_count + ' topics · ' + p.post_count + ' posts')
+            : (p.topic_count + ' témat · ' + p.post_count + ' příspěvků');
+          return '<div class="flex items-center gap-3 p-3 rounded-2xl bg-brand-card border ' + (i < 3 ? 'border-brand-purple/50' : 'border-brand-border') + '">' +
+            '<span class="w-6 text-center text-sm">' + (medal[i] || ('<span class="text-xs font-mono text-slate-500">#' + (i + 1) + '</span>')) + '</span>' +
+            '<a href="ucet.html?u=' + encodeURIComponent(p.username) + '" class="flex items-center gap-3 min-w-0 flex-1 hover:opacity-80 transition">' +
+            avatarHtml(p) +
+            '<div class="min-w-0 flex-1"><div class="font-bold text-white text-sm truncate">' + kpEscapeHtml(p.username) + adminBadge + '</div>' +
+            '<div class="text-[11px] text-slate-500">' + statsLabel + '</div></div>' +
+            '</a>' +
+            '<span class="text-xs font-black text-brand-purple shrink-0">' + p.score + ' ' + (isEn ? 'pts' : 'b.') + '</span>' +
+            '</div>';
+        }).join('');
+      }).catch(function () {
+        activityBox.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'Could not load the leaderboard.' : 'Žebříček se nepodařilo načíst.') + '</p>';
+      });
+    }
   })();
 
   /* ================= Fórum ================= */
