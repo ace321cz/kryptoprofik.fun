@@ -6080,6 +6080,64 @@
       )).join('');
     }
 
+    function renderNewsletter(rows) {
+      const list = document.getElementById('modList');
+      const countEl = document.getElementById('modNewsletterCount');
+      if (countEl) countEl.textContent = rows.length ? '(' + rows.length + ')' : '';
+      const emails = rows.map(function (r) { return r.email; });
+      const composerHtml =
+        '<div class="p-4 rounded-2xl bg-brand-card border border-brand-border mb-4 space-y-3">' +
+        '<div class="flex items-center justify-between gap-2 flex-wrap">' +
+        '<p class="text-sm font-bold text-white"><i class="fa-solid fa-paper-plane mr-1.5 text-brand-accent"></i>Napsat newsletter (' + emails.length + ' odběratelů)</p>' +
+        '<div class="flex gap-2">' +
+        '<button type="button" id="modNlCopyEmails" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition"><i class="fa-regular fa-copy mr-1"></i>Kopírovat e-maily</button>' +
+        '<button type="button" id="modNlDownloadCsv" class="px-3 py-1.5 rounded-lg bg-slate-900 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition"><i class="fa-solid fa-file-csv mr-1"></i>Stáhnout CSV</button>' +
+        '</div></div>' +
+        '<input type="text" id="modNlSubject" placeholder="Předmět e-mailu" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none">' +
+        '<textarea id="modNlBody" rows="6" placeholder="Text newsletteru…" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none"></textarea>' +
+        '<div class="flex items-center justify-between gap-2 flex-wrap">' +
+        '<p class="text-[11px] text-slate-500 max-w-md">Tlačítko otevře tvůj e-mailový klient (Gmail, Outlook…) s předvyplněným předmětem, textem a všemi e-maily ve skryté kopii (BCC) – odešleš přímo odtud, bez třetí strany.</p>' +
+        '<button type="button" id="modNlSend" class="px-4 py-2.5 rounded-xl bg-brand-accent text-white text-sm font-bold hover:opacity-90 transition shrink-0"' + (emails.length ? '' : ' disabled') + '><i class="fa-solid fa-envelope mr-1.5"></i>Otevřít e-mail pro všechny</button>' +
+        '</div></div>';
+      if (!rows.length) {
+        list.innerHTML = composerHtml + '<div class="text-xs text-slate-500 italic">Zatím žádní odběratelé.</div>';
+      } else {
+        list.innerHTML = composerHtml + '<div class="space-y-2">' + rows.map(function (r) {
+          return '<div class="p-3 rounded-xl bg-brand-card border border-brand-border flex items-center justify-between gap-3 flex-wrap">' +
+            '<span class="font-mono text-sm text-white">' + kpEscapeHtml(r.email) + '</span>' +
+            '<span class="text-[10px] text-slate-500">' + fmtDateTime(r.created_at) + '</span>' +
+            '</div>';
+        }).join('') + '</div>';
+      }
+      const copyBtn = document.getElementById('modNlCopyEmails');
+      if (copyBtn) copyBtn.addEventListener('click', function () {
+        navigator.clipboard.writeText(emails.join(', ')).then(function () {
+          copyBtn.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Zkopírováno!';
+          setTimeout(function () { copyBtn.innerHTML = '<i class="fa-regular fa-copy mr-1"></i>Kopírovat e-maily'; }, 1800);
+        }).catch(function () {});
+      });
+      const csvBtn = document.getElementById('modNlDownloadCsv');
+      if (csvBtn) csvBtn.addEventListener('click', function () {
+        const csv = 'email,lang,created_at\n' + rows.map(function (r) {
+          return [r.email, r.lang || '', r.created_at].map(function (v) { return '"' + String(v || '').replace(/"/g, '""') + '"'; }).join(',');
+        }).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'newsletter-odberatele.csv';
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+      });
+      const sendBtn = document.getElementById('modNlSend');
+      if (sendBtn) sendBtn.addEventListener('click', function () {
+        const subject = (document.getElementById('modNlSubject').value || '').trim();
+        const body = (document.getElementById('modNlBody').value || '').trim();
+        if (!subject || !body) { alert('Vyplň prosím předmět i text zprávy.'); return; }
+        const mailto = 'mailto:?bcc=' + encodeURIComponent(emails.join(',')) + '&subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+        window.location.href = mailto;
+      });
+    }
+
     async function refreshPendingCount() {
       try {
         const rows = await authSelect('comments', 'approved=eq.false&select=id');
@@ -6250,6 +6308,9 @@
         } else if (tab === 'forum-cats') {
           const cats = await authSelect('forum_categories', 'select=*&order=sort_order.asc');
           renderForumCategories(cats);
+        } else if (tab === 'newsletter') {
+          const subs = await authSelect('newsletter_subscribers', 'select=email,lang,created_at&order=created_at.desc');
+          renderNewsletter(subs);
         }
       } catch (e) {
         list.innerHTML = '<div class="text-xs text-rose-400">Nepodařilo se načíst data. Zkus se prosím znovu přihlásit.</div>';
