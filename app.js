@@ -1920,7 +1920,7 @@
       const avatarHtml = (profile && profile.avatar_url)
         ? '<img src="' + kpEscapeHtml(profile.avatar_url) + '" class="w-6 h-6 rounded-full object-cover bg-slate-800">'
         : '<span class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 text-[10px]"><i class="fa-solid fa-user"></i></span>';
-      box.innerHTML = '<div class="relative flex items-center gap-1.5">' +
+      box.innerHTML = '<div class="relative flex items-center gap-1">' +
         '<div class="relative">' +
         '<button type="button" id="headerNotifBtn" aria-haspopup="true" aria-expanded="false" aria-label="' + (isEn ? 'Notifications' : 'Upozornění') + '" class="relative w-8 h-8 rounded-lg border border-brand-border bg-brand-card/80 text-slate-300 hover:text-white flex items-center justify-center transition">' +
         '<i class="fa-solid fa-bell text-sm"></i>' +
@@ -1934,7 +1934,7 @@
         '<div id="headerNotifList" class="divide-y divide-brand-border"><div class="px-4 py-6 text-center text-xs text-slate-500">' + (isEn ? 'Loading…' : 'Načítám…') + '</div></div>' +
         '</div></div>' +
         '<div class="relative">' +
-        '<button type="button" id="headerAuthBtn" aria-haspopup="true" aria-expanded="false" class="relative flex items-center gap-1.5 pl-1 pr-2 sm:pr-3 py-1 rounded-full bg-brand-card border ' +
+        '<button type="button" id="headerAuthBtn" aria-haspopup="true" aria-expanded="false" class="relative flex items-center gap-1 pl-1 pr-1.5 sm:pr-3 py-1 rounded-full bg-brand-card border ' +
         (isAdmin ? 'border-amber-400 ring-2 ring-amber-400' : 'border-brand-border') +
         ' hover:border-brand-accent transition whitespace-nowrap">' + avatarHtml +
         '<span class="hidden min-[480px]:inline text-xs font-bold text-white max-w-[9rem] truncate">' + kpEscapeHtml(label) + '</span>' +
