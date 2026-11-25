@@ -912,6 +912,9 @@
       const head = child(art, 'header'); if (!head) return;
       head.classList.remove('mb-4'); head.classList.add('cursor-pointer');
       if (head.children[0]) head.children[0].classList.add('shrink-0');
+      // Bez min-w-0/flex-1 se dlouhý název modulu na mobilu nezmenší a tlačítko
+      // (šipka) se tím vytlačí mimo obrazovku - stejný problém jako v hlavičce.
+      if (head.children[1]) head.children[1].classList.add('min-w-0', 'flex-1');
       const body = document.createElement('div');
       body.className = 'module-body mt-6'; body.id = m.id + '-body';
       while (head.nextSibling) body.appendChild(head.nextSibling);
@@ -1897,6 +1900,97 @@
         })
         .finally(function () { submitEl.disabled = false; });
     });
+  })();
+
+  /* ================= Novinky na hlavní stránce =================
+     Krátké aktuality o tom, co je na webu nového -- píšou se přímo tady
+     v sekci (ne skrz Moderaci), aby to adminovi nezabralo víc než pár vteřin.
+     Čtou všichni (i nepřihlášení), psát/mazat může jen admin (RLS). */
+  (function siteNewsWidget() {
+    const listEl = document.getElementById('siteNewsList');
+    if (!listEl) return;
+    const adminBox = document.getElementById('siteNewsAdminBox');
+    const form = document.getElementById('siteNewsForm');
+    const titleInput = document.getElementById('siteNewsTitleInput');
+    const bodyInput = document.getElementById('siteNewsBodyInput');
+    const submitBtn = document.getElementById('siteNewsSubmitBtn');
+    const msgEl = document.getElementById('siteNewsFormMsg');
+    let isAdmin = false;
+
+    function dict() { return (window.I18N && window.I18N[document.documentElement.lang]) || {}; }
+    function t(k, fallback) { const v = dict()[k]; return v != null ? v : fallback; }
+
+    function fmtDate(iso) {
+      try {
+        const d = new Date(iso);
+        const locale = document.documentElement.lang === 'en' ? 'en-GB' : 'cs-CZ';
+        return d.toLocaleDateString(locale, { day: 'numeric', month: 'numeric', year: 'numeric' });
+      } catch (e) { return ''; }
+    }
+
+    function render(rows) {
+      if (!rows || !rows.length) {
+        listEl.innerHTML = '<p class="text-xs text-slate-500 col-span-full">' + t('kNewsEmpty', 'Zatím žádné novinky.') + '</p>';
+        return;
+      }
+      listEl.innerHTML = rows.map(function (r) {
+        return '<div class="relative rounded-2xl border border-brand-border bg-brand-card p-4">' +
+          (isAdmin ? '<button type="button" class="siteNewsDeleteBtn absolute top-2 right-2 w-6 h-6 rounded-lg bg-slate-800 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition" data-id="' + r.id + '" aria-label="delete"><i class="fa-solid fa-trash text-[10px]"></i></button>' : '') +
+          '<div class="text-[10px] text-slate-500 mb-1">' + fmtDate(r.created_at) + '</div>' +
+          '<h3 class="text-sm font-black text-white mb-1 pr-6">' + kpEscapeHtml(r.title) + '</h3>' +
+          '<p class="text-xs text-slate-400 leading-relaxed whitespace-pre-line">' + kpEscapeHtml(r.body) + '</p>' +
+          '</div>';
+      }).join('');
+      listEl.querySelectorAll('.siteNewsDeleteBtn').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+          if (!confirm(t('kNewsDeleteConfirm', 'Opravdu smazat tuhle novinku?'))) return;
+          const id = btn.getAttribute('data-id');
+          try { await kpSbDeleteAuth('site_news', 'id=eq.' + id); } catch (e) {}
+          load();
+        });
+      });
+    }
+
+    function load() {
+      kpSbSelect('site_news', 'select=id,title,body,created_at&order=created_at.desc&limit=6')
+        .then(render)
+        .catch(function () { listEl.innerHTML = ''; });
+    }
+
+    load();
+
+    const user = window.kpAuth && window.kpAuth.currentUser();
+    if (user) {
+      kpSbSelectAuth('profiles', 'id=eq.' + user.id + '&select=is_admin').then(function (rows) {
+        isAdmin = !!(rows && rows[0] && rows[0].is_admin);
+        if (isAdmin && adminBox) adminBox.classList.remove('hidden');
+        load();
+      }).catch(function () {});
+    }
+
+    if (form) {
+      form.addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        const title = (titleInput.value || '').trim();
+        const body = (bodyInput.value || '').trim();
+        if (!title || !body) return;
+        submitBtn.disabled = true;
+        const origLabel = submitBtn.textContent;
+        submitBtn.textContent = t('kNewsPosting', 'Přidávám…');
+        if (msgEl) msgEl.textContent = '';
+        try {
+          await kpSbInsertAuth('site_news', { title: title, body: body }, true);
+          titleInput.value = '';
+          bodyInput.value = '';
+          load();
+        } catch (err) {
+          if (msgEl) msgEl.textContent = document.documentElement.lang === 'en' ? 'Something went wrong, try again.' : 'Něco se nepovedlo, zkus to znovu.';
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = origLabel;
+        }
+      });
+    }
   })();
 
   /* ================= Hlavička: vidět, jestli jsem přihlášen(a) ================= */
