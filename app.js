@@ -1667,7 +1667,7 @@
     function hide(fragHtml) { stash.push(fragHtml); return '\u0000' + (stash.length - 1) + '\u0000'; }
     if (opts.images) {
       html = html.replace(/!\[([^\]\n]*)\]\((https?:\/\/[^\s)]+)\)/g, function (m, alt, url) {
-        return hide('<img src="' + url + '" alt="' + alt + '" class="max-w-full rounded-xl mt-1.5 mb-1.5 block">');
+        return hide('<img src="' + url + '" alt="' + alt + '" loading="lazy" decoding="async" class="max-w-full rounded-xl mt-1.5 mb-1.5 block">');
       });
     }
     html = html.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, function (m, label, url) {
@@ -2024,6 +2024,7 @@
             if (/^\s*javascript:/i.test(v) || (name === 'src' && /^data:(?!image\/)/i.test(v))) child.removeAttribute(attr.name);
           });
           if (child.tagName === 'A') { child.setAttribute('target', '_blank'); child.setAttribute('rel', 'noopener noreferrer'); }
+          if (child.tagName === 'IMG') { child.setAttribute('loading', 'lazy'); child.setAttribute('decoding', 'async'); }
           walk(child);
         } else if (child.nodeType !== 3) {
           node.removeChild(child);
@@ -2185,7 +2186,7 @@
         const author = authorsById[r.author_id];
         const authorHref = author ? ('ucet.html?u=' + encodeURIComponent(author.username)) : null;
         const avatarHtml = author && author.avatar_url
-          ? '<img src="' + kpEscapeHtml(author.avatar_url) + '" class="w-5 h-5 rounded-full object-cover shrink-0" alt=""/>'
+          ? '<img src="' + kpEscapeHtml(author.avatar_url) + '" class="w-5 h-5 rounded-full object-cover shrink-0" alt="" loading="lazy" decoding="async"/>'
           : '<span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 text-[9px] shrink-0"><i class="fa-solid fa-user"></i></span>';
         const byline = author ? (
           (authorHref ? '<a href="' + authorHref + '" class="flex items-center gap-1.5 hover:text-white transition">' : '<span class="flex items-center gap-1.5">') +
@@ -2308,7 +2309,7 @@
       const isAdmin = !!(profile && profile.is_admin);
       const label = (profile && profile.username) || (user.email ? user.email.split('@')[0] : (isEn ? 'Account' : 'Účet'));
       const avatarHtml = (profile && profile.avatar_url)
-        ? '<img src="' + kpEscapeHtml(profile.avatar_url) + '" class="w-6 h-6 rounded-full object-cover bg-slate-800">'
+        ? '<img src="' + kpEscapeHtml(profile.avatar_url) + '" class="w-6 h-6 rounded-full object-cover bg-slate-800" loading="lazy" decoding="async">'
         : '<span class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 text-[10px]"><i class="fa-solid fa-user"></i></span>';
       box.innerHTML = '<div class="relative flex items-center gap-1">' +
         '<div class="relative">' +
@@ -4086,7 +4087,7 @@
     function avatarHtml(userId, name) {
       const url = avatarById[userId];
       const inner = url
-        ? '<img src="' + kpEscapeHtml(url) + '" class="w-6 h-6 rounded-full object-cover bg-slate-800 shrink-0" alt="">'
+        ? '<img src="' + kpEscapeHtml(url) + '" class="w-6 h-6 rounded-full object-cover bg-slate-800 shrink-0" alt="" loading="lazy" decoding="async">'
         : '<span class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[10px] font-bold text-slate-400 shrink-0">' + kpEscapeHtml((name || '?').trim().charAt(0).toUpperCase() || '?') + '</span>';
       return '<span class="kp-chat-name cursor-pointer" data-username="' + kpEscapeHtml(name) + '">' + inner + '</span>';
     }
@@ -4370,7 +4371,7 @@
       if (me && !isSelf) { try { myProfile = await window.kpAuth.getMyProfile(); } catch (e) {} }
       const iAmAdmin = !!(myProfile && myProfile.is_admin);
       const avatarHtml = p.avatar_url
-        ? '<img src="' + kpEscapeHtml(p.avatar_url) + '" class="w-20 h-20 rounded-2xl object-cover bg-slate-800 border border-brand-border">'
+        ? '<img src="' + kpEscapeHtml(p.avatar_url) + '" class="w-20 h-20 rounded-2xl object-cover bg-slate-800 border border-brand-border" loading="lazy" decoding="async">'
         : '<div class="w-20 h-20 rounded-2xl bg-slate-800 border border-brand-border flex items-center justify-center text-slate-500"><i class="fa-solid fa-user text-2xl"></i></div>';
       const adminBadge = p.is_admin ? ' <span class="text-[9px] font-black text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded align-middle">ADMIN</span>' : '';
       const bannedBadge = p.banned ? ' <span class="text-[9px] font-black text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded align-middle">BANOVÁN</span>' : '';
@@ -4770,7 +4771,7 @@
 
     function avatarChipHtml(p, size) {
       size = size || 9;
-      if (p && p.avatar_url) return '<img src="' + kpEscapeHtml(p.avatar_url) + '" class="w-' + size + ' h-' + size + ' rounded-full object-cover bg-slate-800 shrink-0">';
+      if (p && p.avatar_url) return '<img src="' + kpEscapeHtml(p.avatar_url) + '" class="w-' + size + ' h-' + size + ' rounded-full object-cover bg-slate-800 shrink-0" loading="lazy" decoding="async">';
       const initial = p && p.username ? p.username.trim().charAt(0).toUpperCase() : '?';
       return '<span class="w-' + size + ' h-' + size + ' rounded-full bg-slate-800 flex items-center justify-center text-slate-500 text-xs shrink-0">' + (initial || '<i class="fa-solid fa-user"></i>') + '</span>';
     }
@@ -5036,7 +5037,7 @@
     if (lastSeenTitleEl) lastSeenTitleEl.textContent = isEn ? 'Last seen online' : 'Naposledy online';
 
     function avatarHtml(p) {
-      if (p.avatar_url) return '<img src="' + kpEscapeHtml(p.avatar_url) + '" class="w-8 h-8 rounded-lg object-cover bg-slate-800 border border-brand-border" alt="">';
+      if (p.avatar_url) return '<img src="' + kpEscapeHtml(p.avatar_url) + '" class="w-8 h-8 rounded-lg object-cover bg-slate-800 border border-brand-border" alt="" loading="lazy" decoding="async">';
       return '<span class="w-8 h-8 rounded-lg bg-slate-800 border border-brand-border flex items-center justify-center text-slate-500 text-xs"><i class="fa-solid fa-user"></i></span>';
     }
     function daysSince(iso) {
@@ -5278,7 +5279,7 @@
     }
     function avatarChip(p, size) {
       size = size || 9;
-      if (p && p.avatar_url) return '<img src="' + kpEscapeHtml(p.avatar_url) + '" class="w-' + size + ' h-' + size + ' rounded-full object-cover bg-slate-800 shrink-0">';
+      if (p && p.avatar_url) return '<img src="' + kpEscapeHtml(p.avatar_url) + '" class="w-' + size + ' h-' + size + ' rounded-full object-cover bg-slate-800 shrink-0" loading="lazy" decoding="async">';
       const initial = p && p.username ? p.username.trim().charAt(0).toUpperCase() : '?';
       return '<span class="w-' + size + ' h-' + size + ' rounded-full bg-slate-800 flex items-center justify-center text-slate-500 text-xs shrink-0 font-bold">' + (initial || '<i class="fa-solid fa-user"></i>') + '</span>';
     }
