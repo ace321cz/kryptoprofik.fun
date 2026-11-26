@@ -31,7 +31,7 @@
 <meta content="https://kryptoprofik.fun/og-image.png" name="twitter:image"/>
 <link href="manifest.json" rel="manifest"/>
 <link href="icon-192.png" rel="apple-touch-icon"/>
-<link href="style.css?v=v23" rel="stylesheet"/>
+<link href="style.css?v=v24" rel="stylesheet"/>
 </head>
 <body class="min-h-screen flex flex-col antialiased custom-scrollbar overflow-x-hidden">
 <noscript><div class="bg-amber-500 text-black text-center text-sm font-semibold p-2" id="noscriptMsg">JavaScript is required / Tento web vyžaduje JavaScript.</div></noscript>
@@ -181,11 +181,12 @@
 </div>
 <div>
 <label class="block text-xs font-bold text-slate-400 mb-1" id="forumBodyLabel">Text</label>
+<div class="flex items-center gap-1 flex-wrap mb-1.5" id="forumNewToolbar"><button type="button" class="kp-news-editor-btn" data-md="bold" title="Tučně"><i class="fa-solid fa-bold text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="italic" title="Kurzíva"><i class="fa-solid fa-italic text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="strike" title="Přeškrtnuté"><i class="fa-solid fa-strikethrough text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="code" title="Kód"><i class="fa-solid fa-code text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="link" title="Vložit odkaz"><i class="fa-solid fa-link text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="image" title="Vložit obrázek"><i class="fa-solid fa-image text-xs"></i></button><input type="file" id="forumNewInlineImg" accept="image/*" class="hidden"/></div>
 <div class="relative">
 <textarea id="forumNewBodyInput" rows="6" maxlength="8000" placeholder="Popiš svůj dotaz nebo námět podrobněji…" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none resize-y"></textarea>
 <div id="forumNewMentionBox" class="hidden absolute left-2 right-2 top-full mt-1 z-20 max-h-48 overflow-y-auto rounded-xl bg-brand-card border border-brand-border shadow-xl"></div>
 </div>
-<p class="text-[11px] text-slate-500 mt-1">Podporováno: <code class="text-slate-400">**tučně**</code>, <code class="text-slate-400">`kód`</code>, <code class="text-slate-400">@přezdívka</code> (napiš @ pro nabídku) a odkazy.</p>
+<p class="text-[11px] text-slate-500 mt-1">Podporováno: <code class="text-slate-400">**tučně**</code>, <code class="text-slate-400">*kurzíva*</code>, <code class="text-slate-400">`kód`</code>, <code class="text-slate-400">@přezdívka</code> (napiš @ pro nabídku), odkazy a obrázky.</p>
 </div>
 <div id="forumNewAttachPreview" class="hidden text-xs text-slate-300 flex items-center gap-2 bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5"></div>
 <div class="flex items-center gap-2">
@@ -223,11 +224,12 @@
 </div>
 
 <form id="forumReplyForm" class="hidden space-y-2">
+<div class="flex items-center gap-1 flex-wrap" id="forumReplyToolbar"><button type="button" class="kp-news-editor-btn" data-md="bold" title="Tučně"><i class="fa-solid fa-bold text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="italic" title="Kurzíva"><i class="fa-solid fa-italic text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="strike" title="Přeškrtnuté"><i class="fa-solid fa-strikethrough text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="code" title="Kód"><i class="fa-solid fa-code text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="link" title="Vložit odkaz"><i class="fa-solid fa-link text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="image" title="Vložit obrázek"><i class="fa-solid fa-image text-xs"></i></button><input type="file" id="forumReplyInlineImg" accept="image/*" class="hidden"/></div>
 <div class="relative">
 <textarea id="forumReplyBody" rows="4" maxlength="8000" placeholder="Napiš odpověď…" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2.5 text-white text-sm focus:border-brand-accent outline-none resize-y"></textarea>
 <div id="forumReplyMentionBox" class="hidden absolute left-2 right-2 top-full mt-1 z-20 max-h-48 overflow-y-auto rounded-xl bg-brand-card border border-brand-border shadow-xl"></div>
 </div>
-<p class="text-[11px] text-slate-500">Podporováno: <code class="text-slate-400">**tučně**</code>, <code class="text-slate-400">`kód`</code>, <code class="text-slate-400">@přezdívka</code> (napiš @ pro nabídku) a odkazy.</p>
+<p class="text-[11px] text-slate-500">Podporováno: <code class="text-slate-400">**tučně**</code>, <code class="text-slate-400">*kurzíva*</code>, <code class="text-slate-400">`kód`</code>, <code class="text-slate-400">@přezdívka</code> (napiš @ pro nabídku), odkazy a obrázky.</p>
 <div id="forumReplyAttachPreview" class="hidden text-xs text-slate-300 flex items-center gap-2 bg-slate-900 border border-brand-border rounded-lg px-2 py-1.5"></div>
 <div class="flex items-center gap-2">
 <label for="forumReplyFile" class="shrink-0 w-10 h-10 rounded-xl bg-slate-900 border border-brand-border text-slate-400 hover:text-white flex items-center justify-center cursor-pointer transition"><i class="fa-solid fa-paperclip"></i></label>
@@ -318,6 +320,6 @@
 </footer>
 <script src="i18n-data.js"></script>
 <script src="qrcode.min.js"></script>
-<script src="app.js?v=v23"></script>
+<script src="app.js?v=v24"></script>
 </body>
 </html>

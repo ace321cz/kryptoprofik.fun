@@ -31,7 +31,7 @@
 <meta content="https://kryptoprofik.fun/og-image.png" name="twitter:image"/>
 <link href="manifest.json" rel="manifest"/>
 <link href="icon-192.png" rel="apple-touch-icon"/>
-<link href="style.css?v=v23" rel="stylesheet"/>
+<link href="style.css?v=v24" rel="stylesheet"/>
 <script defer="" src="https://s3.tradingview.com/tv.js"></script>
 <script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "KryptoProfík", "alternateName": "KryptoProfík – Masterclass od A do Z", "url": "https://kryptoprofik.fun/", "inLanguage": ["cs", "en"], "description": "Nezávislý krypto portál v češtině: peněženky, burzy, detekce podvodů, daně v ČR, živé ceny, kalkulačky, slovník a kvíz.", "publisher": {"@type": "Person", "name": "Ace321cz", "email": "ace321cz@gmail.com"}}</script>
@@ -119,9 +119,15 @@
 <button type="button" class="kp-news-editor-btn" data-cmd="bold" title="Tučně"><i class="fa-solid fa-bold text-xs"></i></button>
 <button type="button" class="kp-news-editor-btn" data-cmd="italic" title="Kurzíva"><i class="fa-solid fa-italic text-xs"></i></button>
 <button type="button" class="kp-news-editor-btn" data-cmd="underline" title="Podtržené"><i class="fa-solid fa-underline text-xs"></i></button>
+<button type="button" class="kp-news-editor-btn" data-cmd="strikeThrough" title="Přeškrtnuté"><i class="fa-solid fa-strikethrough text-xs"></i></button>
+<button type="button" class="kp-news-editor-btn" data-cmd="h3" title="Nadpis"><i class="fa-solid fa-heading text-xs"></i></button>
+<button type="button" class="kp-news-editor-btn" data-cmd="blockquote" title="Citace"><i class="fa-solid fa-quote-left text-xs"></i></button>
 <button type="button" class="kp-news-editor-btn" data-cmd="insertUnorderedList" title="Odrážky"><i class="fa-solid fa-list-ul text-xs"></i></button>
+<button type="button" class="kp-news-editor-btn" data-cmd="insertOrderedList" title="Číslovaný seznam"><i class="fa-solid fa-list-ol text-xs"></i></button>
+<button type="button" class="kp-news-editor-btn" data-cmd="code" title="Kód"><i class="fa-solid fa-code text-xs"></i></button>
 <button type="button" class="kp-news-editor-btn" data-action="link" title="Vložit odkaz"><i class="fa-solid fa-link text-xs"></i></button>
 <button type="button" class="kp-news-editor-btn" data-action="image" title="Vložit obrázek"><i class="fa-solid fa-image text-xs"></i></button>
+<button type="button" class="kp-news-editor-btn" data-cmd="undo" title="Zpět"><i class="fa-solid fa-rotate-left text-xs"></i></button>
 <input type="file" id="siteNewsImageFile" accept="image/*" class="hidden"/>
 </div>
 <div id="siteNewsBodyInput" contenteditable="true" data-placeholder="Co je nového? (text, odkazy, obrázky…)" class="kp-news-prose w-full min-h-[5rem] bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-accent transition"></div>
@@ -135,11 +141,13 @@
 </div>
 <div class="flex items-center gap-3 flex-wrap">
 <button type="submit" id="siteNewsSubmitBtn" class="px-4 py-2 rounded-xl bg-brand-accent text-white text-xs font-bold hover:bg-emerald-400 transition" data-i18n="kNewsAddBtn">Přidat novinku</button>
+<button type="button" id="siteNewsCancelEditBtn" class="hidden px-4 py-2 rounded-xl bg-slate-800 border border-brand-border text-slate-300 text-xs font-bold hover:text-white transition" data-i18n="kNewsCancelEdit">Zrušit úpravu</button>
 <span id="siteNewsFormMsg" class="text-xs text-slate-400"></span>
 </div>
 </form>
 </div>
-<div id="siteNewsList" class="grid sm:grid-cols-3 gap-3"></div>
+<div id="siteNewsList" class="grid sm:grid-cols-2 gap-3"></div>
+<div id="siteNewsPager" class="flex items-center justify-center gap-3 mt-4"></div>
 </div>
 </section>
 <section class="relative py-12 sm:py-20 px-4 border-b border-brand-border hero-glow hero-grid" id="hero">
@@ -371,6 +379,6 @@
 </footer>
 <script src="i18n-data.js"></script>
 <script src="qrcode.min.js"></script>
-<script src="app.js?v=v23"></script>
+<script src="app.js?v=v24"></script>
 </body>
 </html>

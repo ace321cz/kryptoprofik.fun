@@ -1650,6 +1650,100 @@
     return kpLinkifyEscaped(kpEscapeHtml(rawText));
   }
 
+  /* Lehké, bezpečné "markdown" formátování pro fórum a soukromé zprávy:
+     **tučně**, *kurzíva*, ~~přeškrtnuté~~, `kód`, [text](url) odkazy,
+     ![alt](url) obrázky, @zmínky a holé odkazy. Vstup je napřed vždy
+     escapovaný, takže uživatel nikdy nemůže vložit skutečný HTML tag --
+     jen tahle pevně daná sada bezpečných náhrad. */
+  function kpRenderRichText(text, opts) {
+    opts = opts || {};
+    let html = kpEscapeHtml(text || '');
+    html = html.replace(/`([^`\n]+)`/g, function (m, code) {
+      return '<code class="px-1.5 py-0.5 rounded bg-slate-900 border border-brand-border text-[0.85em] font-mono text-emerald-300">' + code + '</code>';
+    });
+    // Odkazy a obrázky nejdřív schováme za placeholdery, ať je po nich
+    // nepřepíše automatické linkování holých URL adres níž.
+    const stash = [];
+    function hide(fragHtml) { stash.push(fragHtml); return '\u0000' + (stash.length - 1) + '\u0000'; }
+    if (opts.images) {
+      html = html.replace(/!\[([^\]\n]*)\]\((https?:\/\/[^\s)]+)\)/g, function (m, alt, url) {
+        return hide('<img src="' + url + '" alt="' + alt + '" class="max-w-full rounded-xl mt-1.5 mb-1.5 block">');
+      });
+    }
+    html = html.replace(/\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)/g, function (m, label, url) {
+      return hide('<a href="' + url + '" target="_blank" rel="noopener noreferrer nofollow" class="underline text-brand-accent hover:text-white">' + label + '</a>');
+    });
+    html = html.replace(/\*\*([^\n*]+)\*\*/g, '<b>$1</b>');
+    html = html.replace(/~~([^\n~]+)~~/g, '<s>$1</s>');
+    html = html.replace(/(^|[^*\w])\*([^\s*][^\n*]*?)\*(?!\*)/g, '$1<i>$2</i>');
+    if (opts.mentions) {
+      html = html.replace(/(^|[^\w@])@([A-Za-z0-9_]{1,32})/g, function (m, pre, handle) {
+        return pre + '<a href="ucet.html?u=' + encodeURIComponent(handle) + '" class="font-bold text-brand-accent hover:underline">@' + handle + '</a>';
+      });
+    }
+    html = kpLinkifyEscaped(html);
+    html = html.replace(/\u0000(\d+)\u0000/g, function (m, i) { return stash[+i]; });
+    return html.replace(/\n/g, '<br>');
+  }
+
+  /* Vloží/obalí text v <textarea> nebo <input type="text"> podle aktuálního
+     výběru -- pro tlačítka formátovací lišty (tučně, kurzíva, ...). */
+  function kpWrapSelection(el, before, after) {
+    after = after == null ? before : after;
+    const start = el.selectionStart || 0, end = el.selectionEnd || 0;
+    const val = el.value || '';
+    const selected = val.slice(start, end);
+    el.value = val.slice(0, start) + before + selected + after + val.slice(end);
+    el.focus();
+    const curStart = start + before.length;
+    try { el.setSelectionRange(curStart, curStart + selected.length); } catch (e) {}
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  function kpInsertAtCursor(el, text) {
+    const start = el.selectionStart || 0, end = el.selectionEnd || 0;
+    const val = el.value || '';
+    el.value = val.slice(0, start) + text + val.slice(end);
+    const pos = start + text.length;
+    el.focus();
+    try { el.setSelectionRange(pos, pos); } catch (e) {}
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  /* Připojí formátovací lištu (tučně/kurzíva/.../odkaz/obrázek) k danému
+     textovému poli -- použito u fóra i soukromých zpráv. */
+  function kpWireMarkdownToolbar(toolbarEl, targetEl, opts) {
+    opts = opts || {};
+    if (!toolbarEl || !targetEl) return;
+    function on(sel, fn) {
+      const b = toolbarEl.querySelector(sel);
+      if (b) b.addEventListener('click', function (ev) { ev.preventDefault(); fn(); });
+    }
+    on('[data-md="bold"]', function () { kpWrapSelection(targetEl, '**'); });
+    on('[data-md="italic"]', function () { kpWrapSelection(targetEl, '*'); });
+    on('[data-md="strike"]', function () { kpWrapSelection(targetEl, '~~'); });
+    on('[data-md="code"]', function () { kpWrapSelection(targetEl, '`'); });
+    on('[data-md="link"]', function () {
+      const url = prompt(opts.isEn ? 'Link URL:' : 'Adresa odkazu:', 'https://');
+      if (!url) return;
+      const start = targetEl.selectionStart || 0, end = targetEl.selectionEnd || 0;
+      const label = (targetEl.value || '').slice(start, end) || url;
+      kpInsertAtCursor(targetEl, '[' + label + '](' + url + ')');
+    });
+    if (opts.imageFile) {
+      on('[data-md="image"]', function () { opts.imageFile.click(); });
+      opts.imageFile.addEventListener('change', async function () {
+        const file = opts.imageFile.files && opts.imageFile.files[0];
+        opts.imageFile.value = '';
+        if (!file) return;
+        try {
+          const uploaded = await kpUploadAttachment(file);
+          kpInsertAtCursor(targetEl, '![](' + uploaded.url + ')');
+        } catch (e) {
+          if (opts.onImageError) opts.onImageError();
+        }
+      });
+    }
+  }
+
   /* ================= Přihlášení (účty): sdílená relace napříč stránkami ================= */
   const kpAuth = (function () {
     const SKEY = 'kp_auth_session';
@@ -1911,7 +2005,7 @@
      both before saving and again before rendering, so even if something bad
      ever ended up in the database, it still can't execute. */
   function kpSanitizeNewsHtml(html) {
-    const allowed = { B: 1, STRONG: 1, I: 1, EM: 1, U: 1, A: 1, IMG: 1, BR: 1, P: 1, DIV: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, SPAN: 1 };
+    const allowed = { B: 1, STRONG: 1, I: 1, EM: 1, U: 1, S: 1, STRIKE: 1, A: 1, IMG: 1, BR: 1, P: 1, DIV: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, SPAN: 1, H3: 1, CODE: 1 };
     const tmp = document.createElement('div');
     tmp.innerHTML = html || '';
     (function walk(node) {
@@ -1959,9 +2053,16 @@
     const enBox = document.getElementById('siteNewsEnBox');
     const imageFile = document.getElementById('siteNewsImageFile');
     const submitBtn = document.getElementById('siteNewsSubmitBtn');
+    const cancelEditBtn = document.getElementById('siteNewsCancelEditBtn');
     const msgEl = document.getElementById('siteNewsFormMsg');
+    const pagerEl = document.getElementById('siteNewsPager');
     let isAdmin = false;
     let authorTarget = null; // which contenteditable the image-upload button was clicked from
+    let allRows = [];
+    let authorsById = {};
+    let page = 1;
+    let editingId = null;
+    const PAGE_SIZE = 4;
 
     function dict() { return (window.I18N && window.I18N[document.documentElement.lang]) || {}; }
     function t(k, fallback) { const v = dict()[k]; return v != null ? v : fallback; }
@@ -1980,7 +2081,13 @@
         btn.addEventListener('click', function () {
           const target = enBox && !enBox.classList.contains('hidden') && document.activeElement === bodyEnInput ? bodyEnInput : bodyInput;
           target.focus();
-          document.execCommand(btn.getAttribute('data-cmd'), false, null);
+          const cmd = btn.getAttribute('data-cmd');
+          if (cmd === 'h3') document.execCommand('formatBlock', false, 'h3');
+          else if (cmd === 'blockquote') document.execCommand('formatBlock', false, 'blockquote');
+          else if (cmd === 'code') {
+            const sel = window.getSelection();
+            if (sel && !sel.isCollapsed) document.execCommand('insertHTML', false, '<code>' + kpEscapeHtml(sel.toString()) + '</code>');
+          } else document.execCommand(cmd, false, null);
         });
       });
       const linkBtn = form.querySelector('.kp-news-editor-btn[data-action="link"]');
@@ -2016,55 +2123,121 @@
       });
     }
 
-    function render(rows, authorsById) {
-      if (!rows || !rows.length) {
+    function exitEditMode() {
+      editingId = null;
+      titleInput.value = '';
+      bodyInput.innerHTML = '';
+      if (titleEnInput) titleEnInput.value = '';
+      if (bodyEnInput) bodyEnInput.innerHTML = '';
+      if (enToggle) { enToggle.checked = false; if (enBox) enBox.classList.add('hidden'); }
+      submitBtn.textContent = t('kNewsAddBtn', 'Přidat novinku');
+      if (cancelEditBtn) cancelEditBtn.classList.add('hidden');
+      if (msgEl) msgEl.textContent = '';
+    }
+
+    function enterEditMode(r) {
+      editingId = r.id;
+      titleInput.value = r.title || '';
+      bodyInput.innerHTML = kpSanitizeNewsHtml(r.body_html || ('<p>' + kpEscapeHtml(r.body || '') + '</p>'));
+      const hasEn = !!(r.title_en && r.body_html_en);
+      if (enToggle) enToggle.checked = hasEn;
+      if (enBox) enBox.classList.toggle('hidden', !hasEn);
+      if (titleEnInput) titleEnInput.value = r.title_en || '';
+      if (bodyEnInput) bodyEnInput.innerHTML = hasEn ? kpSanitizeNewsHtml(r.body_html_en) : '';
+      submitBtn.textContent = t('kNewsSaveBtn', 'Uložit změny');
+      if (cancelEditBtn) cancelEditBtn.classList.remove('hidden');
+      if (adminBox) adminBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      titleInput.focus();
+    }
+
+    if (cancelEditBtn) cancelEditBtn.addEventListener('click', exitEditMode);
+
+    function totalPages() { return Math.max(1, Math.ceil(allRows.length / PAGE_SIZE)); }
+
+    function renderPager() {
+      if (!pagerEl) return;
+      const pages = totalPages();
+      if (allRows.length <= PAGE_SIZE) { pagerEl.innerHTML = ''; return; }
+      pagerEl.innerHTML =
+        '<button type="button" id="siteNewsPrevBtn" class="kp-pager-btn w-8 h-8 rounded-lg bg-brand-card border border-brand-border text-slate-300 hover:text-white flex items-center justify-center transition" ' + (page <= 1 ? 'disabled' : '') + '><i class="fa-solid fa-chevron-left text-xs"></i></button>' +
+        '<span class="text-[11px] text-slate-500 font-semibold px-1">' + t('kNewsPageLabel', 'Strana') + ' ' + page + ' / ' + pages + '</span>' +
+        '<button type="button" id="siteNewsNextBtn" class="kp-pager-btn w-8 h-8 rounded-lg bg-brand-card border border-brand-border text-slate-300 hover:text-white flex items-center justify-center transition" ' + (page >= pages ? 'disabled' : '') + '><i class="fa-solid fa-chevron-right text-xs"></i></button>';
+      const prevBtn = document.getElementById('siteNewsPrevBtn');
+      const nextBtn = document.getElementById('siteNewsNextBtn');
+      if (prevBtn) prevBtn.addEventListener('click', function () { if (page > 1) { page -= 1; renderPage(); window.scrollTo({ top: listEl.offsetTop - 90, behavior: 'smooth' }); } });
+      if (nextBtn) nextBtn.addEventListener('click', function () { if (page < pages) { page += 1; renderPage(); window.scrollTo({ top: listEl.offsetTop - 90, behavior: 'smooth' }); } });
+    }
+
+    function renderPage() {
+      const pages = totalPages();
+      if (page > pages) page = pages;
+      if (!allRows.length) {
         listEl.innerHTML = '<p class="text-xs text-slate-500 col-span-full">' + t('kNewsEmpty', 'Zatím žádné novinky.') + '</p>';
+        renderPager();
         return;
       }
-      listEl.innerHTML = rows.map(function (r) {
+      const slice = allRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+      listEl.innerHTML = slice.map(function (r) {
         const useEn = isEn() && r.title_en && r.body_html_en;
         const title = useEn ? r.title_en : r.title;
-        const bodyHtml = kpSanitizeNewsHtml(useEn ? r.body_html_en : (r.body_html || ('<p>' + kpEscapeHtml(r.body || '') + '</p>')));
+        const bodyHtmlOut = kpSanitizeNewsHtml(useEn ? r.body_html_en : (r.body_html || ('<p>' + kpEscapeHtml(r.body || '') + '</p>')));
         const czOnlyTag = (isEn() && !useEn) ? '<span class="text-[9px] font-black uppercase tracking-wide text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded">' + t('kNewsCzOnlyTag', 'CZ original') + '</span>' : '';
         const author = authorsById[r.author_id];
+        const authorHref = author ? ('ucet.html?u=' + encodeURIComponent(author.username)) : null;
+        const avatarHtml = author && author.avatar_url
+          ? '<img src="' + kpEscapeHtml(author.avatar_url) + '" class="w-5 h-5 rounded-full object-cover shrink-0" alt=""/>'
+          : '<span class="w-5 h-5 rounded-full bg-slate-800 flex items-center justify-center text-slate-500 text-[9px] shrink-0"><i class="fa-solid fa-user"></i></span>';
         const byline = author ? (
-          '<span class="flex items-center gap-1">' +
-          (author.avatar_url ? '<img src="' + author.avatar_url + '" class="w-3.5 h-3.5 rounded-full object-cover" alt=""/>' : '<i class="fa-solid fa-user text-[9px]"></i>') +
-          '<span>' + t('kNewsByLabel', 'od') + ' <span class="font-semibold text-slate-400">' + kpEscapeHtml(author.username) + '</span></span></span>'
+          (authorHref ? '<a href="' + authorHref + '" class="flex items-center gap-1.5 hover:text-white transition">' : '<span class="flex items-center gap-1.5">') +
+          avatarHtml + '<span class="font-bold text-slate-300">' + kpEscapeHtml(author.username) + '</span>' +
+          (authorHref ? '</a>' : '</span>')
         ) : '';
-        return '<div class="relative rounded-2xl border border-brand-border bg-brand-card p-4">' +
-          (isAdmin ? '<button type="button" class="siteNewsDeleteBtn absolute top-2 right-2 w-6 h-6 rounded-lg bg-slate-800 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition" data-id="' + r.id + '" aria-label="delete"><i class="fa-solid fa-trash text-[10px]"></i></button>' : '') +
-          '<div class="flex items-center flex-wrap gap-1.5 text-[10px] text-slate-500 mb-1">' +
-          '<span>' + fmtDate(r.created_at) + '</span>' +
-          (byline ? '<span>&middot;</span>' + byline : '') +
-          (czOnlyTag ? '<span>&middot;</span>' + czOnlyTag : '') +
+        return '<div class="relative rounded-2xl border border-brand-border bg-brand-card p-4 hover:border-brand-accent/40 transition">' +
+          (isAdmin ? '<div class="absolute top-2 right-2 flex items-center gap-1">' +
+            '<button type="button" class="siteNewsEditBtn w-6 h-6 rounded-lg bg-slate-800 text-slate-400 hover:text-brand-accent hover:bg-brand-accent/10 flex items-center justify-center transition" data-id="' + r.id + '" aria-label="edit" title="' + (isEn() ? 'Edit' : 'Upravit') + '"><i class="fa-solid fa-pen text-[10px]"></i></button>' +
+            '<button type="button" class="siteNewsDeleteBtn w-6 h-6 rounded-lg bg-slate-800 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition" data-id="' + r.id + '" aria-label="delete" title="' + (isEn() ? 'Delete' : 'Smazat') + '"><i class="fa-solid fa-trash text-[10px]"></i></button>' +
+            '</div>' : '') +
+          '<div class="flex items-center justify-between flex-wrap gap-1.5 mb-2' + (isAdmin ? ' pr-14' : '') + '">' +
+          (byline || '<span></span>') +
+          '<span class="text-[10px] text-slate-500 font-semibold">' + fmtDate(r.created_at) + '</span>' +
           '</div>' +
-          '<h3 class="text-sm font-black text-white mb-1 pr-6">' + kpEscapeHtml(title) + '</h3>' +
-          '<div class="text-xs text-slate-400 kp-news-prose">' + bodyHtml + '</div>' +
+          (czOnlyTag ? '<div class="mb-1.5">' + czOnlyTag + '</div>' : '') +
+          '<h3 class="text-sm font-black text-white mb-1.5">' + kpEscapeHtml(title) + '</h3>' +
+          '<div class="text-xs text-slate-400 kp-news-prose">' + bodyHtmlOut + '</div>' +
           '</div>';
       }).join('');
       listEl.querySelectorAll('.siteNewsDeleteBtn').forEach(function (btn) {
         btn.addEventListener('click', async function () {
           if (!confirm(t('kNewsDeleteConfirm', 'Opravdu smazat tuhle novinku?'))) return;
           const id = btn.getAttribute('data-id');
+          if (editingId === id) exitEditMode();
           try { await kpSbDeleteAuth('site_news', 'id=eq.' + id); } catch (e) {}
           load();
         });
       });
+      listEl.querySelectorAll('.siteNewsEditBtn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const id = btn.getAttribute('data-id');
+          const r = allRows.find(function (rr) { return rr.id === id; });
+          if (r) enterEditMode(r);
+        });
+      });
+      renderPager();
     }
 
     function load() {
-      kpSbSelect('site_news', 'select=id,title,body,body_html,title_en,body_html_en,created_at,author_id&order=created_at.desc&limit=6')
+      kpSbSelect('site_news', 'select=id,title,body,body_html,title_en,body_html_en,created_at,author_id&order=created_at.desc&limit=48')
         .then(function (rows) {
-          const authorIds = Array.from(new Set(rows.map(function (r) { return r.author_id; }).filter(Boolean)));
-          if (!authorIds.length) return render(rows, {});
+          allRows = rows || [];
+          const authorIds = Array.from(new Set(allRows.map(function (r) { return r.author_id; }).filter(Boolean)));
+          if (!authorIds.length) { authorsById = {}; renderPage(); return; }
           return kpSbSelect('profiles', 'id=in.(' + authorIds.join(',') + ')&select=id,username,avatar_url')
             .then(function (profilesRows) {
-              const byId = {};
-              profilesRows.forEach(function (p) { byId[p.id] = p; });
-              render(rows, byId);
+              authorsById = {};
+              profilesRows.forEach(function (p) { authorsById[p.id] = p; });
+              renderPage();
             })
-            .catch(function () { render(rows, {}); });
+            .catch(function () { authorsById = {}; renderPage(); });
         })
         .catch(function () { listEl.innerHTML = ''; });
     }
@@ -2076,7 +2249,7 @@
       kpSbSelectAuth('profiles', 'id=eq.' + user.id + '&select=is_admin').then(function (rows) {
         isAdmin = !!(rows && rows[0] && rows[0].is_admin);
         if (isAdmin && adminBox) adminBox.classList.remove('hidden');
-        load();
+        renderPage();
       }).catch(function () {});
     }
 
@@ -2084,36 +2257,33 @@
       form.addEventListener('submit', async function (ev) {
         ev.preventDefault();
         const title = (titleInput.value || '').trim();
-        const bodyHtml = kpSanitizeNewsHtml((bodyInput.innerHTML || '').trim());
+        const bodyHtmlVal = kpSanitizeNewsHtml((bodyInput.innerHTML || '').trim());
         const bodyText = (bodyInput.textContent || '').trim();
         if (!title || !bodyText) return;
-        const row = { title: title, body: bodyText.slice(0, 600), body_html: bodyHtml };
-        if (user) row.author_id = user.id;
+        const row = { title: title, body: bodyText.slice(0, 600), body_html: bodyHtmlVal };
+        if (user && !editingId) row.author_id = user.id;
         if (enToggle && enToggle.checked) {
           const titleEn = (titleEnInput.value || '').trim();
           const bodyEnHtml = kpSanitizeNewsHtml((bodyEnInput.innerHTML || '').trim());
           if (titleEn && (bodyEnInput.textContent || '').trim()) {
             row.title_en = titleEn;
             row.body_html_en = bodyEnHtml;
-          }
-        }
+          } else { row.title_en = null; row.body_html_en = null; }
+        } else if (editingId) { row.title_en = null; row.body_html_en = null; }
         submitBtn.disabled = true;
         const origLabel = submitBtn.textContent;
-        submitBtn.textContent = t('kNewsPosting', 'Přidávám…');
+        submitBtn.textContent = editingId ? t('kNewsSaving', 'Ukládám…') : t('kNewsPosting', 'Přidávám…');
         if (msgEl) msgEl.textContent = '';
         try {
-          await kpSbInsertAuth('site_news', row, true);
-          titleInput.value = '';
-          bodyInput.innerHTML = '';
-          if (titleEnInput) titleEnInput.value = '';
-          if (bodyEnInput) bodyEnInput.innerHTML = '';
-          if (enToggle) { enToggle.checked = false; if (enBox) enBox.classList.add('hidden'); }
+          if (editingId) { const ok = await kpSbPatchAuth('site_news', 'id=eq.' + editingId, row); if (!ok) throw new Error('patch-failed'); }
+          else await kpSbInsertAuth('site_news', row, true);
+          exitEditMode();
           load();
         } catch (err) {
           if (msgEl) msgEl.textContent = isEn() ? 'Something went wrong, try again.' : 'Něco se nepovedlo, zkus to znovu.';
         } finally {
           submitBtn.disabled = false;
-          submitBtn.textContent = origLabel;
+          if (!editingId) submitBtn.textContent = origLabel;
         }
       });
     }
@@ -4759,10 +4929,10 @@
           inner += '<a href="' + kpEscapeHtml(m.attachment_url) + '" target="_blank" rel="noopener" class="flex items-center gap-2 text-xs underline mb-1"><i class="fa-solid fa-file-arrow-down"></i>' + kpEscapeHtml(m.attachment_name || (isEn ? 'Attachment' : 'Příloha')) + '</a>';
         }
       }
-      if (m.body) inner += '<span class="whitespace-pre-wrap">' + kpLinkify(m.body) + '</span>';
+      if (m.body) inner += '<span class="kp-news-prose">' + kpRenderRichText(m.body, { mentions: true }) + '</span>';
       const delBtn = '<button type="button" class="pm-msg-delete text-[10px] text-slate-600 hover:text-rose-400 transition" data-id="' + m.id + '" title="' + (isEn ? 'Delete' : 'Smazat') + '"><i class="fa-solid fa-trash-can"></i></button>';
       return '<div class="group text-xs ' + (mine ? 'text-right' : 'text-left') + '">' +
-        '<span class="inline-block px-3 py-2 rounded-xl ' + (mine ? 'bg-brand-accent text-white' : 'bg-slate-800 text-slate-200') + ' max-w-[85%] text-left">' + inner + '</span>' +
+        '<span class="inline-block px-3 py-2 rounded-xl ' + (mine ? 'bg-brand-accent text-white kp-chat-mine-rich' : 'bg-slate-800 text-slate-200') + ' max-w-[85%] text-left">' + inner + '</span>' +
         '<div class="flex items-center gap-2 mt-0.5 ' + (mine ? 'justify-end' : 'justify-start') + '"><span class="text-[10px] text-slate-600">' + fmtTime(m.created_at) + '</span>' +
         '<span class="opacity-0 group-hover:opacity-100 transition">' + delBtn + '</span></div></div>';
     }
@@ -4783,6 +4953,8 @@
 
     const pmEmojiBar = document.getElementById('pmEmojiBar');
     const pmBodyInput = document.getElementById('pmBody');
+    const pmToolbar = document.getElementById('pmToolbar');
+    if (pmToolbar) kpWireMarkdownToolbar(pmToolbar, pmBodyInput, { isEn: isEn });
     if (pmEmojiBar) {
       pmEmojiBar.addEventListener('click', function (ev) {
         const b = ev.target.closest('.kp-pm-emoji-btn');
@@ -5097,26 +5269,12 @@
     function fmtDateTime(iso) {
       try { return new Date(iso).toLocaleString(isEn ? 'en-GB' : 'cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (e) { return ''; }
     }
-    /* Vykreslí tělo příspěvku fóra: escapuje HTML, pak přidá jen velmi omezené
-       bezpečné formátování -- **tučně**, `kód`, @zmínky (odkaz na profil) a
-       automatické odkazy -- a nakonec zalomí nové řádky. Pořadí kroků je
-       důležité: formátování se aplikuje na už escapovaný text, takže nikdy
-       nemůže vložit skutečné HTML tagy ze vstupu uživatele. */
+    /* Vykreslí tělo příspěvku fóra -- **tučně**, *kurzíva*, ~~přeškrtnuté~~,
+       `kód`, [text](url) odkazy, ![](url) obrázky, @zmínky a holé odkazy.
+       Sdílené s rendrem soukromých zpráv (kpRenderRichText), vstup je vždy
+       napřed escapovaný, takže uživatel nemůže vložit skutečný HTML tag. */
     function bodyHtml(text) {
-      let html = kpEscapeHtml(text || '');
-      // `kód` (nejdřív, ať se obsah v backtickách dál neformátuje jako tučné/zmínka)
-      html = html.replace(/`([^`\n]+)`/g, function (m, code) {
-        return '<code class="px-1.5 py-0.5 rounded bg-slate-900 border border-brand-border text-[0.85em] font-mono text-emerald-300">' + code + '</code>';
-      });
-      // **tučně**
-      html = html.replace(/\*\*([^\n*]+)\*\*/g, '<b>$1</b>');
-      // @zmínka uživatele -- odkaz na profil, bez ověření existence (ucet.html
-      // si poradí i s neexistující přezdívkou).
-      html = html.replace(/(^|[^\w@])@([A-Za-z0-9_]{1,32})/g, function (m, pre, handle) {
-        return pre + '<a href="ucet.html?u=' + encodeURIComponent(handle) + '" class="font-bold text-brand-accent hover:underline">@' + handle + '</a>';
-      });
-      html = kpLinkifyEscaped(html);
-      return html.replace(/\n/g, '<br>');
+      return kpRenderRichText(text, { images: true, mentions: true });
     }
     function avatarChip(p, size) {
       size = size || 9;
@@ -5197,6 +5355,17 @@
     const replyFileInput = document.getElementById('forumReplyFile');
     const replyAttachPreview = document.getElementById('forumReplyAttachPreview');
     const reportModal = document.getElementById('forumReportModal');
+
+    const newTopicBodyInput = document.getElementById('forumNewBodyInput');
+    const replyBodyInput = document.getElementById('forumReplyBody');
+    kpWireMarkdownToolbar(document.getElementById('forumNewToolbar'), newTopicBodyInput, {
+      isEn: isEn, imageFile: document.getElementById('forumNewInlineImg'),
+      onImageError: function () { alert(isEn ? 'Image upload failed.' : 'Nahrání obrázku se nepovedlo.'); },
+    });
+    kpWireMarkdownToolbar(document.getElementById('forumReplyToolbar'), replyBodyInput, {
+      isEn: isEn, imageFile: document.getElementById('forumReplyInlineImg'),
+      onImageError: function () { alert(isEn ? 'Image upload failed.' : 'Nahrání obrázku se nepovedlo.'); },
+    });
 
     let categoriesCache = null; // slug -> category row (with _topics/_posts)
     let currentCategory = null;
@@ -6073,6 +6242,7 @@
         const post = currentPosts.find(function (pp) { return pp.id === postId; });
         if (!bodyEl || !post) return;
         bodyEl.innerHTML =
+          '<div class="flex items-center gap-1 flex-wrap mb-1.5 forum-edit-toolbar"><button type="button" class="kp-news-editor-btn" data-md="bold" title="Tučně"><i class="fa-solid fa-bold text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="italic" title="Kurzíva"><i class="fa-solid fa-italic text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="strike" title="Přeškrtnuté"><i class="fa-solid fa-strikethrough text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="code" title="Kód"><i class="fa-solid fa-code text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="link" title="Vložit odkaz"><i class="fa-solid fa-link text-xs"></i></button><button type="button" class="kp-news-editor-btn" data-md="image" title="Vložit obrázek"><i class="fa-solid fa-image text-xs"></i></button><input type="file" accept="image/*" class="hidden forum-edit-inline-img"/></div>' +
           '<textarea class="forum-edit-textarea w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-white text-sm focus:border-brand-accent outline-none" rows="4">' + kpEscapeHtml(post.body) + '</textarea>' +
           '<div class="flex items-center gap-2 mt-2">' +
           '<button type="button" class="forum-edit-save-btn px-3 py-1.5 rounded-lg bg-brand-accent text-white text-xs font-bold hover:opacity-90 transition" data-post="' + postId + '">' + (isEn ? 'Save' : 'Uložit') + '</button>' +
@@ -6080,6 +6250,10 @@
           '<span class="forum-edit-error text-xs text-rose-400 hidden"></span>' +
           '</div>';
         const ta = bodyEl.querySelector('.forum-edit-textarea');
+        kpWireMarkdownToolbar(bodyEl.querySelector('.forum-edit-toolbar'), ta, {
+          isEn: isEn, imageFile: bodyEl.querySelector('.forum-edit-inline-img'),
+          onImageError: function () { alert(isEn ? 'Image upload failed.' : 'Nahrání obrázku se nepovedlo.'); },
+        });
         if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }
         return;
       }

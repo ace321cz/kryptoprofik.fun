@@ -221,3 +221,13 @@ code,.font-mono{overflow-wrap:anywhere}
 .kp-news-prose img{border-radius:.75rem;margin:.5rem 0;max-width:100%;height:auto}
 .overflow-x-hidden{overflow-x:hidden}
 .min-w-\[6rem\]{min-width:6rem}
+.kp-pager-btn:disabled{opacity:.35;cursor:not-allowed}
+.pr-14{padding-right:3.5rem}
+.kp-news-prose h3{font-weight:900;color:#fff;margin:.75rem 0 .35rem;font-size:1.05em}
+.kp-news-prose blockquote{border-left:2px solid rgba(16,185,129,.5);padding-left:.75rem;margin:.5rem 0;color:#94a3b8;font-style:italic}
+.kp-news-prose code{background:#0f172a;border:1px solid #334155;border-radius:.3rem;padding:.1rem .35rem;font-size:.85em;color:#6ee7b7;font-family:monospace}
+.kp-news-prose ol{list-style:decimal;padding-left:1.25rem;margin:.25rem 0}
+.kp-news-prose s{opacity:.7}
+.kp-chat-mine-rich a{color:#fff;text-decoration-color:rgba(255,255,255,.65)}
+.kp-chat-mine-rich a:hover{color:#fff;opacity:.85}
+.kp-chat-mine-rich code{background:rgba(0,0,0,.25);border-color:rgba(255,255,255,.25);color:#fff}
