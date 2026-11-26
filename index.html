@@ -31,7 +31,7 @@
 <meta content="https://kryptoprofik.fun/og-image.png" name="twitter:image"/>
 <link href="manifest.json" rel="manifest"/>
 <link href="icon-192.png" rel="apple-touch-icon"/>
-<link href="style.css?v=v22" rel="stylesheet"/>
+<link href="style.css?v=v23" rel="stylesheet"/>
 <script defer="" src="https://s3.tradingview.com/tv.js"></script>
 <script defer="" src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "KryptoProfík", "alternateName": "KryptoProfík – Masterclass od A do Z", "url": "https://kryptoprofik.fun/", "inLanguage": ["cs", "en"], "description": "Nezávislý krypto portál v češtině: peněženky, burzy, detekce podvodů, daně v ČR, živé ceny, kalkulačky, slovník a kvíz.", "publisher": {"@type": "Person", "name": "Ace321cz", "email": "ace321cz@gmail.com"}}</script>
@@ -115,7 +115,24 @@
 <div class="text-[11px] font-bold text-amber-300 mb-2" data-i18n="kNewsAdminLabel">Napsat novinku (vidíš jen ty jako admin)</div>
 <form id="siteNewsForm" class="space-y-2">
 <input type="text" id="siteNewsTitleInput" maxlength="120" required class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-accent transition" data-i18n-ph="kNewsAddTitlePh" placeholder="Nadpis novinky…"/>
-<textarea id="siteNewsBodyInput" maxlength="600" required rows="2" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-accent transition resize-none" data-i18n-ph="kNewsAddBodyPh" placeholder="Co je nového? (pár vět)"></textarea>
+<div class="flex items-center gap-1 flex-wrap">
+<button type="button" class="kp-news-editor-btn" data-cmd="bold" title="Tučně"><i class="fa-solid fa-bold text-xs"></i></button>
+<button type="button" class="kp-news-editor-btn" data-cmd="italic" title="Kurzíva"><i class="fa-solid fa-italic text-xs"></i></button>
+<button type="button" class="kp-news-editor-btn" data-cmd="underline" title="Podtržené"><i class="fa-solid fa-underline text-xs"></i></button>
+<button type="button" class="kp-news-editor-btn" data-cmd="insertUnorderedList" title="Odrážky"><i class="fa-solid fa-list-ul text-xs"></i></button>
+<button type="button" class="kp-news-editor-btn" data-action="link" title="Vložit odkaz"><i class="fa-solid fa-link text-xs"></i></button>
+<button type="button" class="kp-news-editor-btn" data-action="image" title="Vložit obrázek"><i class="fa-solid fa-image text-xs"></i></button>
+<input type="file" id="siteNewsImageFile" accept="image/*" class="hidden"/>
+</div>
+<div id="siteNewsBodyInput" contenteditable="true" data-placeholder="Co je nového? (text, odkazy, obrázky…)" class="kp-news-prose w-full min-h-[5rem] bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-accent transition"></div>
+<label class="flex items-center gap-2 text-[11px] text-slate-400 pt-1 cursor-pointer select-none">
+<input type="checkbox" id="siteNewsEnToggle" class="accent-brand-accent"/>
+<span data-i18n="kNewsEnToggle">Přidat i anglickou verzi (nepovinné)</span>
+</label>
+<div id="siteNewsEnBox" class="hidden space-y-2 pt-1 border-t border-brand-border/60">
+<input type="text" id="siteNewsTitleEnInput" maxlength="120" class="w-full bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-brand-accent transition" data-i18n-ph="kNewsAddTitleEnPh" placeholder="Headline (EN)…"/>
+<div id="siteNewsBodyEnInput" contenteditable="true" data-placeholder="What's new? (EN)" class="kp-news-prose w-full min-h-[4rem] bg-slate-900 border border-brand-border rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-accent transition"></div>
+</div>
 <div class="flex items-center gap-3 flex-wrap">
 <button type="submit" id="siteNewsSubmitBtn" class="px-4 py-2 rounded-xl bg-brand-accent text-white text-xs font-bold hover:bg-emerald-400 transition" data-i18n="kNewsAddBtn">Přidat novinku</button>
 <span id="siteNewsFormMsg" class="text-xs text-slate-400"></span>
@@ -354,6 +371,6 @@
 </footer>
 <script src="i18n-data.js"></script>
 <script src="qrcode.min.js"></script>
-<script src="app.js?v=v22"></script>
+<script src="app.js?v=v23"></script>
 </body>
 </html>

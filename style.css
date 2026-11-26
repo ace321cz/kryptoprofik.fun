@@ -209,5 +209,15 @@ code,.font-mono{overflow-wrap:anywhere}
 @media (min-width:640px){.sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .max-w-\[9\.5rem\]{max-width:9.5rem}
 .px-3\.5{padding-left:0.875rem;padding-right:0.875rem}
+#siteNewsBodyInput:empty:before,#siteNewsBodyEnInput:empty:before{content:attr(data-placeholder);color:#64748b;pointer-events:none}
+.kp-news-editor-btn{width:2rem;height:2rem;border-radius:.5rem;display:flex;align-items:center;justify-content:center;background:#1e293b;color:#cbd5e1;border:1px solid #334155;cursor:pointer;transition:background .15s,color .15s}
+.kp-news-editor-btn:hover{background:#334155;color:#fff}
+.kp-news-editor-btn.active{background:#10b981;color:#fff;border-color:#10b981}
+.kp-news-prose{line-height:1.6;overflow-wrap:break-word}
+.kp-news-prose p{margin:0 0 .5rem}
+.kp-news-prose p:last-child{margin-bottom:0}
+.kp-news-prose a{color:#10b981;text-decoration:underline}
+.kp-news-prose ul{list-style:disc;padding-left:1.25rem;margin:.25rem 0}
+.kp-news-prose img{border-radius:.75rem;margin:.5rem 0;max-width:100%;height:auto}
 .overflow-x-hidden{overflow-x:hidden}
 .min-w-\[6rem\]{min-width:6rem}

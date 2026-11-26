@@ -1906,6 +1906,46 @@
      Krátké aktuality o tom, co je na webu nového -- píšou se přímo tady
      v sekci (ne skrz Moderaci), aby to adminovi nezabralo víc než pár vteřin.
      Čtou všichni (i nepřihlášení), psát/mazat může jen admin (RLS). */
+  /* Very small allow-list HTML sanitizer for admin-authored news content
+     (bold/italic/underline/links/images/lists). Defense in depth: called
+     both before saving and again before rendering, so even if something bad
+     ever ended up in the database, it still can't execute. */
+  function kpSanitizeNewsHtml(html) {
+    const allowed = { B: 1, STRONG: 1, I: 1, EM: 1, U: 1, A: 1, IMG: 1, BR: 1, P: 1, DIV: 1, UL: 1, OL: 1, LI: 1, BLOCKQUOTE: 1, SPAN: 1 };
+    const tmp = document.createElement('div');
+    tmp.innerHTML = html || '';
+    (function walk(node) {
+      Array.from(node.childNodes).forEach(function (child) {
+        if (child.nodeType === 1) {
+          if (!allowed[child.tagName]) {
+            while (child.firstChild) node.insertBefore(child.firstChild, child);
+            node.removeChild(child);
+            return;
+          }
+          Array.from(child.attributes).forEach(function (attr) {
+            const name = attr.name.toLowerCase();
+            const keep = (child.tagName === 'A' && name === 'href') || (child.tagName === 'IMG' && (name === 'src' || name === 'alt'));
+            if (!keep) { child.removeAttribute(attr.name); return; }
+            const v = (attr.value || '').trim();
+            if (/^\s*javascript:/i.test(v) || (name === 'src' && /^data:(?!image\/)/i.test(v))) child.removeAttribute(attr.name);
+          });
+          if (child.tagName === 'A') { child.setAttribute('target', '_blank'); child.setAttribute('rel', 'noopener noreferrer'); }
+          walk(child);
+        } else if (child.nodeType !== 3) {
+          node.removeChild(child);
+        }
+      });
+    })(tmp);
+    return tmp.innerHTML;
+  }
+
+  /* ================= Novinky na hlavní stránce =================
+     Krátké aktuality o tom, co je na webu nového -- píšou se přímo tady
+     v sekci (ne skrz Moderaci), aby to adminovi nezabralo víc než pár vteřin.
+     Čtou všichni (i nepřihlášení), psát/mazat může jen admin (RLS). Má
+     jednoduchý formátovací panel (tučně/kurzíva/odkaz/obrázek) a volitelnou
+     anglickou verzi -- bez ní se v angličtině ukáže český originál se
+     značkou "CZ", ať to nepůsobí jako chyba. */
   (function siteNewsWidget() {
     const listEl = document.getElementById('siteNewsList');
     if (!listEl) return;
@@ -1913,32 +1953,94 @@
     const form = document.getElementById('siteNewsForm');
     const titleInput = document.getElementById('siteNewsTitleInput');
     const bodyInput = document.getElementById('siteNewsBodyInput');
+    const titleEnInput = document.getElementById('siteNewsTitleEnInput');
+    const bodyEnInput = document.getElementById('siteNewsBodyEnInput');
+    const enToggle = document.getElementById('siteNewsEnToggle');
+    const enBox = document.getElementById('siteNewsEnBox');
+    const imageFile = document.getElementById('siteNewsImageFile');
     const submitBtn = document.getElementById('siteNewsSubmitBtn');
     const msgEl = document.getElementById('siteNewsFormMsg');
     let isAdmin = false;
+    let authorTarget = null; // which contenteditable the image-upload button was clicked from
 
     function dict() { return (window.I18N && window.I18N[document.documentElement.lang]) || {}; }
     function t(k, fallback) { const v = dict()[k]; return v != null ? v : fallback; }
+    const isEn = function () { return document.documentElement.lang === 'en'; };
 
     function fmtDate(iso) {
       try {
         const d = new Date(iso);
-        const locale = document.documentElement.lang === 'en' ? 'en-GB' : 'cs-CZ';
-        return d.toLocaleDateString(locale, { day: 'numeric', month: 'numeric', year: 'numeric' });
+        return d.toLocaleDateString(isEn() ? 'en-GB' : 'cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
       } catch (e) { return ''; }
     }
 
-    function render(rows) {
+    // ---- formatting toolbar (works for both the CZ and the optional EN editor) ----
+    if (form) {
+      form.querySelectorAll('.kp-news-editor-btn[data-cmd]').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          const target = enBox && !enBox.classList.contains('hidden') && document.activeElement === bodyEnInput ? bodyEnInput : bodyInput;
+          target.focus();
+          document.execCommand(btn.getAttribute('data-cmd'), false, null);
+        });
+      });
+      const linkBtn = form.querySelector('.kp-news-editor-btn[data-action="link"]');
+      if (linkBtn) linkBtn.addEventListener('click', function () {
+        const target = document.activeElement === bodyEnInput ? bodyEnInput : bodyInput;
+        const url = prompt(isEn() ? 'Link URL:' : 'Adresa odkazu:', 'https://');
+        if (!url) return;
+        target.focus();
+        const sel = window.getSelection();
+        if (!sel || sel.isCollapsed) document.execCommand('insertHTML', false, '<a href="' + url.replace(/"/g, '&quot;') + '">' + url + '</a>');
+        else document.execCommand('createLink', false, url);
+      });
+      const imgBtn = form.querySelector('.kp-news-editor-btn[data-action="image"]');
+      if (imgBtn) imgBtn.addEventListener('click', function () {
+        authorTarget = document.activeElement === bodyEnInput ? bodyEnInput : bodyInput;
+        if (imageFile) imageFile.click();
+      });
+      if (imageFile) imageFile.addEventListener('change', async function () {
+        const file = imageFile.files && imageFile.files[0];
+        imageFile.value = '';
+        if (!file) return;
+        const target = authorTarget || bodyInput;
+        target.focus();
+        try {
+          const uploaded = await kpUploadAttachment(file);
+          document.execCommand('insertHTML', false, '<img src="' + uploaded.url + '" alt="">');
+        } catch (e) {
+          if (msgEl) msgEl.textContent = isEn() ? 'Image upload failed.' : 'Nahrání obrázku se nepovedlo.';
+        }
+      });
+      if (enToggle && enBox) enToggle.addEventListener('change', function () {
+        enBox.classList.toggle('hidden', !enToggle.checked);
+      });
+    }
+
+    function render(rows, authorsById) {
       if (!rows || !rows.length) {
         listEl.innerHTML = '<p class="text-xs text-slate-500 col-span-full">' + t('kNewsEmpty', 'Zatím žádné novinky.') + '</p>';
         return;
       }
       listEl.innerHTML = rows.map(function (r) {
+        const useEn = isEn() && r.title_en && r.body_html_en;
+        const title = useEn ? r.title_en : r.title;
+        const bodyHtml = kpSanitizeNewsHtml(useEn ? r.body_html_en : (r.body_html || ('<p>' + kpEscapeHtml(r.body || '') + '</p>')));
+        const czOnlyTag = (isEn() && !useEn) ? '<span class="text-[9px] font-black uppercase tracking-wide text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded">' + t('kNewsCzOnlyTag', 'CZ original') + '</span>' : '';
+        const author = authorsById[r.author_id];
+        const byline = author ? (
+          '<span class="flex items-center gap-1">' +
+          (author.avatar_url ? '<img src="' + author.avatar_url + '" class="w-3.5 h-3.5 rounded-full object-cover" alt=""/>' : '<i class="fa-solid fa-user text-[9px]"></i>') +
+          '<span>' + t('kNewsByLabel', 'od') + ' <span class="font-semibold text-slate-400">' + kpEscapeHtml(author.username) + '</span></span></span>'
+        ) : '';
         return '<div class="relative rounded-2xl border border-brand-border bg-brand-card p-4">' +
           (isAdmin ? '<button type="button" class="siteNewsDeleteBtn absolute top-2 right-2 w-6 h-6 rounded-lg bg-slate-800 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 flex items-center justify-center transition" data-id="' + r.id + '" aria-label="delete"><i class="fa-solid fa-trash text-[10px]"></i></button>' : '') +
-          '<div class="text-[10px] text-slate-500 mb-1">' + fmtDate(r.created_at) + '</div>' +
-          '<h3 class="text-sm font-black text-white mb-1 pr-6">' + kpEscapeHtml(r.title) + '</h3>' +
-          '<p class="text-xs text-slate-400 leading-relaxed whitespace-pre-line">' + kpEscapeHtml(r.body) + '</p>' +
+          '<div class="flex items-center flex-wrap gap-1.5 text-[10px] text-slate-500 mb-1">' +
+          '<span>' + fmtDate(r.created_at) + '</span>' +
+          (byline ? '<span>&middot;</span>' + byline : '') +
+          (czOnlyTag ? '<span>&middot;</span>' + czOnlyTag : '') +
+          '</div>' +
+          '<h3 class="text-sm font-black text-white mb-1 pr-6">' + kpEscapeHtml(title) + '</h3>' +
+          '<div class="text-xs text-slate-400 kp-news-prose">' + bodyHtml + '</div>' +
           '</div>';
       }).join('');
       listEl.querySelectorAll('.siteNewsDeleteBtn').forEach(function (btn) {
@@ -1952,8 +2054,18 @@
     }
 
     function load() {
-      kpSbSelect('site_news', 'select=id,title,body,created_at&order=created_at.desc&limit=6')
-        .then(render)
+      kpSbSelect('site_news', 'select=id,title,body,body_html,title_en,body_html_en,created_at,author_id&order=created_at.desc&limit=6')
+        .then(function (rows) {
+          const authorIds = Array.from(new Set(rows.map(function (r) { return r.author_id; }).filter(Boolean)));
+          if (!authorIds.length) return render(rows, {});
+          return kpSbSelect('profiles', 'id=in.(' + authorIds.join(',') + ')&select=id,username,avatar_url')
+            .then(function (profilesRows) {
+              const byId = {};
+              profilesRows.forEach(function (p) { byId[p.id] = p; });
+              render(rows, byId);
+            })
+            .catch(function () { render(rows, {}); });
+        })
         .catch(function () { listEl.innerHTML = ''; });
     }
 
@@ -1972,19 +2084,33 @@
       form.addEventListener('submit', async function (ev) {
         ev.preventDefault();
         const title = (titleInput.value || '').trim();
-        const body = (bodyInput.value || '').trim();
-        if (!title || !body) return;
+        const bodyHtml = kpSanitizeNewsHtml((bodyInput.innerHTML || '').trim());
+        const bodyText = (bodyInput.textContent || '').trim();
+        if (!title || !bodyText) return;
+        const row = { title: title, body: bodyText.slice(0, 600), body_html: bodyHtml };
+        if (user) row.author_id = user.id;
+        if (enToggle && enToggle.checked) {
+          const titleEn = (titleEnInput.value || '').trim();
+          const bodyEnHtml = kpSanitizeNewsHtml((bodyEnInput.innerHTML || '').trim());
+          if (titleEn && (bodyEnInput.textContent || '').trim()) {
+            row.title_en = titleEn;
+            row.body_html_en = bodyEnHtml;
+          }
+        }
         submitBtn.disabled = true;
         const origLabel = submitBtn.textContent;
         submitBtn.textContent = t('kNewsPosting', 'Přidávám…');
         if (msgEl) msgEl.textContent = '';
         try {
-          await kpSbInsertAuth('site_news', { title: title, body: body }, true);
+          await kpSbInsertAuth('site_news', row, true);
           titleInput.value = '';
-          bodyInput.value = '';
+          bodyInput.innerHTML = '';
+          if (titleEnInput) titleEnInput.value = '';
+          if (bodyEnInput) bodyEnInput.innerHTML = '';
+          if (enToggle) { enToggle.checked = false; if (enBox) enBox.classList.add('hidden'); }
           load();
         } catch (err) {
-          if (msgEl) msgEl.textContent = document.documentElement.lang === 'en' ? 'Something went wrong, try again.' : 'Něco se nepovedlo, zkus to znovu.';
+          if (msgEl) msgEl.textContent = isEn() ? 'Something went wrong, try again.' : 'Něco se nepovedlo, zkus to znovu.';
         } finally {
           submitBtn.disabled = false;
           submitBtn.textContent = origLabel;
