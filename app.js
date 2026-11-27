@@ -1588,6 +1588,56 @@
     const res = await fetch(KP_SB_URL + '/rest/v1/' + table + '?' + query, { method: 'DELETE', headers: headers });
     return res.ok;
   }
+  /* Sdílené definice odznaků (gamifikace) -- jediné místo pravdy pro ikonu/popisek
+     každého odznaku, používá jak "Můj postup" (vyhodnocení, jestli je odznak
+     odemčený) tak účet/veřejný profil (zobrazení odznaků, co má dotyčný uložené
+     na serveru -- viz kpSyncBadges a kpRenderProfileBadges níže). */
+  const KP_BADGE_DEFS = {
+    streak3: { icon: 'fa-fire', cs: '3denní série', en: '3-day streak' },
+    streak7: { icon: 'fa-fire-flame-curved', cs: 'Týden v řadě', en: '7-day streak' },
+    streak30: { icon: 'fa-crown', cs: 'Měsíc v řadě', en: '30-day streak' },
+    quiz1: { icon: 'fa-circle-check', cs: 'První kvíz', en: 'First quiz' },
+    all_quizzes: { icon: 'fa-graduation-cap', cs: 'Mistr kvízů', en: 'Quiz master' },
+    checklist: { icon: 'fa-shield-halved', cs: 'Zabezpečeno', en: 'Secured' },
+    all_chapters: { icon: 'fa-trophy', cs: 'Kurz dokončen', en: 'Course complete' }
+  };
+  /* Odznaky (gamifikace) jsou jinak čistě lokální (localStorage) -- přihlášeným
+     uživatelům je navíc jednosměrně zapíšeme na server (tabulka user_badges),
+     ať je vidí i ostatní na veřejném profilu a ať nezmizí při smazání prohlížeče
+     nebo přechodu na jiné zařízení. Postup/série/kvízy samotné zůstávají jen
+     v prohlížeči -- synchronizují se jen samotné odemčené odznaky (jednoduché
+     milníky), ne celý průběh kurzu. */
+  async function kpSyncBadges(unlockedKeys) {
+    try {
+      const user = window.kpAuth && window.kpAuth.currentUser();
+      if (!user || !unlockedKeys || !unlockedKeys.length) return;
+      const existing = await kpSbSelectAuth('user_badges', 'user_id=eq.' + user.id + '&select=badge_key');
+      const have = new Set(existing.map(function (r) { return r.badge_key; }));
+      const missing = unlockedKeys.filter(function (k) { return !have.has(k); });
+      for (const k of missing) {
+        try { await kpSbInsertAuth('user_badges', { user_id: user.id, badge_key: k }, true); } catch (e) {}
+      }
+    } catch (e) { /* offline/not logged in -- odznaky zůstanou jen lokální, nevadí */ }
+  }
+  /* Zobrazení odznaků uložených na serveru pro daného uživatele (vlastní účet
+     i veřejný profil ?u=). Veřejné SELECT je povolené pro kohokoliv (RLS). */
+  async function kpRenderProfileBadges(userId, elId, isEn) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    try {
+      const rows = await kpSbSelect('user_badges', 'user_id=eq.' + userId + '&select=badge_key,earned_at&order=earned_at.asc');
+      if (!rows.length) {
+        el.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'No badges earned yet.' : 'Zatím žádné odznaky.') + '</p>';
+        return;
+      }
+      el.innerHTML = rows.map(function (r) {
+        const def = KP_BADGE_DEFS[r.badge_key];
+        if (!def) return '';
+        const label = isEn ? def.en : def.cs;
+        return '<div class="w-9 h-9 rounded-full bg-amber-400 text-black flex items-center justify-center shrink-0" title="' + kpEscapeHtml(label) + '"><i class="fa-solid ' + def.icon + ' text-sm"></i></div>';
+      }).join('');
+    } catch (e) { el.innerHTML = ''; }
+  }
   /* Uploads a File to the public "avatars" Supabase Storage bucket, under the
      logged-in user's own folder (required by the storage RLS policies), and
      returns its public URL. */
@@ -4408,9 +4458,13 @@
         '<div class="text-xs text-slate-500">' + sinceLabel + fmtDate(p.created_at) + daysLabel + '</div></div></div>' +
         bioHtml + (socialHtml ? '<div class="flex flex-wrap gap-2 mt-3">' + socialHtml + '</div>' : '') + actionsHtml +
         '<div class="pt-3 mt-4 border-t border-brand-border">' +
+        '<div class="flex items-center justify-between mb-2"><h3 class="text-xs font-black text-slate-400 uppercase tracking-wide">' + (isEn ? 'Badges' : 'Odznaky') + '</h3></div>' +
+        '<div id="publicBadgesRow" class="flex flex-wrap gap-2"></div></div>' +
+        '<div class="pt-3 mt-4 border-t border-brand-border">' +
         '<div class="flex items-center justify-between mb-2"><h3 class="text-xs font-black text-slate-400 uppercase tracking-wide">Fórum</h3><span id="publicForumStats" class="text-[11px] text-slate-500"></span></div>' +
         '<div id="publicForumList" class="space-y-1.5"></div></div>';
       loadForumActivity(p.id, 'publicForumList', 'publicForumStats');
+      kpRenderProfileBadges(p.id, 'publicBadgesRow', isEn);
       const banBtn = document.getElementById('publicBanBtn');
       if (banBtn) banBtn.addEventListener('click', function () {
         const nowBanned = banBtn.getAttribute('data-banned') === '1';
@@ -4537,6 +4591,7 @@
       else { profileViewBio.textContent = ''; profileViewEmpty.textContent = isEn ? 'You haven’t written anything about yourself yet.' : 'Zatím jsi o sobě nic nenapsal(a).'; profileViewEmpty.classList.remove('hidden'); }
       profileViewSocial.innerHTML = socialChipsHtml(profile);
       loadForumActivity(profile.id, 'profileForumList', 'profileForumStats');
+      kpRenderProfileBadges(profile.id, 'profileBadgesRow', isEn);
 
       refreshHeaderBadges();
     }
@@ -6994,15 +7049,24 @@
       const badgesEl = document.getElementById('mpBadges');
       if (badgesEl) {
         const checklistLen = Array.isArray(checklist) ? checklist.length : 0;
-        const BADGES = [
-          { key: 'streak3', icon: 'fa-fire', unlocked: streakBest >= 3, title: isEn ? '3-day streak' : '3denní série', desc: isEn ? 'Visit 3 days in a row' : 'Navštiv web 3 dny po sobě' },
-          { key: 'streak7', icon: 'fa-fire-flame-curved', unlocked: streakBest >= 7, title: isEn ? '7-day streak' : 'Týden v řadě', desc: isEn ? 'Visit 7 days in a row' : 'Navštiv web 7 dnů po sobě' },
-          { key: 'streak30', icon: 'fa-crown', unlocked: streakBest >= 30, title: isEn ? '30-day streak' : 'Měsíc v řadě', desc: isEn ? 'Visit 30 days in a row' : 'Navštiv web 30 dnů po sobě' },
-          { key: 'quiz1', icon: 'fa-circle-check', unlocked: quizCount >= 1, title: isEn ? 'First quiz' : 'První kvíz', desc: isEn ? 'Pass your first quiz' : 'Splň první kvíz v kurzu' },
-          { key: 'all_quizzes', icon: 'fa-graduation-cap', unlocked: chips.length > 0 && quizCount === chips.length, title: isEn ? 'Quiz master' : 'Mistr kvízů', desc: isEn ? 'Pass every chapter quiz' : 'Splň kvízy ve všech kapitolách' },
-          { key: 'checklist', icon: 'fa-shield-halved', unlocked: checklistLen >= 7, title: isEn ? 'Secured' : 'Zabezpečeno', desc: isEn ? 'Finish the security checklist' : 'Dokonči bezpečnostní checklist' },
-          { key: 'all_chapters', icon: 'fa-trophy', unlocked: chips.length > 0 && doneChapters === chips.length, title: isEn ? 'Course complete' : 'Kurz dokončen', desc: isEn ? 'Finish every chapter' : 'Dokonči všechny kapitoly' }
-        ];
+        const BADGE_UNLOCKED = {
+          streak3: streakBest >= 3, streak7: streakBest >= 7, streak30: streakBest >= 30,
+          quiz1: quizCount >= 1, all_quizzes: chips.length > 0 && quizCount === chips.length,
+          checklist: checklistLen >= 7, all_chapters: chips.length > 0 && doneChapters === chips.length
+        };
+        const BADGE_DESC = {
+          streak3: { cs: 'Navštiv web 3 dny po sobě', en: 'Visit 3 days in a row' },
+          streak7: { cs: 'Navštiv web 7 dnů po sobě', en: 'Visit 7 days in a row' },
+          streak30: { cs: 'Navštiv web 30 dnů po sobě', en: 'Visit 30 days in a row' },
+          quiz1: { cs: 'Splň první kvíz v kurzu', en: 'Pass your first quiz' },
+          all_quizzes: { cs: 'Splň kvízy ve všech kapitolách', en: 'Pass every chapter quiz' },
+          checklist: { cs: 'Dokonči bezpečnostní checklist', en: 'Finish the security checklist' },
+          all_chapters: { cs: 'Dokonči všechny kapitoly', en: 'Finish every chapter' }
+        };
+        const BADGES = Object.keys(KP_BADGE_DEFS).map(function (key) {
+          const def = KP_BADGE_DEFS[key];
+          return { key: key, icon: def.icon, unlocked: !!BADGE_UNLOCKED[key], title: isEn ? def.en : def.cs, desc: isEn ? BADGE_DESC[key].en : BADGE_DESC[key].cs };
+        });
         badgesEl.innerHTML = BADGES.map(function (b) {
           return '<div class="rounded-2xl border p-3 text-center flex flex-col items-center gap-1.5 ' +
             (b.unlocked ? 'bg-amber-400/10 border-amber-400/40' : 'bg-brand-card/40 border-brand-border opacity-50') +
@@ -7011,6 +7075,9 @@
             '<span class="text-[11px] font-bold ' + (b.unlocked ? 'text-white' : 'text-slate-500') + '">' + kpEscapeHtml(b.title) + '</span>' +
             '</div>';
         }).join('');
+        // Jednosměrně zapíšeme odemčené odznaky na server (přihlášení uživatelé),
+        // ať je vidí i na veřejném profilu -- viz kpSyncBadges výše.
+        kpSyncBadges(BADGES.filter(function (b) { return b.unlocked; }).map(function (b) { return b.key; }));
       }
 
       const riskWrap = document.getElementById('mpRiskWrap'), riskEmpty = document.getElementById('mpRiskEmpty');
