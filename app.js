@@ -1463,6 +1463,12 @@
       const btn = header && dslChild(header, 'button.mod-toggle');
       if (btn) btn.setAttribute('aria-expanded', String(open));
     }
+    // Lessons stay collapsed by default (like the original MODS accordion above) --
+    // only the one matching the URL hash (e.g. a deep link or "my progress" link)
+    // opens automatically. Previously every new DSL lesson force-opened at once,
+    // so a chapter like "Basics" (13 lessons) rendered as one giant wall of text.
+    let hashIdForMods = '';
+    try { hashIdForMods = decodeURIComponent((location.hash || '').slice(1)); } catch (e) {}
     newMods.forEach(art => {
       const header = dslChild(art, 'header.mod-head');
       if (!header) return;
@@ -1472,7 +1478,7 @@
         const body = dslChild(art, '.module-body');
         if (body) setDslMod(art, body.hidden);
       });
-      setDslMod(art, true); // new modules start expanded, same as their static markup
+      setDslMod(art, !!hashIdForMods && art.id === hashIdForMods);
     });
     const expandAllBtn = $('#expandAll'), collapseAllBtn = $('#collapseAll');
     if (expandAllBtn) expandAllBtn.addEventListener('click', () => newMods.forEach(a => setDslMod(a, true)));
