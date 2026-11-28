@@ -2379,6 +2379,7 @@
         '<button type="button" id="headerNotifMarkAll" class="text-[10px] font-bold text-brand-accent hover:underline">' + (isEn ? 'Mark all read' : 'Vše přečteno') + '</button>' +
         '</div>' +
         '<div id="headerNotifList" class="divide-y divide-brand-border"><div class="px-4 py-6 text-center text-xs text-slate-500">' + (isEn ? 'Loading…' : 'Načítám…') + '</div></div>' +
+        '<a href="oznameni.html" class="block px-4 py-2.5 text-center text-[11px] font-bold text-brand-accent hover:bg-slate-800 transition border-t border-brand-border">' + (isEn ? 'View all notifications' : 'Zobrazit všechna upozornění') + '</a>' +
         '</div></div>' +
         '<div class="relative">' +
         '<button type="button" id="headerAuthBtn" aria-haspopup="true" aria-expanded="false" class="relative flex items-center gap-1 pl-1 pr-1.5 sm:pr-3 py-1 rounded-full bg-brand-card border ' +
@@ -2589,6 +2590,107 @@
     kpAuth.getMyProfile().then(function (profile) {
       if (profile) renderLoggedIn(user, profile);
     }).catch(function () { /* necháme viditelný odhad z e-mailu */ });
+  })();
+
+  /* ================= Stránka "Upozornění" (oznameni.html) =================
+     Zvoneček v hlavičce ukazuje jen posledních 20 -- tahle stránka je plná
+     historie se stránkováním, ať se ke starším upozorněním (odpovědi, oblíbená
+     témata, zmínky) dá kdykoliv vrátit. */
+  (function notificationsPage() {
+    const root = document.querySelector('[data-notif-page]');
+    if (!root) return;
+    const isEn = document.documentElement.lang === 'en';
+    const user = kpAuth.currentUser();
+    const loginWall = document.getElementById('notifPageLoginWall');
+    const listEl = document.getElementById('notifPageList');
+    const pagerEl = document.getElementById('notifPagePager');
+    const markAllBtn = document.getElementById('notifPageMarkAll');
+    if (!user) { if (loginWall) loginWall.classList.remove('hidden'); return; }
+    if (markAllBtn) markAllBtn.classList.remove('hidden');
+    const PAGE_SIZE = 15;
+    let all = [];
+    let page = 1;
+    function notifText(isEn, n, actorName, topicTitle) {
+      if (n.type === 'mention') return (isEn ? (actorName + ' mentioned you in "') : (actorName + ' vás zmínil(a) v tématu „')) + topicTitle + (isEn ? '"' : '“');
+      if (n.type === 'bookmark_reply') return (isEn ? (actorName + ' replied in your bookmarked topic "') : (actorName + ' odpověděl(a) v oblíbeném tématu „')) + topicTitle + (isEn ? '"' : '“');
+      return (isEn ? (actorName + ' replied to your topic "') : (actorName + ' odpověděl(a) na vaše téma „')) + topicTitle + (isEn ? '"' : '“');
+    }
+    function timeAgo(iso) {
+      const diffMin = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+      if (diffMin < 1) return isEn ? 'just now' : 'právě teď';
+      if (diffMin < 60) return diffMin + (isEn ? 'm ago' : ' min');
+      const diffH = Math.round(diffMin / 60);
+      if (diffH < 24) return diffH + (isEn ? 'h ago' : ' h');
+      return Math.round(diffH / 24) + (isEn ? 'd ago' : ' d');
+    }
+    function renderPage() {
+      const start = (page - 1) * PAGE_SIZE;
+      const rows = all.slice(start, start + PAGE_SIZE);
+      if (!rows.length) {
+        listEl.innerHTML = '<div class="rounded-2xl bg-brand-card border border-brand-border p-8 text-center text-xs text-slate-500">' + (isEn ? 'No notifications yet.' : 'Zatím žádná upozornění.') + '</div>';
+      } else {
+        listEl.innerHTML = rows.map(function (n) {
+          const icon = n.type === 'mention' ? 'fa-at' : (n.type === 'bookmark_reply' ? 'fa-star' : 'fa-reply');
+          return '<a href="forum.html?topic=' + n.topic_id + '" data-notif-id="' + n.id + '" class="kp-notif-page-row flex items-start gap-3 rounded-2xl border p-4 text-sm transition hover:border-brand-accent ' +
+            (n.is_read ? 'bg-brand-card/50 border-brand-border text-slate-400' : 'bg-brand-accent/5 border-brand-accent/30 text-white') + '">' +
+            '<span class="w-8 h-8 rounded-full bg-brand-accent/15 text-brand-accent flex items-center justify-center shrink-0"><i class="fa-solid ' + icon + '"></i></span>' +
+            '<span class="min-w-0 flex-1">' + n._text + '<span class="block text-[11px] text-slate-500 mt-1">' + timeAgo(n.created_at) + '</span></span>' +
+            (n.is_read ? '' : '<span class="w-2 h-2 rounded-full bg-brand-accent shrink-0 mt-1.5"></span>') +
+            '</a>';
+        }).join('');
+      }
+      const pages = Math.max(1, Math.ceil(all.length / PAGE_SIZE));
+      if (pages <= 1) { pagerEl.innerHTML = ''; return; }
+      pagerEl.innerHTML =
+        '<button type="button" id="notifPagePrev" class="kp-pager-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-xs font-bold text-slate-300 hover:border-brand-accent transition"' + (page <= 1 ? ' disabled' : '') + '><i class="fa-solid fa-chevron-left"></i></button>' +
+        '<span class="text-xs text-slate-400 font-bold">' + page + ' / ' + pages + '</span>' +
+        '<button type="button" id="notifPageNext" class="kp-pager-btn px-3 py-1.5 rounded-lg bg-brand-card border border-brand-border text-xs font-bold text-slate-300 hover:border-brand-accent transition"' + (page >= pages ? ' disabled' : '') + '><i class="fa-solid fa-chevron-right"></i></button>';
+      const prevBtn = document.getElementById('notifPagePrev');
+      const nextBtn = document.getElementById('notifPageNext');
+      if (prevBtn) prevBtn.addEventListener('click', function () { if (page > 1) { page--; renderPage(); window.scrollTo({ top: root.offsetTop - 80, behavior: 'smooth' }); } });
+      if (nextBtn) nextBtn.addEventListener('click', function () { if (page < pages) { page++; renderPage(); window.scrollTo({ top: root.offsetTop - 80, behavior: 'smooth' }); } });
+    }
+    async function load() {
+      listEl.innerHTML = '<div class="rounded-2xl bg-brand-card border border-brand-border p-8 text-center text-xs text-slate-500">' + (isEn ? 'Loading…' : 'Načítám…') + '</div>';
+      try {
+        const notifs = await kpSbSelectAuth('forum_notifications', 'order=created_at.desc&limit=200&select=id,type,topic_id,post_id,actor_id,is_read,created_at');
+        const topicIds = Array.from(new Set(notifs.map(function (n) { return n.topic_id; })));
+        const actorIds = Array.from(new Set(notifs.map(function (n) { return n.actor_id; })));
+        const topics = topicIds.length ? await kpSbSelectAuth('forum_topics', 'id=in.(' + topicIds.join(',') + ')&select=id,title') : [];
+        const topicMap = {}; topics.forEach(function (t) { topicMap[t.id] = t.title; });
+        const profiles = actorIds.length ? await kpSbSelectAuth('profiles', 'id=in.(' + actorIds.join(',') + ')&select=id,username') : [];
+        const profMap = {}; profiles.forEach(function (p) { profMap[p.id] = p.username; });
+        all = notifs.map(function (n) {
+          const actorName = profMap[n.actor_id] || (isEn ? 'Someone' : 'Někdo');
+          const topicTitle = kpEscapeHtml(topicMap[n.topic_id] || '…');
+          n._text = notifText(isEn, n, kpEscapeHtml(actorName), topicTitle);
+          return n;
+        });
+        page = 1;
+        renderPage();
+      } catch (e) {
+        listEl.innerHTML = '<div class="rounded-2xl bg-brand-card border border-brand-border p-8 text-center text-xs text-slate-500">' + (isEn ? 'Could not load notifications.' : 'Upozornění se nepodařilo načíst.') + '</div>';
+      }
+    }
+    listEl.addEventListener('click', function (ev) {
+      const row = ev.target.closest('.kp-notif-page-row');
+      if (!row) return;
+      const id = row.getAttribute('data-notif-id');
+      if (!id) return;
+      const n = all.find(function (x) { return String(x.id) === String(id); });
+      if (n && !n.is_read) {
+        n.is_read = true;
+        kpSbPatchAuth('forum_notifications', 'id=eq.' + id, { is_read: true }).then(function () { if (window.kpRefreshHeaderBadges) window.kpRefreshHeaderBadges(); }).catch(function () {});
+      }
+    });
+    if (markAllBtn) markAllBtn.addEventListener('click', function () {
+      kpSbPatchAuth('forum_notifications', 'is_read=eq.false', { is_read: true }).then(function () {
+        all.forEach(function (n) { n.is_read = true; });
+        renderPage();
+        if (window.kpRefreshHeaderBadges) window.kpRefreshHeaderBadges();
+      });
+    });
+    load();
   })();
 
   /* ================= Shared: draw a QR code onto any 2D canvas context ================= */
@@ -4344,9 +4446,18 @@
 
     /* Nedávná témata a příspěvky uživatele na fóru + hrubé součty -- ukazuje
        se jak na veřejném profilu (?u=), tak na vlastním dashboardu. */
-    async function loadForumActivity(authorId, listElId, statsElId) {
+    function forumTierChip(score) {
+      // Stejný vzorec jako žebříček aktivity (kp_forum_leaderboard): topic_count*3 + post_count.
+      if (score <= 0) return '';
+      let icon = 'fa-medal', cls = 'bg-amber-700/15 text-amber-600 border-amber-700/30', label = isEn ? 'Bronze' : 'Bronz';
+      if (score >= 50) { icon = 'fa-crown'; cls = 'bg-amber-400/15 text-amber-300 border-amber-400/30'; label = isEn ? 'Gold' : 'Zlato'; }
+      else if (score >= 15) { icon = 'fa-medal'; cls = 'bg-slate-400/15 text-slate-300 border-slate-400/30'; label = isEn ? 'Silver' : 'Stříbro'; }
+      return '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md border text-[10px] font-black ' + cls + '" title="' + (isEn ? 'Forum activity level' : 'Úroveň aktivity ve fóru') + '"><i class="fa-solid ' + icon + '"></i>' + label + '</span>';
+    }
+    async function loadForumActivity(authorId, listElId, statsElId, tierElId) {
       const listEl = document.getElementById(listElId);
       const statsEl = document.getElementById(statsElId);
+      const tierEl = tierElId ? document.getElementById(tierElId) : null;
       if (!listEl) return;
       listEl.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'Loading…' : 'Načítám…') + '</p>';
       try {
@@ -4357,6 +4468,7 @@
           kpSbSelect('forum_posts', 'author_id=eq.' + authorId + '&select=id')
         ]);
         if (statsEl) statsEl.textContent = topicCountRows.length + ' ' + (isEn ? 'topics' : 'témat') + ' · ' + postCountRows.length + ' ' + (isEn ? 'posts' : 'příspěvků');
+        if (tierEl) tierEl.innerHTML = forumTierChip(topicCountRows.length * 3 + postCountRows.length);
         if (!topicsOwned.length && !postsOwned.length) {
           listEl.innerHTML = '<p class="text-xs text-slate-500 italic">' + (isEn ? 'No forum activity yet.' : 'Zatím žádná aktivita ve fóru.') + '</p>';
           return;
@@ -4386,7 +4498,7 @@
       // najít stejný účet); escapujeme LIKE zvláštní znaky (_, %, \), ať se
       // podtržítko v přezdívce nechová jako wildcard.
       const unameEsc = String(username).replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_');
-      return kpSbSelect('profiles', 'username=ilike.' + encodeURIComponent(unameEsc) + '&select=id,username,bio,avatar_url,created_at,is_admin,banned,instagram,facebook,twitter,website');
+      return kpSbSelect('profiles', 'username=ilike.' + encodeURIComponent(unameEsc) + '&is_deleted=eq.false&select=id,username,bio,avatar_url,created_at,is_admin,banned,instagram,facebook,twitter,website');
     }
     async function renderPublicProfile(username) {
       // generační čítač: pokud se mezitím rozjede novější volání (např. druhý
@@ -4461,9 +4573,9 @@
         '<div class="flex items-center justify-between mb-2"><h3 class="text-xs font-black text-slate-400 uppercase tracking-wide">' + (isEn ? 'Badges' : 'Odznaky') + '</h3></div>' +
         '<div id="publicBadgesRow" class="flex flex-wrap gap-2"></div></div>' +
         '<div class="pt-3 mt-4 border-t border-brand-border">' +
-        '<div class="flex items-center justify-between mb-2"><h3 class="text-xs font-black text-slate-400 uppercase tracking-wide">Fórum</h3><span id="publicForumStats" class="text-[11px] text-slate-500"></span></div>' +
+        '<div class="flex items-center justify-between mb-2"><h3 class="text-xs font-black text-slate-400 uppercase tracking-wide">Fórum</h3><span class="flex items-center gap-2"><span id="publicForumTier"></span><span id="publicForumStats" class="text-[11px] text-slate-500"></span></span></div>' +
         '<div id="publicForumList" class="space-y-1.5"></div></div>';
-      loadForumActivity(p.id, 'publicForumList', 'publicForumStats');
+      loadForumActivity(p.id, 'publicForumList', 'publicForumStats', 'publicForumTier');
       kpRenderProfileBadges(p.id, 'publicBadgesRow', isEn);
       const banBtn = document.getElementById('publicBanBtn');
       if (banBtn) banBtn.addEventListener('click', function () {
@@ -4590,7 +4702,7 @@
       if (profile.bio) { profileViewBio.textContent = profile.bio; profileViewEmpty.classList.add('hidden'); }
       else { profileViewBio.textContent = ''; profileViewEmpty.textContent = isEn ? 'You haven’t written anything about yourself yet.' : 'Zatím jsi o sobě nic nenapsal(a).'; profileViewEmpty.classList.remove('hidden'); }
       profileViewSocial.innerHTML = socialChipsHtml(profile);
-      loadForumActivity(profile.id, 'profileForumList', 'profileForumStats');
+      loadForumActivity(profile.id, 'profileForumList', 'profileForumStats', 'profileForumTier');
       kpRenderProfileBadges(profile.id, 'profileBadgesRow', isEn);
 
       refreshHeaderBadges();
@@ -4704,6 +4816,25 @@
 
     document.getElementById('accLogout').addEventListener('click', function () {
       window.kpAuth.signOut().then(function () { location.reload(); });
+    });
+
+    // ---------------- "Nebezpečná zóna": smazání účtu (měkké smazání) ----------------
+    const deleteBtn = document.getElementById('accDeleteBtn');
+    if (deleteBtn) deleteBtn.addEventListener('click', function () {
+      if (!confirm(isEn ? 'Are you sure you want to delete your account? This can’t be undone.' : 'Opravdu chceš smazat svůj účet? Tahle akce se nedá vzít zpět.')) return;
+      const statusBox = document.getElementById('accDeleteStatus');
+      deleteBtn.disabled = true;
+      const origLabel = deleteBtn.innerHTML;
+      deleteBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+      kpRpcAuth('kp_delete_my_account').then(function () {
+        return window.kpAuth.signOut();
+      }).then(function () {
+        location.href = 'index.html';
+      }).catch(function () {
+        if (statusBox) { showStatus(statusBox, isEn ? 'Could not delete the account. Please try again.' : 'Účet se nepodařilo smazat. Zkus to prosím znovu.', false); }
+        deleteBtn.disabled = false;
+        deleteBtn.innerHTML = origLabel;
+      });
     });
 
     renderDash();
@@ -4826,7 +4957,7 @@
 
     async function allProfiles() {
       if (pmProfilesCache) return pmProfilesCache;
-      pmProfilesCache = await kpSbSelect('profiles', 'select=id,username,avatar_url&order=username.asc');
+      pmProfilesCache = await kpSbSelect('profiles', 'is_deleted=eq.false&select=id,username,avatar_url&order=username.asc');
       return pmProfilesCache;
     }
 
@@ -5118,7 +5249,7 @@
       return isEn ? (days + (days === 1 ? ' day ago' : ' days ago')) : ('před ' + days + ' dny');
     }
 
-    kpSbSelect('profiles', 'select=id,username,avatar_url,created_at,last_seen_at,is_admin&order=created_at.asc&limit=200').then(function (rows) {
+    kpSbSelect('profiles', 'is_deleted=eq.false&select=id,username,avatar_url,created_at,last_seen_at,is_admin&order=created_at.asc&limit=200').then(function (rows) {
       // Admin vždy nahoře, pak ostatní podle toho, jak dlouho jsou s námi.
       rows = rows.slice().sort(function (a, b) {
         if (!!a.is_admin !== !!b.is_admin) return a.is_admin ? -1 : 1;
@@ -5277,7 +5408,7 @@
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(function () {
           const esc = partial.replace(/\\/g, '\\\\').replace(/%/g, '\\%').replace(/_/g, '\\_').replace(/\*/g, '\\*');
-          kpSbSelect('profiles', 'username=ilike.' + encodeURIComponent(esc + '*') + '&select=username&limit=6&order=username.asc')
+          kpSbSelect('profiles', 'username=ilike.' + encodeURIComponent(esc + '*') + '&is_deleted=eq.false&select=username&limit=6&order=username.asc')
             .then(function (rows) {
               if (!rows || !rows.length) { hide(); return; }
               box.innerHTML = rows.map(function (p) {

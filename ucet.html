@@ -31,7 +31,7 @@
 <meta content="https://kryptoprofik.fun/og-image.png" name="twitter:image"/>
 <link href="manifest.json" rel="manifest"/>
 <link href="icon-192.png" rel="apple-touch-icon"/>
-<link href="style.css?v=v27" rel="stylesheet"/>
+<link href="style.css?v=v28" rel="stylesheet"/>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "KryptoProfík", "alternateName": "KryptoProfík – Masterclass od A do Z", "url": "https://kryptoprofik.fun/", "inLanguage": ["cs", "en"], "description": "Nezávislý krypto portál v češtině: peněženky, burzy, detekce podvodů, daně v ČR, živé ceny, kalkulačky, slovník a kvíz.", "publisher": {"@type": "Person", "name": "Ace321cz", "email": "ace321cz@gmail.com"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Můj účet | KryptoProfík", "description": "Registrace, přihlášení a profil na KryptoProfík.", "url": "https://kryptoprofik.fun/ucet.html", "inLanguage": "cs", "isPartOf": {"@type": "WebSite", "name": "KryptoProfík", "url": "https://kryptoprofik.fun/"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "KryptoProfík", "item": "https://kryptoprofik.fun/"}, {"@type": "ListItem", "position": 2, "name": "Můj účet", "item": "https://kryptoprofik.fun/ucet.html"}]}</script>
@@ -160,7 +160,7 @@
 <div class="pt-3 mt-1 border-t border-brand-border">
 <div class="flex items-center justify-between mb-2">
 <h3 class="text-xs font-black text-slate-400 uppercase tracking-wide">Fórum</h3>
-<span id="profileForumStats" class="text-[11px] text-slate-500"></span>
+<span class="flex items-center gap-2"><span id="profileForumTier"></span><span id="profileForumStats" class="text-[11px] text-slate-500"></span></span>
 </div>
 <div id="profileForumList" class="space-y-1.5"></div>
 </div>
@@ -195,6 +195,12 @@
 </div>
 
 <button type="button" id="accLogout" class="w-full mt-4 px-4 py-2.5 rounded-xl bg-slate-900 border border-brand-border text-slate-300 text-sm font-bold hover:text-white transition" data-i18n="kmp22baf46">Odhlásit se</button>
+
+<div class="mt-6 pt-4 border-t border-rose-500/20">
+<button type="button" id="accDeleteBtn" class="w-full px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm font-bold hover:bg-rose-500/20 transition"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i><span data-i18n="kAccDeleteBtn">Smazat účet</span></button>
+<p class="text-[11px] text-slate-500 mt-2" data-i18n="kAccDeleteHint">Smaže tvůj profil (bio, fotku, sociální sítě) a odhlásí tě. Tahle akce se nedá vzít zpět.</p>
+<div id="accDeleteStatus" class="hidden text-xs font-bold rounded-xl px-3 py-2.5 border mt-2"></div>
+</div>
 </div>
 </section>
 </main>
@@ -264,6 +270,6 @@
 </footer>
 <script src="i18n-data.js"></script>
 <script src="qrcode.min.js"></script>
-<script src="app.js?v=v27"></script>
+<script src="app.js?v=v28"></script>
 </body>
 </html>
